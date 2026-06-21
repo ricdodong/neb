@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import axios from 'axios';
 const BASE_URL = 'https://dpsapi.ricalgen.eu.org';
+const FILE_URL = 'https://jadefile.ricalgen.eu.org/';
 const CustomerManagement = () => {
     const [customers, setCustomers] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
@@ -186,7 +187,7 @@ const CustomerManagement = () => {
                                     <div className="position-relative me-4" style={{ cursor: 'pointer' }} onClick={() => fileInputRef.current.click()}>
                                         {selectedCustomer.profile_picture ? (
                                             <img 
-                                                src={`${BASE_URL}${selectedCustomer.profile_picture}`} 
+                                                src={`${FILE_URL}${selectedCustomer.profile_picture}`} 
                                                 alt="Profile" 
                                                 className="rounded-circle border border-3 border-primary shadow-sm" 
                                                 style={{ width: '100px', height: '100px', objectFit: 'cover' }} 
