@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import axios from 'axios';
-
+const BASE_URL = 'https://dpsapi.ricalgen.eu.org';
 const CustomerManagement = () => {
     const [customers, setCustomers] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
@@ -10,6 +10,7 @@ const CustomerManagement = () => {
     const [expandedRow, setExpandedRow] = useState(null);
     
     const fileInputRef = useRef(null);
+    
 
     useEffect(() => {
         fetchCustomers();
@@ -17,7 +18,7 @@ const CustomerManagement = () => {
 
     const fetchCustomers = async () => {
         try {
-            const res = await axios.get('https://api.ricalgen.eu.org/api/customers');
+            const res = await axios.get(`${BASE_URL}/api/customers`);
             setCustomers(res.data);
         } catch (err) {
             console.error("Error loading customers", err);
@@ -30,8 +31,8 @@ const CustomerManagement = () => {
         
         try {
             const [ledgerRes, serviceRes] = await Promise.all([
-                axios.get(`https://api.ricalgen.eu.org/api/customers/${customer.id}/history`),
-                axios.get(`https://api.ricalgen.eu.org/api/customers/${customer.id}/service-calls`)
+                axios.get(`${BASE_URL}/api/customers/${customer.id}/history`),
+                axios.get(`${BASE_URL}/api/customers/${customer.id}/service-calls`)
             ]);
             setPurchaseHistory(ledgerRes.data);
             setServiceHistory(serviceRes.data);
@@ -70,7 +71,7 @@ const CustomerManagement = () => {
         formData.append('image', file);
 
         try {
-            const res = await axios.post(`https://api.ricalgen.eu.org/api/customers/${selectedCustomer.id}/upload-photo`, formData, {
+            const res = await axios.post(`${BASE_URL}/api/customers/${selectedCustomer.id}/upload-photo`, formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
             
@@ -185,7 +186,7 @@ const CustomerManagement = () => {
                                     <div className="position-relative me-4" style={{ cursor: 'pointer' }} onClick={() => fileInputRef.current.click()}>
                                         {selectedCustomer.profile_picture ? (
                                             <img 
-                                                src={`https://api.ricalgen.eu.org${selectedCustomer.profile_picture}`} 
+                                                src={`${BASE_URL}${selectedCustomer.profile_picture}`} 
                                                 alt="Profile" 
                                                 className="rounded-circle border border-3 border-primary shadow-sm" 
                                                 style={{ width: '100px', height: '100px', objectFit: 'cover' }} 

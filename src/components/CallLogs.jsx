@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 
+const BASE_URL = 'https://dpsapi.ricalgen.eu.org';
+
 const CallLogs = () => {
     const [logs, setLogs] = useState([]);
     const [customers, setCustomers] = useState([]);
@@ -21,21 +23,21 @@ const CallLogs = () => {
     // --- API Helpers ---
     const fetchLogs = async () => {
         try {
-            const res = await axios.get(`https://api.ricalgen.eu.org/api/call-logs?t=${Date.now()}`);
+            const res = await axios.get(`${BASE_URL}/api/call-logs?t=${Date.now()}`);
             setLogs(res.data);
         } catch (err) { /* Silent fail for interval fetching */ }
     };
 
     const fetchCustomers = async () => {
         try {
-            const res = await axios.get('https://api.ricalgen.eu.org/api/customers');
+            const res = await axios.get(`${BASE_URL}/api/customers`);
             setCustomers(res.data);
         } catch (err) { console.error("Error fetching customers:", err); }
     };
 
     const fetchItemsByCustomer = async (customerId) => {
         try {
-            const res = await axios.get(`https://api.ricalgen.eu.org/api/customers/${customerId}/repairable`);
+            const res = await axios.get(`${BASE_URL}/api/customers/${customerId}/repairable`);
             setCustomerItems(res.data);
         } catch (err) { console.error("Error fetching customer history:", err); }
     };
@@ -83,7 +85,7 @@ const CallLogs = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            await axios.post('https://api.ricalgen.eu.org/api/call-logs', formData);
+            await axios.post(`${BASE_URL}/api/call-logs`, formData);
             setFormData({ customer_id: '', item_id: '', serial_number: '', problem: '', status: 'pending' });
             setSelectedTxId('');
             fetchLogs(); 
