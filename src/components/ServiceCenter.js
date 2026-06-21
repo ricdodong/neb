@@ -172,6 +172,5 @@ const BASE_URL = 'https://dpsapi.ricalgen.eu.org';
             )}
         </div>
     );
-};
 
 export default ServiceCenter;
