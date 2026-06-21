@@ -14,7 +14,7 @@ const StockManagement = () => {
 
     const fetchInventory = async () => {
         try {
-            const res = await axios.get(`${BASE_URL}/api/inventory`);
+            const res = await axios.get(`${BASE_URL}/api/pos-inventory`);
             setInventory(res.data);
         } catch (err) {
             console.error("Backend unreachable", err);
@@ -25,7 +25,7 @@ const StockManagement = () => {
         setSelectedItem(item);
         try {
             // Fetching the combined Union data from the new endpoint
-            const res = await axios.get(`${BASE_URL}/api/inventory/${item.id}/ledger`);
+            const res = await axios.get(`${BASE_URL}/api/pos-inventory/${item.id}/ledger`);
             setLedger(res.data);
         } catch (err) {
             console.error("Error fetching ledger", err);
