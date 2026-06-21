@@ -6,6 +6,7 @@ import MobileUpload2 from './MobileUpload2';
 // CONSTANTS
 // ============================================================================
 const API_BASE = 'https://dpsapi.ricalgen.eu.org';
+const FILE_BASE = 'https://jadefile.ricalgen.eu.org';
 const ENDPOINTS = {
   clients: `${API_BASE}/api/po-receives/clients`,
   history: `${API_BASE}/api/po-receives/history`,
@@ -411,8 +412,8 @@ const DocumentViewerModal = ({
 }) => {
   if (!viewDocsRow) return null;
 
-  const drUrl = viewDocsRow.dr_attachment ? `${API_BASE}${viewDocsRow.dr_attachment}` : '';
-  const poUrl = viewDocsRow.po_attachment ? `${API_BASE}${viewDocsRow.po_attachment}` : '';
+  const drUrl = viewDocsRow.dr_attachment ? `${FILE_BASE}${viewDocsRow.dr_attachment}` : '';
+  const poUrl = viewDocsRow.po_attachment ? `${FILE_BASE}${viewDocsRow.po_attachment}` : '';
 
   return (
     <div style={styles.modalOverlay} onClick={onClose}>
