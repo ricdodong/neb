@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './Login';
 import JadeSystem from './JadeSystem';
-import MobileUpload2 from './components/MobileUpload2'; // Import your new component
+import MobileUpload2 from './components/MobileUpload2'; 
 
 export default function App() {
     const [user, setUser] = useState(null);
@@ -25,9 +25,9 @@ export default function App() {
     };
 
     return (
-        <BrowserRouter>
+        <HashRouter>
             <Routes>
-                {/* Public Route: The mobile upload bypasses the login screen */}
+                {/* Public Route: Bypasses the login screen using standard hash parsing */}
                 <Route path="/mobile-uploads2/:batchRef" element={<MobileUpload2 />} />
 
                 {/* Main System Routes */}
@@ -43,9 +43,9 @@ export default function App() {
                     )
                 } />
 
-                {/* Redirect any unknown paths to login */}
+                {/* Redirect any unknown paths back to home */}
                 <Route path="*" element={<Navigate to="/" />} />
             </Routes>
-        </BrowserRouter>
+        </HashRouter>
     );
 }
