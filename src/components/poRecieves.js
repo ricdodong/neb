@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import MobileUpload2 from './MobileUpload2';
+
 // ============================================================================
 // CONSTANTS
 // ============================================================================
@@ -13,6 +14,7 @@ const ENDPOINTS = {
   serverInfo: `${API_BASE}/api/server-info`,
   
   mobileUploads2: (ref) => `/mobile-uploads2/${ref}`,
+
   mobileUploadsBatch: (ref) => `${API_BASE}/mobile-uploads/${ref}`,
 };
 
