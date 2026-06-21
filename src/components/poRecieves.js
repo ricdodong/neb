@@ -4,7 +4,7 @@ import { QRCodeSVG } from 'qrcode.react';
 // ============================================================================
 // CONSTANTS
 // ============================================================================
-const API_BASE = 'https://api.ricalgen.eu.org';
+const API_BASE = 'https://dpsapi.ricalgen.eu.org';
 const ENDPOINTS = {
   clients: `${API_BASE}/api/po-receives/clients`,
   history: `${API_BASE}/api/po-receives/history`,

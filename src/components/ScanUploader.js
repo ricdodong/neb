@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { Camera, Upload, CheckCircle, XCircle } from 'lucide-react';
-
+const BASE_URL = 'https://dpsapi.ricalgen.eu.org';
 const ScanUploader = ({ transactionId, onComplete, onClose }) => {
     const [file, setFile] = useState(null);
     // Default to receipt, but we'll include the others now
@@ -32,7 +32,7 @@ const ScanUploader = ({ transactionId, onComplete, onClose }) => {
         setUploading(true);
         try {
             // Note: Use your environment IP if testing on a real mobile device
-            const res = await axios.post('https://api.ricalgen.eu.org/api/transactions/attach-scan', formData, {
+            const res = await axios.post(`${BASE_URL}/transactions/attach-scan`, formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
 

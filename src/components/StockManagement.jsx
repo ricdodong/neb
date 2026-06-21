@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
+
+const BASE_URL = 'https://dpsapi.ricalgen.eu.org';
 const StockManagement = () => {
     const [inventory, setInventory] = useState([]);
     const [selectedItem, setSelectedItem] = useState(null);
@@ -12,7 +14,7 @@ const StockManagement = () => {
 
     const fetchInventory = async () => {
         try {
-            const res = await axios.get('https://api.ricalgen.eu.org/api/inventory');
+            const res = await axios.get(`${BASE_URL}/api/inventory`);
             setInventory(res.data);
         } catch (err) {
             console.error("Backend unreachable", err);
@@ -23,7 +25,7 @@ const StockManagement = () => {
         setSelectedItem(item);
         try {
             // Fetching the combined Union data from the new endpoint
-            const res = await axios.get(`https://api.ricalgen.eu.org/api/inventory/${item.id}/ledger`);
+            const res = await axios.get(`${BASE_URL}/api/inventory/${item.id}/ledger`);
             setLedger(res.data);
         } catch (err) {
             console.error("Error fetching ledger", err);

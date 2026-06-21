@@ -6,6 +6,7 @@ import { QRCodeSVG } from 'qrcode.react';
  * JADE POS - Point of Sale Component
  * Optimized with direct Scan Receipt redirection logic.
  */
+const BASE_URL = 'https://dpsapi.ricalgen.eu.org';
 const PointOfSale = ({ triggerToast }) => {
     // --- State Management ---
     const [stock, setStock] = useState([]);
@@ -37,7 +38,7 @@ const PointOfSale = ({ triggerToast }) => {
     // --- API Interactions ---
     const fetchServerInfo = async () => {
         try {
-            const res = await axios.get('https://api.ricalgen.eu.org/api/server-info');
+            const res = await axios.get(`${BASE_URL}/api/server-info`);
             setServerBaseUrl(res.data.baseUrl);
             setUseLocalIp(false);
         } catch (err) {
@@ -54,7 +55,7 @@ const PointOfSale = ({ triggerToast }) => {
     const fetchStock = async () => {
         try {
             setIsLoading(true);
-            const res = await axios.get(`https://api.ricalgen.eu.org/api/pos-inventory?t=${Date.now()}`);
+            const res = await axios.get(`${BASE_URL}/api/pos-inventory?t=${Date.now()}`);
             const sanitizedStock = res.data.map(item => ({
                 ...item,
                 price: Number(item.price || 0),
@@ -70,7 +71,7 @@ const PointOfSale = ({ triggerToast }) => {
 
     const fetchCustomers = async () => {
         try {
-            const res = await axios.get('https://api.ricalgen.eu.org/api/customers');
+            const res = await axios.get(`${BASE_URL}/api/customers`);
             setCustomers(res.data);
         } catch (err) { 
             console.error("Customer fetch error:", err); 
@@ -125,7 +126,7 @@ const PointOfSale = ({ triggerToast }) => {
 
         try {
             const salePromises = cart.map(async (item) => {
-                return await axios.post('https://api.ricalgen.eu.org/api/sales', {
+                return await axios.post(`${BASE_URL}/api/sales`, {
                     customer_id: selectedCustomerId,
                     item_id: item.id,
                     serial_number: item.selectedSN,
@@ -168,7 +169,7 @@ const PointOfSale = ({ triggerToast }) => {
         // Build destination target parameter path dynamically
         const targetUrl = useLocalIp 
             ? `${serverBaseUrl}/mobile-uploads/${lastTransactionId}` 
-            : `https://api.ricalgen.eu.org/mobile-uploads/${lastTransactionId}`;
+            : `${BASE_URL}/api/mobile-uploads/${lastTransactionId}`;
             
         // Open the native browser portal window wrapper directly
         window.open(targetUrl, '_blank');
@@ -315,7 +316,7 @@ const PointOfSale = ({ triggerToast }) => {
 
                             <div className="bg-white p-3 d-flex justify-content-center rounded mb-3 mx-auto shadow-lg border border-success" style={{ maxWidth: '210px' }}>
                                 <QRCodeSVG 
-                                    value={useLocalIp ? `${serverBaseUrl}/mobile-uploads/${lastTransactionId}` : `https://api.ricalgen.eu.org/mobile-uploads/${lastTransactionId}`} 
+                                    value={useLocalIp ? `${serverBaseUrl}/mobile-uploads/${lastTransactionId}` : `${BASE_URL}/mobile-uploads/${lastTransactionId}`} 
                                     size={160}
                                     level={"H"}
                                     includeMargin={true}

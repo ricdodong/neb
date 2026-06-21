@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-
+const BASE_URL = 'https://dpsapi.ricalgen.eu.org';
 const ServiceCenter = () => {
     const [tickets, setTickets] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -12,7 +12,7 @@ const ServiceCenter = () => {
     const fetchTickets = async () => {
         try {
             setIsLoading(true);
-            const res = await axios.get(`https://api.ricalgen.eu.org/api/call-logs?t=${Date.now()}`);
+            const res = await axios.get(`${BASE_URL}/api/call-logs?t=${Date.now()}`);
             setTickets(res.data);
         } catch (err) {
             console.error("Error loading service tickets:", err);
@@ -41,7 +41,7 @@ const ServiceCenter = () => {
     const handleUpdate = async (e) => {
         e.preventDefault();
         try {
-            await axios.put(`https://api.ricalgen.eu.org/api/call-logs/${selectedTicket.id}`, editData);
+            await axios.put(`${BASE_URL}/api/call-logs/${selectedTicket.id}`, editData);
             setSelectedTicket(null); 
             fetchTickets(); 
         } catch (err) {
