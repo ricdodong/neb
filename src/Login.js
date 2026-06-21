@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 
 // Dynamically extracts Cloudflare routing endpoints via webpack/react-scripts environment maps
-const API_BASE_URL = 'https://api.ricalgen.eu.org';
+const API_BASE_URL = 'https://dpsapi.ricalgen.eu.org';
 
 const Login = ({ onLogin }) => {
     const [credentials, setCredentials] = useState({ username: '', password: '' });
