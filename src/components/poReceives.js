@@ -14,7 +14,7 @@ const ENDPOINTS = {
   checkStaging: (ref) => `${API_BASE}/api/po-receives/check-staging/${ref}`,
   serverInfo: `${API_BASE}/api/server-info`,
   
-  mobileUploads2: (ref) => `/mobile-uploads2/${ref}`,
+  mobileUploads2: (ref) => `/#/mobile-uploads2/${ref}`,
 
   mobileUploadsBatch: (ref) => `${API_BASE}/mobile-uploads/${ref}`,
 };
