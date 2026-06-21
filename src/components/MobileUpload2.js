@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
 
@@ -7,28 +7,26 @@ const MobileUpload2 = () => {
     const [file, setFile] = useState(null);
     const [docType, setDocType] = useState('po');
     const [uploading, setUploading] = useState(false);
-    const [status, setStatus] = useState('INITIALIZING...');
+    const [status, setStatus] = useState('');
 
     const handleUpload = async (e) => {
         e.preventDefault();
         if (!file) return;
         setUploading(true);
 
-        // Using FormData to stream the file to your Cloudflare Worker
         const formData = new FormData();
         formData.append('image', file);
         formData.append('batch_reference', batchRef);
         formData.append('type', docType);
 
         try {
-            // Pointing to your new Cloudflare Worker URL
+            // This maps to your finalize-po-staging Worker endpoint
             const response = await axios.post('https://dpsapi.ricalgen.eu.org/api/transactions/finalize-po-staging', formData);
             if (response.data.success) {
                 setStatus('UPLOAD SUCCESSFUL');
             }
         } catch (err) {
             setStatus('UPLOAD FAILED');
-            console.error(err);
         } finally {
             setUploading(false);
         }
@@ -47,11 +45,9 @@ const MobileUpload2 = () => {
                         <option value="dr">Delivery Receipt</option>
                     </select>
                     <input type="file" accept="image/*" capture="environment" onChange={(e) => setFile(e.target.files[0])} />
-                    <button type="submit" disabled={uploading}>
-                        {uploading ? 'UPLOADING...' : 'STAGE FILE'}
-                    </button>
+                    <button type="submit" disabled={uploading}>{uploading ? 'UPLOADING...' : 'STAGE FILE'}</button>
                 </form>
-                <div>{status}</div>
+                <div style={{marginTop: '20px'}}>{status}</div>
             </div>
         </div>
     );
