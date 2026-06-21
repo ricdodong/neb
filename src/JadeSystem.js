@@ -7,7 +7,7 @@ import StockManagement from './components/StockManagement';
 import CallLogs from './components/CallLogs';
 import PointOfSale from './components/PointOfSale';
 import ServiceCenter from './components/ServiceCenter';
-import POReceives from './components/poRecieves'; // 1. F
+import POReceives from './components/poReceives'; 
 
 const BASE_URL = 'https://dpsapi.ricalgen.eu.org'; // Use your actual Worker URL here
 
@@ -149,7 +149,7 @@ const DashboardHome = ({ userRole, setActivePage, activities, dashboardStats, us
                             { title: 'Inventory Log', desc: 'Add/Update Hardware', icon: 'fa-boxes-stacked', target: 'stocks' },
                             { title: 'Call Logs', desc: 'Broken Unit Service', icon: 'fa-headset', target: 'call logs' },
                             { title: 'Customer File', desc: 'CRM & History', icon: 'fa-address-card', target: 'customers' },
-                            { title: 'PO Receives', desc: 'Log Inbound Logistics', icon: 'fa-file-import', target: 'po recieves' } // 2. Connected block to Home screen matrices
+                            { title: 'PO Receives', desc: 'Log Inbound Logistics', icon: 'fa-file-import', target: 'po receives' }
                         ].map((box, i) => (
                             <div className="col-12 col-sm-6" key={i}>
                                 <button onClick={() => setActivePage(box.target)} className="w-100 p-4 rounded-4 sidebar-btn text-start d-flex align-items-center gap-4 h-100 border border-white border-opacity-5">
@@ -299,7 +299,7 @@ const JadeSystem = ({ userRole, onLogout, username }) => {
         { id: 'customers', label: 'Clients', icon: 'fa-users-gear', roles: ['admin', 'sales'] },
         { id: 'services', label: 'Repair Lab', icon: 'fa-screwdriver-wrench', roles: ['admin', 'technical'] },
         { id: 'call logs', label: 'Call Logs', icon: 'fa-headset', roles: ['admin', 'technical', 'sales'] },
-        { id: 'po recieves', label: 'PO Receives', icon: 'fa-file-import', roles: ['admin', 'technical', 'sales'] },
+        { id: 'po receives', label: 'PO Receives', icon: 'fa-file-import', roles: ['admin', 'technical', 'sales'] },
     ];
 
     const SidebarContent = () => (
@@ -355,7 +355,7 @@ const JadeSystem = ({ userRole, onLogout, username }) => {
                 <section className="page-container mt-lg-4 p-3 p-md-4 p-lg-5 animate-fade-in">
                     <div className="d-flex justify-content-between align-items-center mb-4">
                         <h2 className="fw-900 text-white text-uppercase tracking-widest m-0 h4">
-                            {activePage === 'po recieves' ? 'PO Receives' : activePage.replace('call logs', 'Call Logs')}
+                            {activePage === 'po receives' ? 'PO Receives' : activePage.replace('call logs', 'Call Logs')}
                         </h2>
                         <div className="status-badge px-3 py-1 rounded-pill d-none d-md-block border border-white border-opacity-10">
                             <span className="jade-accent tiny-text">Simple System For a Simple Company</span>
@@ -377,7 +377,7 @@ const JadeSystem = ({ userRole, onLogout, username }) => {
                         {activePage === 'call logs' && <CallLogs triggerToast={triggerToast} userRole={userRole} />}
                         {activePage === 'pos' && <PointOfSale triggerToast={triggerToast} userRole={userRole} />}
                         {activePage === 'services' && <ServiceCenter triggerToast={triggerToast} userRole={userRole} />}
-                        {activePage === 'po recieves' && <POReceives triggerToast={triggerToast} userRole={userRole} />} 
+                        {activePage === 'po receives' && <POReceives triggerToast={triggerToast} userRole={userRole} />} 
                     </div>
                 </section>
             </main>
