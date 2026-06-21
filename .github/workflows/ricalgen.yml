@@ -3,7 +3,7 @@ name: Deploy React App
 on:
   push:
     branches:
-      - main  # Change this if your default branch is named differently (e.g., master)
+      - main
 
 permissions:
   contents: read
@@ -20,15 +20,14 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24' # Upgraded to fix the deprecation warning
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci 
 
       - name: Build
         run: npm run build
-        # If using Vite, ensure your base is configured correctly in vite.config.js
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
@@ -36,7 +35,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './dist' # Common for Vite. Change to './build' if using Create React App
+          path: './dist' # Use './build' if using Create React App instead of Vite
 
       - name: Deploy to GitHub Pages
         id: deployment
