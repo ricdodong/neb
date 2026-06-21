@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-const BASE_URL = 'https://dpsapi.ricalgen.eu.org';
 
+const BASE_URL = 'https://dpsapi.ricalgen.eu.org';
+const ServiceCenter = () => {
     const [tickets, setTickets] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     
@@ -172,5 +173,6 @@ const BASE_URL = 'https://dpsapi.ricalgen.eu.org';
             )}
         </div>
     );
+};
 
 export default ServiceCenter;
