@@ -27,6 +27,8 @@ jobs:
         run: npm ci 
 
       - name: Build
+        env:
+          CI: false
         run: npm run build
 
       - name: Setup Pages
@@ -35,7 +37,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './dist' # Use './build' if using Create React App instead of Vite
+          path: './build' # Use './build' if using Create React App instead of Vite
 
       - name: Deploy to GitHub Pages
         id: deployment
