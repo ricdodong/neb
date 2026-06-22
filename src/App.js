@@ -3,6 +3,7 @@ import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './Login';
 import JadeSystem from './JadeSystem';
 import MobileUpload2 from './components/MobileUpload2'; 
+import MobileUpload from './components/MobileUpload'; 
 
 export default function App() {
     const [user, setUser] = useState(null);
@@ -29,7 +30,7 @@ export default function App() {
             <Routes>
                 {/* Public Route: Bypasses the login screen using standard hash parsing */}
                 <Route path="/mobile-uploads2/:batchRef" element={<MobileUpload2 />} />
-
+                <Route path="/mobile-uploads/:batchRef" element={<MobileUpload />} />
                 {/* Main System Routes */}
                 <Route path="/" element={
                     !user ? (
