@@ -29,8 +29,8 @@ export default function App() {
         <HashRouter>
             <Routes>
                 {/* Public Route: Bypasses the login screen using standard hash parsing */}
-                <Route path="/mobile-uploads2/:batchRef" element={<MobileUpload2 />} />
-                <Route path="/mobile-uploads/:batchRef" element={<MobileUpload />} />
+                <Route path="/mobile-upload2/:batchRef" element={<MobileUpload2 />} />
+                <Route path="/mobile-upload/:batchRef" element={<MobileUpload />} />
                 {/* Main System Routes */}
                 <Route path="/" element={
                     !user ? (
