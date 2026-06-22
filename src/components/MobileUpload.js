@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import axios from 'axios';
 
 const MobileUpload = () => {
-    const { id } = useParams(); // Matches the route :id
+    const { batchRef } = useParams(); // Matches the route :id
     const [file, setFile] = useState(null);
     const [docType, setDocType] = useState('receipt');
     const [uploading, setUploading] = useState(false);
@@ -18,7 +18,7 @@ const MobileUpload = () => {
 
         const formData = new FormData();
         formData.append('image', file);
-        formData.append('batch_reference', id); // Your API expects batch_reference
+        formData.append('batch_reference', batchRef); // Your API expects batch_reference
         formData.append('type', docType);
 
         try {
@@ -48,7 +48,7 @@ const MobileUpload = () => {
                 boxShadow: 'inset 4px 4px 10px #000'
             }}>
                 <h3 style={{ fontWeight: '900', margin: '0 0 5px 0' }}>System Scan Tool</h3>
-                <p style={{ color: '#00ff88', fontFamily: 'monospace', fontWeight: 'bold' }}>Target ID: {id}</p>
+                <p style={{ color: '#00ff88', fontFamily: 'monospace', fontWeight: 'bold' }}>Batch Reference: {batchRef}</p>
                 
                 <form onSubmit={handleUpload}>
                     <label style={{ display: 'block', textAlign: 'left', fontSize: '12px', color: '#888', marginTop: '10px' }}>DOCUMENT TYPE</label>

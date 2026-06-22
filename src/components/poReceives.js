@@ -15,9 +15,9 @@ const ENDPOINTS = {
   checkStaging: (ref) => `${API_BASE}/api/po-receives/check-staging/${ref}`,
   serverInfo: `${API_BASE}/api/server-info`,
   
-  mobileUploads2: (ref) => `/#/mobile-uploads2/${ref}`,
+  mobileUploads2: (ref) => `/#/mobile-upload2/${ref}`,
 
-  mobileUploadsBatch: (ref) => `/#/mobile-uploads/${ref}`,
+  mobileUploadsBatch: (ref) => `/#/mobile-upload/${ref}`,
 };
 
 const POLLING_INTERVAL = 3000;
