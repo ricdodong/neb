@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-import MobileUpload2 from './MobileUpload2';
+import MobileUploads2 from './MobileUpload2';
+import MobileUploadsBatch from './MobileUpload';
 
 // ============================================================================
 // CONSTANTS
