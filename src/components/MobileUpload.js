@@ -48,7 +48,7 @@ const MobileUpload = () => {
                 boxShadow: 'inset 4px 4px 10px #000'
             }}>
                 <h3 style={{ fontWeight: '900', margin: '0 0 5px 0' }}>System Scan Tool</h3>
-                <p style={{ fontSize: '12px', color: '#00ff88' }}>Target ID: {id}</p>
+                <p style={{ color: '#00ff88', fontFamily: 'monospace', fontWeight: 'bold' }}>Target ID: {id}</p>
                 
                 <form onSubmit={handleUpload}>
                     <label style={{ display: 'block', textAlign: 'left', fontSize: '12px', color: '#888', marginTop: '10px' }}>DOCUMENT TYPE</label>
