@@ -36,9 +36,10 @@ const MobileUpload = () => {
     };
 
     return (
-        <div style={{ background: '#080808', color: '#fff', padding: '20px', minHeight: '100vh', textAlign: 'center' }}>
-            <div style={{ color: '#00ff88', fontSize: '20px', fontWeight: 'bold' }}>JADE ELECTRONICS</div>
-            
+        <div style={{ background: '#050505', color: '#fff', padding: '20px', minHeight: '100vh', fontFamily: 'sans-serif' }}>
+            <h1 style={{ fontWeight: '900', letterSpacing: '-1px', fontStyle: 'italic', marginBottom: '30px' }}>
+                DPS<span style={{ color: '#00ff88', fontStyle: 'normal', textShadow: '0 0 10px rgba(0, 255, 136, 0.3)' }}>system</span>
+            </h1>      
             <div style={{ border: '1px solid #00ff88', padding: '20px', borderRadius: '15px', background: '#111', marginTop: '20px' }}>
                 <h3>System Scan Tool</h3>
                 <p style={{ fontSize: '12px', color: '#00ff88' }}>Target ID: {id}</p>

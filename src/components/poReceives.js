@@ -16,7 +16,7 @@ const ENDPOINTS = {
   
   mobileUploads2: (ref) => `/#/mobile-uploads2/${ref}`,
 
-  mobileUploadsBatch: (ref) => `${API_BASE}/mobile-uploads/${ref}`,
+  mobileUploadsBatch: (ref) => `/#/mobile-uploads/${ref}`,
 };
 
 const POLLING_INTERVAL = 3000;
