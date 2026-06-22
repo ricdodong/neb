@@ -40,8 +40,14 @@ const MobileUpload = () => {
             <h1 style={{ fontWeight: '900', letterSpacing: '-1px', fontStyle: 'italic', marginBottom: '30px' }}>
                 DPS<span style={{ color: '#00ff88', fontStyle: 'normal', textShadow: '0 0 10px rgba(0, 255, 136, 0.3)' }}>system</span>
             </h1>      
-            <div style={{ border: '1px solid #00ff88', padding: '20px', borderRadius: '15px', background: '#111', marginTop: '20px' }}>
-                <h3>System Scan Tool</h3>
+            <div style={{ 
+                background: '#080808',
+                border: '1px solid rgba(255, 255, 255, 0.05)', 
+                padding: '30px', 
+                borderRadius: '24px',
+                boxShadow: 'inset 4px 4px 10px #000'
+            }}>
+                <h3 style={{ fontWeight: '900', margin: '0 0 5px 0' }}>System Scan Tool</h3>
                 <p style={{ fontSize: '12px', color: '#00ff88' }}>Target ID: {id}</p>
                 
                 <form onSubmit={handleUpload}>
