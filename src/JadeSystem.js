@@ -8,6 +8,7 @@ import CallLogs from './components/CallLogs';
 import PointOfSale from './components/PointOfSale';
 import ServiceCenter from './components/ServiceCenter';
 import POReceives from './components/poReceives'; 
+import PurchaseOrder from './components/po';
 
 const BASE_URL = 'https://dpsapi.ricalgen.eu.org'; // Use your actual Worker URL here
 
@@ -300,6 +301,7 @@ const JadeSystem = ({ userRole, onLogout, username }) => {
         { id: 'services', label: 'Repair Lab', icon: 'fa-screwdriver-wrench', roles: ['admin', 'technical'] },
         { id: 'call logs', label: 'Call Logs', icon: 'fa-headset', roles: ['admin', 'technical', 'sales'] },
         { id: 'po receives', label: 'PO Receives', icon: 'fa-file-import', roles: ['admin', 'technical', 'sales'] },
+        { id: 'purchase order', label: 'Purchase Order', icon: 'fa-file-import', roles: ['admin', 'technical', 'sales'] },
     ];
 
     const SidebarContent = () => (
@@ -378,6 +380,7 @@ const JadeSystem = ({ userRole, onLogout, username }) => {
                         {activePage === 'pos' && <PointOfSale triggerToast={triggerToast} userRole={userRole} />}
                         {activePage === 'services' && <ServiceCenter triggerToast={triggerToast} userRole={userRole} />}
                         {activePage === 'po receives' && <POReceives triggerToast={triggerToast} userRole={userRole} />} 
+                        {activePage === 'purchase order' && <PurchaseOrder triggerToast={triggerToast} userRole={userRole} />} 
                     </div>
                 </section>
             </main>
