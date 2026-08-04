@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import axios from 'axios';
 
 const MobileUpload = () => {
-    const { batchRef } = useParams(); // Matches the route :id
+    const { batchRef } = useParams(); // Matches your route params
     const [file, setFile] = useState(null);
     const [docType, setDocType] = useState('receipt');
     const [uploading, setUploading] = useState(false);
@@ -68,7 +68,8 @@ const MobileUpload = () => {
                     </button>
                 </form>
             </div>
-            <p style={{ marginTop: '20px', fontSize: '10px', color: '#444' }}>ID Verification: {id ? 'VALID' : 'MISSING'}</p>
+            {/* FIXED LINE 71 */}
+            <p style={{ marginTop: '20px', fontSize: '10px', color: '#444' }}>ID Verification: {batchRef ? 'VALID' : 'MISSING'}</p>
         </div>
     );
 };
