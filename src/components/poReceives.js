@@ -1,7 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-import MobileUploads2 from './MobileUpload2';
-import MobileUploadsBatch from './MobileUpload';
 
 // ============================================================================
 // CONSTANTS
@@ -16,7 +14,6 @@ const ENDPOINTS = {
   serverInfo: `${API_BASE}/api/server-info`,
   
   mobileUploads2: (ref) => `/#/mobile-upload2/${ref}`,
-
   mobileUploadsBatch: (ref) => `/#/mobile-upload/${ref}`,
 };
 
@@ -121,7 +118,6 @@ const styles = {
 // ============================================================================
 // UTILITY FUNCTIONS
 // ============================================================================
-
 const generateBatchKey = () => {
   const timestamp = Date.now();
   const randomStr = Math.random().toString(36).substring(2, 7).toUpperCase();
@@ -468,8 +464,8 @@ const UploadModal = ({ activeInspectionBatch, styles, onClose }) => {
   if (!activeInspectionBatch) return null;
 
   return (
-    <div style={styles.modalOverlay}>
-      <div style={styles.modalContent}>
+    <div style={styles.modalOverlay} onClick={onClose}>
+      <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
         <div style={styles.modalHeader}>
           <h4 style={styles.modalTitle}>DOCUMENT ATTACHMENT BRIDGE</h4>
           <button style={styles.modalCloseBtn} onClick={onClose}>✕</button>
@@ -492,6 +488,7 @@ const UploadModal = ({ activeInspectionBatch, styles, onClose }) => {
 
 // ============================================================================
 // MAIN COMPONENT
+// ============================================================================
 
 const POReceives = () => {
   const [clients, setClients] = useState([]);
@@ -586,7 +583,7 @@ const POReceives = () => {
     fetchClients();
     fetchServerInfo();
     fetchPoHistory();
-  }, []);
+  }, [fetchClients, fetchPoHistory, fetchServerInfo]);
 
   // Active polling to check staging status
   useEffect(() => {
