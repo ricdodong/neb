@@ -52,10 +52,10 @@ const styles = {
   formGroup: { display:'flex', flexDirection:'column', gap:'8px', flex:'1 1', minWidth:0 },
   label: { fontSize:'12px', fontWeight:'600', color:'#94a3b8', textTransform:'uppercase', letterSpacing:'0.03em' },
   input: { background:'#1f2937', border:'1px solid #374151', borderRadius:'6px', padding:'12px 14px', color:'#fff', fontSize:'14px', width:'100%', boxSizing:'border-box' },
-  inputDisabled: { background:'#0f172a', borderColor:'#1e293b', color:'#64748b', fontFamily:'monospace', fontSize:'13px' },
+  inputError: { borderColor:'#ef4444', background:'rgba(239, 68, 68, 0.05)' },
   select: { background:'#1f2937', border:'1px solid #374151', borderRadius:'6px', padding:'12px 14px', color:'#fff', fontSize:'14px', width:'100%', boxSizing:'border-box', cursor:'pointer' },
   submitBtn: { background:'#00ff88', color:'#0b0f19', border:'none', borderRadius:'6px', padding:'16px 20px', fontSize:'14px', fontWeight:'700', cursor:'pointer', width:'100%' },
-  submitBtnLoading: { background:'#009951', color:'#334155', cursor:'not-allowed' },
+  submitBtnLoading: { background:'#1e293b', color:'#64748b', cursor:'not-allowed' },
   redirectBtn: { display:'block', background:'rgba(0,255,136,.05)', color:'#00ff88', border:'1px solid #00ff88', borderRadius:'6px', padding:'14px 20px', textDecoration:'none', textAlign:'center', width:'100%' },
   redirectBtnDisabled: { borderColor:'#1e293b', color:'#475569', background:'transparent', cursor:'not-allowed' },
   scannerInstructions: { fontSize:'13px', color:'#94a3b8', lineHeight:'1.6', margin:'0 0 24px 0' },
@@ -112,24 +112,21 @@ const styles = {
   modalQrWrapper: { background: '#090d16', padding: '16px', border: '1px solid #1f2937', borderRadius: '12px', margin: '20px 0', display: 'flex', alignItems: 'center', justifyContent: 'center' },
   viewAttachmentBtn: { background: '#1e3a8a', color: '#60a5fa', border: '1px solid #2563eb', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: '600' },
   rowAttachmentBtn: { background: 'transparent', border: '1px solid #0284c7', color: '#38bdf8', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: '600' },
-  mutedText: { color: '#4b5563', fontSize: '14px' }
+  mutedText: { color: '#4b5563', fontSize: '14px' },
+  errorHint: { color: '#ef4444', fontSize: '11px', fontWeight: '700', marginTop: '4px' },
+  successHint: { color: '#00ff88', fontSize: '11px', fontWeight: '700', marginTop: '4px' }
 };
 
 // ============================================================================
 // UTILITY FUNCTIONS
 // ============================================================================
-const generateBatchKey = () => {
-  const timestamp = Date.now();
-  const randomStr = Math.random().toString(36).substring(2, 7).toUpperCase();
-  return `PO-BATCH-${timestamp}-${randomStr}`;
-};
-
 const formatPHP = (val) => {
   const numericVal = typeof val === 'string' ? parseFloat(val) : val;
   return new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(numericVal || 0);
 };
 
 const getInitialFormData = () => ({
+  batch_reference: '',
   customer_id: '',
   amount: '',
   po_date: new Date().toISOString().split('T')[0],
@@ -141,10 +138,33 @@ const getInitialFormData = () => ({
 // SUB-COMPONENTS
 // ============================================================================
 
-const POFormSection = React.memo(({ formData, clients, batchReference, loading, styles, onInputChange, onSubmit }) => (
+const POFormSection = React.memo(({ formData, clients, isDuplicate, loading, styles, onInputChange, onSubmit }) => (
   <div className="po-form-container" style={styles.card}>
     <h3 style={styles.cardTitle}>PO Metadata Parameters</h3>
     <form onSubmit={onSubmit} style={styles.form}>
+      
+      <div style={styles.formGroup}>
+        <label style={styles.label}>PO Number</label>
+        <input 
+          type="text" 
+          name="batch_reference"
+          placeholder="Enter Physical PO Number (e.g. PO-2026-001)"
+          value={formData.batch_reference} 
+          onChange={onInputChange} 
+          style={{ 
+            ...styles.input, 
+            ...(isDuplicate ? styles.inputError : {}) 
+          }} 
+          required 
+        />
+        {isDuplicate && (
+          <span style={styles.errorHint}>⚠️ DUPLICATE PO NUMBER DETECTED IN RECORDS</span>
+        )}
+        {!isDuplicate && formData.batch_reference.trim() !== '' && (
+          <span style={styles.successHint}>✓ PO NUMBER IS AVAILABLE</span>
+        )}
+      </div>
+
       <div style={styles.formGroup}>
         <label style={styles.label}>Select Client / Customer Link</label>
         <select 
@@ -217,20 +237,10 @@ const POFormSection = React.memo(({ formData, clients, batchReference, loading, 
         </select>
       </div>
 
-      <div style={styles.formGroup}>
-        <label style={styles.label}>Session Reference Track ID (System Generated)</label>
-        <input 
-          type="text" 
-          value={batchReference || 'GENERATING SYSTEM KEY...'} 
-          style={{ ...styles.input, ...styles.inputDisabled }} 
-          readOnly 
-        />
-      </div>
-
       <button 
         type="submit" 
-        style={{ ...styles.submitBtn, ...(loading ? styles.submitBtnLoading : {}) }}
-        disabled={loading || !batchReference}
+        style={{ ...styles.submitBtn, ...(loading || isDuplicate || !formData.batch_reference.trim() ? styles.submitBtnLoading : {}) }}
+        disabled={loading || isDuplicate || !formData.batch_reference.trim()}
       >
         {loading ? 'COMMITTING TRANSACTION...' : 'SAVE PURCHASE ORDER RECORD'}
       </button>
@@ -245,10 +255,10 @@ const POScannerSection = React.memo(({ mobileScannerUrl, stagingStatus, batchRef
       Scan the target route mapping using a mobile device node to attach camera document snaps seamlessly.
     </p>
     <div style={styles.qrContainer}>
-      {mobileScannerUrl ? (
+      {mobileScannerUrl && batchReference ? (
         <QRCodeSVG value={mobileScannerUrl} size={140} bgColor={"#13151a"} fgColor={"#00ff88"} level={"M"} includeMargin={false} />
       ) : (
-        <div style={styles.syncText}>Syncing Reference Pipeline...</div>
+        <div style={styles.syncText}>Enter PO Number...</div>
       )}
     </div>
 
@@ -256,8 +266,8 @@ const POScannerSection = React.memo(({ mobileScannerUrl, stagingStatus, batchRef
       href={mobileScannerUrl || '#'}
       target={mobileScannerUrl ? "_blank" : "_self"} 
       rel="noopener noreferrer" 
-      style={{ ...styles.redirectBtn, ...(!mobileScannerUrl ? styles.redirectBtnDisabled : {}) }}
-      onClick={(e) => !mobileScannerUrl && e.preventDefault()}
+      style={{ ...styles.redirectBtn, ...(!mobileScannerUrl || !batchReference ? styles.redirectBtnDisabled : {}) }}
+      onClick={(e) => (!mobileScannerUrl || !batchReference) && e.preventDefault()}
     >
       📸 OPEN CAMERA LINK
     </a>
@@ -273,7 +283,7 @@ const POScannerSection = React.memo(({ mobileScannerUrl, stagingStatus, batchRef
 
     <div style={styles.batchBadge}>
       <span style={styles.badgeLabel}>ACTIVE TRACK STAMP</span>
-      <code style={styles.badgeCode}>{batchReference || 'COMPILING'}</code>
+      <code style={styles.badgeCode}>{batchReference || 'AWAITING PO NUMBER'}</code>
     </div>
   </div>
 ));
@@ -305,6 +315,7 @@ const POHistoryTable = React.memo(({ poHistory, isSyncing, styles, onRefresh, on
       <table style={styles.table}>
         <thead>
           <tr>
+            <th style={styles.th}>PO Number</th>
             <th style={styles.th}>Customer</th>
             <th style={styles.th}>PO Date</th>
             <th style={styles.th}>Terms</th>
@@ -317,11 +328,12 @@ const POHistoryTable = React.memo(({ poHistory, isSyncing, styles, onRefresh, on
         <tbody>
           {poHistory.length === 0 ? (
             <tr>
-              <td colSpan="7" style={styles.emptyTd}>No recorded purchase order transactions saved in this session cluster logs.</td>
+              <td colSpan="8" style={styles.emptyTd}>No recorded purchase order transactions saved in this session cluster logs.</td>
             </tr>
           ) : (
             poHistory.map((row, idx) => (
               <tr key={row.batch_reference || row.id || idx} style={styles.tableRow}>
+                <td style={{ ...styles.td, fontFamily: 'monospace', fontWeight: 'bold', color: '#38bdf8' }}>{row.batch_reference || row.po_number || 'N/A'}</td>
                 <td style={styles.td}>{row.customer_name || row.customer_id || 'N/A'}</td>
                 <td style={styles.td}>{row.po_date}</td>
                 <td style={styles.td}><span style={styles.termsBadge}>{row.po_terms}</span></td>
@@ -463,7 +475,7 @@ const DocumentViewerModal = React.memo(({
         </div>
         
         <div style={styles.modalFooter}>
-          <span style={styles.footerRefText}>Batch Track: {viewDocsRow.batch_reference}</span>
+          <span style={styles.footerRefText}>PO Number: {viewDocsRow.batch_reference || viewDocsRow.po_number}</span>
           <button style={styles.closeActionBtn} onClick={onClose}>Dismiss Canvas View</button>
         </div>
       </div>
@@ -482,7 +494,7 @@ const UploadModal = React.memo(({ activeInspectionBatch, styles, onClose }) => {
           <button style={styles.modalCloseBtn} onClick={onClose}>✕</button>
         </div>
         <div style={styles.modalBody}>
-          <p style={styles.modalInstructions}>Processing attachment stream targets specifically for track sequence stamp:</p>
+          <p style={styles.modalInstructions}>Processing attachment stream targets specifically for PO Number:</p>
           <div style={styles.modalBadgeDisplay}><code>{activeInspectionBatch}</code></div>
           <div style={styles.modalQrWrapper}>
             <QRCodeSVG value={ENDPOINTS.mobileUploadsBatch(activeInspectionBatch)} size={160} bgColor={"#111827"} fgColor={"#00ff88"} level={"M"} includeMargin={false} />
@@ -505,7 +517,7 @@ const POReceives = () => {
   const [clients, setClients] = useState([]);
   const [poHistory, setPoHistory] = useState([]); 
   const [formData, setFormData] = useState(getInitialFormData());
-  const [batchReference, setBatchReference] = useState('');
+  const [isDuplicate, setIsDuplicate] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
@@ -571,9 +583,9 @@ const POReceives = () => {
   }, []);
 
   const checkStagingStatus = useCallback(async () => {
-    if (!batchReference) return;
+    if (!formData.batch_reference) return;
     try {
-      const res = await fetch(ENDPOINTS.checkStaging(batchReference));
+      const res = await fetch(ENDPOINTS.checkStaging(formData.batch_reference));
       if (res.ok) {
         const data = await res.json();
         setStagingStatus({
@@ -584,13 +596,11 @@ const POReceives = () => {
     } catch (err) {
       console.error("Failed to check staging status:", err);
     }
-  }, [batchReference]);
+  }, [formData.batch_reference]);
 
   // ========== Lifecycle Effects ==========
   useEffect(() => {
-    setBatchReference(generateBatchKey());
     setStagingStatus({ po_attachment: false, dr_attachment: false });
-
     fetchClients();
     fetchServerInfo();
     fetchPoHistory();
@@ -598,10 +608,10 @@ const POReceives = () => {
 
   // Active polling to check staging status
   useEffect(() => {
-    if (!batchReference) return;
+    if (!formData.batch_reference) return;
     const interval = setInterval(checkStagingStatus, POLLING_INTERVAL);
     return () => clearInterval(interval);
-  }, [batchReference, checkStagingStatus]);
+  }, [formData.batch_reference, checkStagingStatus]);
 
   // Reset zoom when modal closes
   useEffect(() => {
@@ -613,21 +623,42 @@ const POReceives = () => {
     }
   }, [viewDocsRow]);
 
-  // ========== Form Handlers ==========
+  // ========== Duplicate Check & Input Handler ==========
   const handleInputChange = useCallback((e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  }, []);
+    
+    setFormData(prev => {
+      const updated = { ...prev, [name]: value };
+      
+      // Auto-scan for duplicate PO Number while typing
+      if (name === 'batch_reference') {
+        const query = value.trim().toLowerCase();
+        if (query === '') {
+          setIsDuplicate(false);
+        } else {
+          const exists = poHistory.some(row => {
+            const ref = (row.batch_reference || row.po_number || '').toString().trim().toLowerCase();
+            return ref === query;
+          });
+          setIsDuplicate(exists);
+        }
+      }
+      
+      return updated;
+    });
+  }, [poHistory]);
 
   const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
+    if (isDuplicate || !formData.batch_reference.trim()) return;
+
     setLoading(true);
     setMessage({ type: '', text: '' });
 
     const payload = {
       ...formData,
+      batch_reference: formData.batch_reference.trim(),
       amount: parseFloat(formData.amount) || 0,
-      batch_reference: batchReference
     };
 
     try {
@@ -643,9 +674,9 @@ const POReceives = () => {
         throw new Error(result.error || 'Failed to save purchase order');
       }
 
-      showNotice('success', `PO successfully saved: ${batchReference}`);
+      showNotice('success', `PO successfully saved: ${formData.batch_reference}`);
       setFormData(getInitialFormData());
-      setBatchReference(generateBatchKey());
+      setIsDuplicate(false);
       setStagingStatus({ po_attachment: false, dr_attachment: false });
       
       // Async re-fetch history
@@ -656,7 +687,7 @@ const POReceives = () => {
     } finally {
       setLoading(false);
     }
-  }, [formData, batchReference, showNotice, fetchPoHistory]);
+  }, [formData, isDuplicate, showNotice, fetchPoHistory]);
 
   // ========== Zoom Handlers ==========
   const adjustZoom = useCallback((setZoom, setPan, factor) => {
@@ -699,7 +730,7 @@ const POReceives = () => {
     });
   }, [isDraggingPo]);
 
-  const mobileScannerUrl = batchReference ? ENDPOINTS.mobileUploads2(batchReference) : '';
+  const mobileScannerUrl = formData.batch_reference ? ENDPOINTS.mobileUploads2(formData.batch_reference.trim()) : '';
 
   return (
     <div style={styles.container}>
@@ -751,7 +782,7 @@ const POReceives = () => {
         <POFormSection 
           formData={formData}
           clients={clients}
-          batchReference={batchReference}
+          isDuplicate={isDuplicate}
           loading={loading}
           styles={styles}
           onInputChange={handleInputChange}
@@ -760,7 +791,7 @@ const POReceives = () => {
         <POScannerSection
           mobileScannerUrl={mobileScannerUrl}
           stagingStatus={stagingStatus}
-          batchReference={batchReference}
+          batchReference={formData.batch_reference}
           styles={styles}
         />
       </div>
