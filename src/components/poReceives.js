@@ -12,7 +12,6 @@ const ENDPOINTS = {
   records: `${API_BASE}/api/po-receives`,
   checkStaging: (ref) => `${API_BASE}/api/po-receives/check-staging/${ref}`,
   serverInfo: `${API_BASE}/api/server-info`,
-  
   mobileUploads2: (ref) => `/#/mobile-upload2/${ref}`,
   mobileUploadsBatch: (ref) => `/#/mobile-upload/${ref}`,
 };
@@ -68,7 +67,8 @@ const styles = {
   tableSection: { marginTop:'32px', background:'#111827', border:'1px solid #1f2937', borderRadius:'12px', padding:'24px' },
   tableHeaderContainer: { display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'20px', flexWrap:'wrap', gap:'12px' },
   tableTitle: { fontSize:'14px', fontWeight:'700', color:'#fff', textTransform:'uppercase', borderLeft:'3px solid #38bdf8', paddingLeft:'10px' },
-  refreshBtn: { background:'#1f2937', border:'1px solid #374151', color:'#cbd5e1', padding:'8px 16px', borderRadius:'6px', cursor:'pointer' },
+  refreshBtn: { background:'#1f2937', border:'1px solid #374151', color:'#cbd5e1', padding:'8px 16px', borderRadius:'6px', cursor:'pointer', display:'inline-flex', alignItems:'center', gap:'8px', transition:'background 0.2s' },
+  refreshBtnDisabled: { opacity: 0.6, cursor: 'not-allowed' },
   tableWrapper: { width:'100%', overflowX:'auto', border:'1px solid #1f2937', borderRadius:'8px' },
   table: { width:'100%', borderCollapse:'collapse', textAlign:'left', minWidth:'850px' },
   th: { padding:'16px', borderBottom:'2px solid #1f2937', color:'#94a3b8', fontSize:'11px', fontWeight:'700', textTransform:'uppercase', background:'#0f172a' },
@@ -141,7 +141,7 @@ const getInitialFormData = () => ({
 // SUB-COMPONENTS
 // ============================================================================
 
-const POFormSection = ({ formData, clients, batchReference, loading, styles, onInputChange, onSubmit }) => (
+const POFormSection = React.memo(({ formData, clients, batchReference, loading, styles, onInputChange, onSubmit }) => (
   <div className="po-form-container" style={styles.card}>
     <h3 style={styles.cardTitle}>PO Metadata Parameters</h3>
     <form onSubmit={onSubmit} style={styles.form}>
@@ -236,9 +236,9 @@ const POFormSection = ({ formData, clients, batchReference, loading, styles, onI
       </button>
     </form>
   </div>
-);
+));
 
-const POScannerSection = ({ mobileScannerUrl, stagingStatus, batchReference, styles }) => (
+const POScannerSection = React.memo(({ mobileScannerUrl, stagingStatus, batchReference, styles }) => (
   <div className="po-qr-container" style={{ ...styles.card, ...styles.scannerCard }}>
     <h3 style={styles.cardTitle}>Active Transaction Session</h3>
     <p style={styles.scannerInstructions}>
@@ -276,13 +276,29 @@ const POScannerSection = ({ mobileScannerUrl, stagingStatus, batchReference, sty
       <code style={styles.badgeCode}>{batchReference || 'COMPILING'}</code>
     </div>
   </div>
-);
+));
 
-const POHistoryTable = ({ poHistory, styles, onRefresh, onViewDocs, onUploadBatch }) => (
+const POHistoryTable = React.memo(({ poHistory, isSyncing, styles, onRefresh, onViewDocs, onUploadBatch }) => (
   <div style={styles.tableSection}>
     <div style={styles.tableHeaderContainer}>
       <h3 style={styles.tableTitle}>Registered Purchase Orders Ledger</h3>
-      <button onClick={onRefresh} style={styles.refreshBtn}>🔄 Sync Logs</button>
+      <button 
+        onClick={onRefresh} 
+        disabled={isSyncing}
+        style={{ 
+          ...styles.refreshBtn, 
+          ...(isSyncing ? styles.refreshBtnDisabled : {}) 
+        }}
+      >
+        <span style={{ 
+          display: 'inline-block', 
+          transform: isSyncing ? 'rotate(360deg)' : 'none', 
+          transition: 'transform 1s linear infinite' 
+        }}>
+          🔄
+        </span> 
+        {isSyncing ? 'Syncing...' : 'Sync Logs'}
+      </button>
     </div>
     
     <div style={styles.tableWrapper}>
@@ -305,7 +321,7 @@ const POHistoryTable = ({ poHistory, styles, onRefresh, onViewDocs, onUploadBatc
             </tr>
           ) : (
             poHistory.map((row, idx) => (
-              <tr key={row.batch_reference || idx} style={styles.tableRow}>
+              <tr key={row.batch_reference || row.id || idx} style={styles.tableRow}>
                 <td style={styles.td}>{row.customer_name || row.customer_id || 'N/A'}</td>
                 <td style={styles.td}>{row.po_date}</td>
                 <td style={styles.td}><span style={styles.termsBadge}>{row.po_terms}</span></td>
@@ -334,14 +350,13 @@ const POHistoryTable = ({ poHistory, styles, onRefresh, onViewDocs, onUploadBatc
       </table>
     </div>
   </div>
-);
+));
 
-const DocumentFrame = ({
+const DocumentFrame = React.memo(({
   docType,
   frameUrl,
   zoom,
   pan,
-  isDragging,
   styles,
   onZoomIn,
   onZoomOut,
@@ -382,7 +397,7 @@ const DocumentFrame = ({
             ...styles.embeddedDocImg, 
             transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})` 
           }}
-          onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling?.style && (e.target.nextSibling.style.display = 'block'); }}
+          onError={(e) => { e.target.style.display = 'none'; if(e.target.nextSibling) e.target.nextSibling.style.display = 'block'; }}
         />
       ) : null}
       <div style={{...styles.imgFallbackText, display: frameUrl ? 'none' : 'block'}}>
@@ -390,9 +405,9 @@ const DocumentFrame = ({
       </div>
     </div>
   </div>
-);
+));
 
-const DocumentViewerModal = ({ 
+const DocumentViewerModal = React.memo(({ 
   viewDocsRow, 
   styles, 
   onClose, 
@@ -400,8 +415,6 @@ const DocumentViewerModal = ({
   poZoom, 
   drPan, 
   poPan, 
-  isDraggingDr, 
-  isDraggingPo,
   onDrZoomIn, onDrZoomOut, onDrZoomReset,
   onPoZoomIn, onPoZoomOut, onPoZoomReset,
   onDrDragStart, onDrDragMove, onDrDragEnd,
@@ -426,7 +439,6 @@ const DocumentViewerModal = ({
             frameUrl={drUrl}
             zoom={drZoom}
             pan={drPan}
-            isDragging={isDraggingDr}
             styles={styles}
             onZoomIn={onDrZoomIn}
             onZoomOut={onDrZoomOut}
@@ -440,7 +452,6 @@ const DocumentViewerModal = ({
             frameUrl={poUrl}
             zoom={poZoom}
             pan={poPan}
-            isDragging={isDraggingPo}
             styles={styles}
             onZoomIn={onPoZoomIn}
             onZoomOut={onPoZoomOut}
@@ -458,9 +469,9 @@ const DocumentViewerModal = ({
       </div>
     </div>
   );
-};
+});
 
-const UploadModal = ({ activeInspectionBatch, styles, onClose }) => {
+const UploadModal = React.memo(({ activeInspectionBatch, styles, onClose }) => {
   if (!activeInspectionBatch) return null;
 
   return (
@@ -484,7 +495,7 @@ const UploadModal = ({ activeInspectionBatch, styles, onClose }) => {
       </div>
     </div>
   );
-};
+});
 
 // ============================================================================
 // MAIN COMPONENT
@@ -496,6 +507,7 @@ const POReceives = () => {
   const [formData, setFormData] = useState(getInitialFormData());
   const [batchReference, setBatchReference] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
   const [stagingStatus, setStagingStatus] = useState({ po_attachment: false, dr_attachment: false });
   const [activeInspectionBatch, setActiveInspectionBatch] = useState(null);
@@ -522,16 +534,22 @@ const POReceives = () => {
 
   // ========== API Calls ==========
   const fetchPoHistory = useCallback(async () => {
+    setIsSyncing(true);
     try {
       const res = await fetch(ENDPOINTS.history);
       if (res.ok) {
         const data = await res.json();
         setPoHistory(data);
+      } else {
+        throw new Error('Failed to retrieve history logs');
       }
     } catch (err) {
       console.error("Failed to fetch PO history:", err);
+      showNotice('error', 'Could not refresh logs. Server unreachable.');
+    } finally {
+      setIsSyncing(false);
     }
-  }, []);
+  }, [showNotice]);
 
   const fetchClients = useCallback(async () => {
     try {
@@ -546,11 +564,7 @@ const POReceives = () => {
 
   const fetchServerInfo = useCallback(async () => {
     try {
-      const res = await fetch(ENDPOINTS.serverInfo);
-      const data = await res.json();
-      if (data.ip) {
-        // Store server IP if needed for future use
-      }
+      await fetch(ENDPOINTS.serverInfo);
     } catch (err) {
       console.error("Failed to fetch server info:", err);
     }
@@ -572,14 +586,11 @@ const POReceives = () => {
     }
   }, [batchReference]);
 
-  // ========== Effects ==========
+  // ========== Lifecycle Effects ==========
   useEffect(() => {
-    const initializeBatch = () => {
-      setBatchReference(generateBatchKey());
-      setStagingStatus({ po_attachment: false, dr_attachment: false });
-    };
+    setBatchReference(generateBatchKey());
+    setStagingStatus({ po_attachment: false, dr_attachment: false });
 
-    initializeBatch();
     fetchClients();
     fetchServerInfo();
     fetchPoHistory();
@@ -603,12 +614,12 @@ const POReceives = () => {
   }, [viewDocsRow]);
 
   // ========== Form Handlers ==========
-  const handleInputChange = (e) => {
+  const handleInputChange = useCallback((e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-  };
+  }, []);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
     setLoading(true);
     setMessage({ type: '', text: '' });
@@ -636,6 +647,8 @@ const POReceives = () => {
       setFormData(getInitialFormData());
       setBatchReference(generateBatchKey());
       setStagingStatus({ po_attachment: false, dr_attachment: false });
+      
+      // Async re-fetch history
       fetchPoHistory(); 
 
     } catch (err) {
@@ -643,50 +656,49 @@ const POReceives = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [formData, batchReference, showNotice, fetchPoHistory]);
 
   // ========== Zoom Handlers ==========
-  const adjustZoom = (zoom, setZoom, pan, setPan, factor) => {
+  const adjustZoom = useCallback((setZoom, setPan, factor) => {
     setZoom(prev => {
       const next = Math.min(Math.max(prev + factor, DEFAULT_ZOOM), MAX_ZOOM);
       if (next === DEFAULT_ZOOM) setPan({ x: 0, y: 0 });
       return next;
     });
-  };
+  }, []);
 
-  const adjustDrZoom = (factor) => adjustZoom(drZoom, setDrZoom, drPan, setDrPan, factor);
-  const adjustPoZoom = (factor) => adjustZoom(poZoom, setPoZoom, poPan, setPoPan, factor);
+  const adjustDrZoom = useCallback((factor) => adjustZoom(setDrZoom, setDrPan, factor), [adjustZoom]);
+  const adjustPoZoom = useCallback((factor) => adjustZoom(setPoZoom, setPoPan, factor), [adjustZoom]);
 
   // ========== Pan Handlers ==========
-  const startDrDrag = (clientX, clientY) => {
+  const startDrDrag = useCallback((clientX, clientY) => {
     if (drZoom <= DEFAULT_ZOOM) return;
     setIsDraggingDr(true);
     dragStartDr.current = { x: clientX - drPan.x, y: clientY - drPan.y };
-  };
+  }, [drZoom, drPan]);
 
-  const moveDrDrag = (clientX, clientY) => {
+  const moveDrDrag = useCallback((clientX, clientY) => {
     if (!isDraggingDr) return;
     setDrPan({
       x: clientX - dragStartDr.current.x,
       y: clientY - dragStartDr.current.y
     });
-  };
+  }, [isDraggingDr]);
 
-  const startPoDrag = (clientX, clientY) => {
+  const startPoDrag = useCallback((clientX, clientY) => {
     if (poZoom <= DEFAULT_ZOOM) return;
     setIsDraggingPo(true);
     dragStartPo.current = { x: clientX - poPan.x, y: clientY - poPan.y };
-  };
+  }, [poZoom, poPan]);
 
-  const movePoDrag = (clientX, clientY) => {
+  const movePoDrag = useCallback((clientX, clientY) => {
     if (!isDraggingPo) return;
     setPoPan({
       x: clientX - dragStartPo.current.x,
       y: clientY - dragStartPo.current.y
     });
-  };
+  }, [isDraggingPo]);
 
-  // ========== URLs ==========
   const mobileScannerUrl = batchReference ? ENDPOINTS.mobileUploads2(batchReference) : '';
 
   return (
@@ -707,6 +719,11 @@ const POReceives = () => {
         }
         button:hover {
           opacity: 0.9;
+        }
+        
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
         }
         
         @media (max-width: 992px) {
@@ -750,6 +767,7 @@ const POReceives = () => {
 
       <POHistoryTable
         poHistory={poHistory}
+        isSyncing={isSyncing}
         styles={styles}
         onRefresh={fetchPoHistory}
         onViewDocs={setViewDocsRow}
@@ -770,8 +788,6 @@ const POReceives = () => {
         poZoom={poZoom}
         drPan={drPan}
         poPan={poPan}
-        isDraggingDr={isDraggingDr}
-        isDraggingPo={isDraggingPo}
         onDrZoomIn={() => adjustDrZoom(ZOOM_STEP)}
         onDrZoomOut={() => adjustDrZoom(-ZOOM_STEP)}
         onDrZoomReset={() => { setDrZoom(DEFAULT_ZOOM); setDrPan({ x: 0, y: 0 }); }}
