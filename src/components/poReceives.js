@@ -10,10 +10,10 @@ const ENDPOINTS = {
   clients: `${API_BASE}/api/po-receives/clients`,
   history: `${API_BASE}/api/po-receives/history`,
   records: `${API_BASE}/api/po-receives`,
-  checkStaging: (ref) => `${API_BASE}/api/po-receives/check-staging/${ref}`,
+  checkStaging: (ref) => `${API_BASE}/api/po-receives/check-staging/${encodeURIComponent(ref)}`,
   serverInfo: `${API_BASE}/api/server-info`,
-  mobileUploads2: (ref) => `/#/mobile-upload2/${ref}`,
-  mobileUploadsBatch: (ref) => `/#/mobile-upload/${ref}`,
+  mobileUploads2: (ref) => `/#/mobile-upload2/${encodeURIComponent(ref)}`,
+  mobileUploadsBatch: (ref) => `/#/mobile-upload/${encodeURIComponent(ref)}`,
 };
 
 const POLLING_INTERVAL = 3000;
@@ -61,10 +61,10 @@ const styles = {
   scannerInstructions: { fontSize:'13px', color:'#94a3b8', lineHeight:'1.6', margin:'0 0 24px 0' },
   qrContainer: { background:'#090d16', padding:'16px', borderRadius:'12px', border:'1px solid #1f2937', marginBottom:'24px', display:'inline-flex', alignItems:'center', justifyContent:'center', minHeight:'172px' },
   syncText: { width:140, height:140, display:'flex', alignItems:'center', justifyContent:'center', color:'#475569', fontSize:'13px' },
-  batchBadge: { background:'#0f172a', border:'1px solid #1e293b', padding:'14px', borderRadius:'6px', width:'100%', textAlign:'left' },
+  batchBadge: { background:'#0f172a', border:'1px solid #1e293b', padding:'14px', borderRadius:'6px', width:'100%', textAlign:'left', boxSizing:'border-box' },
   badgeLabel: { display:'block', fontSize:'10px', color:'#64748b', fontWeight:'700' },
-  badgeCode: { color:'#38bdf8', fontFamily:'monospace', fontSize:'13px', fontWeight:'600' },
-  tableSection: { marginTop:'32px', background:'#111827', border:'1px solid #1f2937', borderRadius:'12px', padding:'24px' },
+  badgeCode: { color:'#38bdf8', fontFamily:'monospace', fontSize:'13px', fontWeight:'600', wordBreak:'break-all' },
+  tableSection: { marginTop:'32px', background:'#111827', border:'1px solid #1f2937', borderRadius:'12px', padding:'24px', boxSizing:'border-box' },
   tableHeaderContainer: { display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'20px', flexWrap:'wrap', gap:'12px' },
   tableTitle: { fontSize:'14px', fontWeight:'700', color:'#fff', textTransform:'uppercase', borderLeft:'3px solid #38bdf8', paddingLeft:'10px' },
   refreshBtn: { background:'#1f2937', border:'1px solid #374151', color:'#cbd5e1', padding:'8px 16px', borderRadius:'6px', cursor:'pointer', display:'inline-flex', alignItems:'center', gap:'8px', transition:'background 0.2s' },
@@ -81,23 +81,23 @@ const styles = {
   statusBadge: { padding:'4px 10px', borderRadius:'20px', fontSize:'11px', fontWeight:'700', textTransform:'uppercase' },
   statusPending: { background:'rgba(245,158,11,.1)', color:'#fbbf24', border:'1px solid rgba(245,158,11,.2)' },
   statusServed: { background:'rgba(16,185,129,.1)', color:'#34d399', border:'1px solid rgba(16,185,129,.2)' },
-  modalOverlay: { position:'fixed', inset:0, background:'rgba(3,7,18,.85)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:1000 },
-  modalContent: { background:'#111827', border:'1px solid #1f2937', borderRadius:'16px', width:'100%', maxWidth:'420px', padding:'32px' },
+  modalOverlay: { position:'fixed', inset:0, background:'rgba(3,7,18,.85)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:1000, padding:'16px', boxSizing:'border-box' },
+  modalContent: { background:'#111827', border:'1px solid #1f2937', borderRadius:'16px', width:'100%', maxWidth:'420px', padding:'32px', boxSizing:'border-box' },
   modalHeader: { display:'flex', justifyContent:'space-between', alignItems:'center', borderBottom:'1px solid #1f2937', paddingBottom:'16px', marginBottom:'24px' },
   modalTitle: { fontSize:'14px', fontWeight:'800', color:'#00ff88', textTransform:'uppercase' },
   modalCloseBtn: { background:'transparent', border:'none', color:'#94a3b8', fontSize:'22px', cursor:'pointer' },
   modalBody: { display:'flex', flexDirection:'column', alignItems:'center', textAlign:'center' },
   modalInstructions: { fontSize:'13px', color:'#94a3b8', lineHeight:'1.6' },
-  alert: { padding:'14px 18px', borderRadius:'8px', fontSize:'14px', fontWeight:'600', display:'flex', alignItems:'center', marginBottom: '20px' },
+  alert: { padding:'14px 18px', borderRadius:'8px', fontSize:'14px', fontWeight:'600', display:'flex', alignItems:'center', marginBottom: '20px', boxSizing:'border-box' },
   alertError: { background:'rgba(220,38,38,.1)', color:'#fca5a5', border:'1px solid rgba(220,38,38,.2)' },
   alertSuccess: { background:'rgba(16,185,129,.1)', color:'#a7f3d0', border:'1px solid rgba(16,185,129,.2)' },
   closeActionBtn: { background:'#1f2937', color:'#fff', border:'1px solid #374151', padding:'10px 20px', borderRadius:'6px', cursor:'pointer' },
   stagingRow: { display:'flex', width:'100%', gap:'10px', marginTop:'12px', justifyContent:'space-between' },
   stagedIndicator: { flex:1, padding:'10px', borderRadius:'6px', fontSize:'11px', fontWeight:'700', textTransform:'uppercase', border:'1px solid #222', background:'#14161d', textAlign:'center' },
-  largeModalContent: { background: '#111827', border: '1px solid #1f2937', borderRadius: '16px', width: '100%', maxWidth: '1100px', height: '85vh', display: 'flex', flexDirection: 'column' },
-  documentViewerGrid: { display: 'flex', gap: '16px', padding: '16px', flex: 1, minHeight: 0 },
-  documentFrame: { background: '#090d16', border: '1px solid #1f2937', borderRadius: '8px', display: 'flex', flexDirection: 'column', flex: '1 1 50%', minHeight: 0 },
-  docFrameHeader: { background: '#0f172a', padding: '10px 16px', borderBottom: '1px solid #1f2937', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderRadius: '8px 8px 0 0' },
+  largeModalContent: { background: '#111827', border: '1px solid #1f2937', borderRadius: '16px', width: '100%', maxWidth: '1100px', height: '85vh', display: 'flex', flexDirection: 'column', boxSizing:'border-box' },
+  documentViewerGrid: { display: 'flex', gap: '16px', padding: '16px', flex: 1, minHeight: 0, boxSizing:'border-box' },
+  documentFrame: { background: '#090d16', border: '1px solid #1f2937', borderRadius: '8px', display: 'flex', flexDirection: 'column', flex: '1 1 50%', minHeight: 0, boxSizing:'border-box' },
+  docFrameHeader: { background: '#0f172a', padding: '10px 16px', borderBottom: '1px solid #1f2937', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderRadius: '8px 8px 0 0', boxSizing:'border-box' },
   docFrameTitle: { fontSize: '12px', color: '#94a3b8', fontWeight: '700', margin: 0 },
   zoomControls: { display: 'flex', alignItems: 'center', gap: '6px' },
   zoomBtn: { background: '#1f2937', border: '1px solid #374151', color: '#cbd5e1', padding: '4px 10px', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', fontWeight: 'bold' },
@@ -105,10 +105,10 @@ const styles = {
   imageCanvas: { flex: 1, overflow: 'hidden', position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'default' },
   embeddedDocImg: { maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', transition: 'transform 0.1s ease-out', userSelect: 'none' },
   imgFallbackText: { color: '#475569', fontSize: '12px', textTransform: 'uppercase', fontWeight: '600' },
-  modalFooter: { background: '#0f172a', padding: '16px', borderTop: '1px solid #1f2937', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderRadius: '0 0 16px 16px' },
-  footerRefText: { fontSize: '12px', color: '#64748b', fontFamily: 'monospace' },
-  modalActionLink: { display: 'block', width: '100%', background: '#00ff88', color: '#0b0f19', textAlign: 'center', textDecoration: 'none', fontSize: '13px', fontWeight: '700', padding: '12px', borderRadius: '6px', textTransform: 'uppercase', marginTop: '16px' },
-  modalBadgeDisplay: { background: '#0f172a', padding: '10px', border: '1px solid #1f2937', borderRadius: '6px', width: '100%', boxSizing: 'border-box', textAlign: 'center', marginTop: '8px' },
+  modalFooter: { background: '#0f172a', padding: '16px', borderTop: '1px solid #1f2937', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderRadius: '0 0 16px 16px', boxSizing:'border-box' },
+  footerRefText: { fontSize: '12px', color: '#64748b', fontFamily: 'monospace', wordBreak: 'break-all' },
+  modalActionLink: { display: 'block', width: '100%', background: '#00ff88', color: '#0b0f19', textAlign: 'center', textDecoration: 'none', fontSize: '13px', fontWeight: '700', padding: '12px', borderRadius: '6px', textTransform: 'uppercase', marginTop: '16px', boxSizing: 'border-box' },
+  modalBadgeDisplay: { background: '#0f172a', padding: '10px', border: '1px solid #1f2937', borderRadius: '6px', width: '100%', boxSizing: 'border-box', textAlign: 'center', marginTop: '8px', wordBreak: 'break-all', fontFamily: 'monospace', color: '#38bdf8' },
   modalQrWrapper: { background: '#090d16', padding: '16px', border: '1px solid #1f2937', borderRadius: '12px', margin: '20px 0', display: 'flex', alignItems: 'center', justifyContent: 'center' },
   viewAttachmentBtn: { background: '#1e3a8a', color: '#60a5fa', border: '1px solid #2563eb', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: '600' },
   rowAttachmentBtn: { background: 'transparent', border: '1px solid #0284c7', color: '#38bdf8', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: '600' },
@@ -367,7 +367,7 @@ const POHistoryTable = React.memo(({ poHistory, isSyncing, styles, onRefresh, on
                     )}
                   </td>
                   <td style={styles.tdRight}>
-                    <button onClick={() => onUploadBatch(row.batch_reference)} style={styles.rowAttachmentBtn}>
+                    <button onClick={() => onUploadBatch(row.batch_reference || row.po_number)} style={styles.rowAttachmentBtn}>
                       {row.po_attachment ? '🔄 Re-upload' : '📄 Scan / Upload'}
                     </button>
                   </td>
@@ -503,6 +503,8 @@ const DocumentViewerModal = React.memo(({
 const UploadModal = React.memo(({ activeInspectionBatch, styles, onClose }) => {
   if (!activeInspectionBatch) return null;
 
+  const batchUrl = ENDPOINTS.mobileUploadsBatch(activeInspectionBatch);
+
   return (
     <div style={styles.modalOverlay} onClick={onClose}>
       <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
@@ -514,10 +516,10 @@ const UploadModal = React.memo(({ activeInspectionBatch, styles, onClose }) => {
           <p style={styles.modalInstructions}>Processing attachment stream targets specifically for PO Number:</p>
           <div style={styles.modalBadgeDisplay}><code>{activeInspectionBatch}</code></div>
           <div style={styles.modalQrWrapper}>
-            <QRCodeSVG value={ENDPOINTS.mobileUploadsBatch(activeInspectionBatch)} size={160} bgColor={"#111827"} fgColor={"#00ff88"} level={"M"} includeMargin={false} />
+            <QRCodeSVG value={batchUrl} size={160} bgColor={"#111827"} fgColor={"#00ff88"} level={"M"} includeMargin={false} />
           </div>
           <p style={styles.modalInstructions}>Scan the grid code directly with a mobile device context, or trigger the deployment route below.</p>
-          <a href={ENDPOINTS.mobileUploadsBatch(activeInspectionBatch)} target="_blank" rel="noopener noreferrer" style={styles.modalActionLink}>
+          <a href={batchUrl} target="_blank" rel="noopener noreferrer" style={styles.modalActionLink}>
             📸 LAUNCH LINKED CAMERA TERMINAL
           </a>
         </div>
@@ -603,9 +605,9 @@ const POReceives = () => {
   }, []);
 
   const checkStagingStatus = useCallback(async () => {
-    if (!formData.batch_reference) return;
+    if (!formData.batch_reference.trim()) return;
     try {
-      const res = await fetch(ENDPOINTS.checkStaging(formData.batch_reference));
+      const res = await fetch(ENDPOINTS.checkStaging(formData.batch_reference.trim()));
       if (res.ok) {
         const data = await res.json();
         setStagingStatus({
@@ -628,7 +630,7 @@ const POReceives = () => {
 
   // Active polling to check staging status
   useEffect(() => {
-    if (!formData.batch_reference) return;
+    if (!formData.batch_reference.trim()) return;
     const interval = setInterval(checkStagingStatus, POLLING_INTERVAL);
     return () => clearInterval(interval);
   }, [formData.batch_reference, checkStagingStatus]);
@@ -757,7 +759,7 @@ const POReceives = () => {
     });
   }, [isDraggingPo]);
 
-  const mobileScannerUrl = formData.batch_reference ? ENDPOINTS.mobileUploads2(formData.batch_reference.trim()) : '';
+  const mobileScannerUrl = formData.batch_reference.trim() ? ENDPOINTS.mobileUploads2(formData.batch_reference.trim()) : '';
 
   return (
     <div style={styles.container}>
@@ -786,7 +788,7 @@ const POReceives = () => {
         
         @media (max-width: 992px) {
           .po-master-grid { flex-direction: column !important; }
-          .po-form-container, .po-qr-container { flex: 1 1 100% !important; width: 100% !important; }
+          .po-form-container, .po-qr-container { flex: 1 1 100% !important; width: 100% !important; box-sizing: border-box !important; }
           .po-docs-viewer-grid { flex-direction: column !important; overflow-y: auto !important; }
           .po-doc-frame { flex: 0 0 auto !important; height: 500px !important; margin-bottom: 15px; }
           .po-large-modal-content { max-height: 95vh !important; overflow-y: auto !important; }
