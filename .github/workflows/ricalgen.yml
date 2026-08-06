@@ -10,9 +10,16 @@ permissions:
   pages: write
   id-token: write
 
+# Prevents multiple concurrent deployments from conflicting and locking the environment
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 10 # Prevents indefinite hanging if the deployment queue stalls
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -20,7 +27,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '24' # Upgraded to fix the deprecation warning
+          node-version: '24'
           cache: 'npm'
 
       - name: Install dependencies
@@ -37,7 +44,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './build' # Use './build' if using Create React App instead of Vite
+          path: './build' # Ensure this matches your build folder (e.g., './dist' if using Vite)
 
       - name: Deploy to GitHub Pages
         id: deployment
