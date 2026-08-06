@@ -134,14 +134,14 @@ const getInitialFormData = () => ({
   status: 'pending'
 });
 
-// Helper function to deduplicate array data based on batch reference or fallback ID
-const ensureUniqueHistory = (items) => {
+// Strict unique deduplication mapped strictly by lowercase batch_reference key
+const enforceUniqueRecords = (items) => {
   if (!Array.isArray(items)) return [];
   const map = new Map();
   items.forEach((item, index) => {
-    const key = (item.batch_reference || item.po_number || item.id || `row-${index}`).toString().trim().toLowerCase();
-    // Keep latest or first occurrence uniquely
-    if (!map.has(key)) {
+    const rawRef = item.batch_reference || item.po_number || item.id || `row-${index}`;
+    const key = rawRef.toString().trim().toLowerCase();
+    if (key && !map.has(key)) {
       map.set(key, item);
     }
   });
@@ -196,7 +196,7 @@ const POFormSection = React.memo(({ formData, clients, isDuplicate, loading, sty
       </div>
 
       <div style={styles.formGroup}>
-        <label style={styles.label}>Total PO Value amount (PHP)</label>
+        <label style={styles.label}>Total PO Value Amount (PHP)</label>
         <input 
           type="number" 
           name="amount" 
@@ -346,7 +346,7 @@ const POHistoryTable = React.memo(({ poHistory, isSyncing, styles, onRefresh, on
             </tr>
           ) : (
             poHistory.map((row, idx) => {
-              const uniqueKey = row.batch_reference || row.po_number || row.id || `row-${idx}`;
+              const uniqueKey = (row.batch_reference || row.po_number || row.id || `row-${idx}`).toString().trim().toLowerCase();
               return (
                 <tr key={uniqueKey} style={styles.tableRow}>
                   <td style={{ ...styles.td, fontFamily: 'monospace', fontWeight: 'bold', color: '#38bdf8' }}>{row.batch_reference || row.po_number || 'N/A'}</td>
@@ -542,6 +542,9 @@ const POReceives = () => {
   const [activeInspectionBatch, setActiveInspectionBatch] = useState(null);
   const [viewDocsRow, setViewDocsRow] = useState(null);
 
+  // Instant Ref Lock to prevent rapid fire multi-submissions before state processes
+  const isSubmittingRef = useRef(false);
+
   // Zoom and pan states for document viewers
   const [drZoom, setDrZoom] = useState(DEFAULT_ZOOM);
   const [poZoom, setPoZoom] = useState(DEFAULT_ZOOM);
@@ -568,8 +571,7 @@ const POReceives = () => {
       const res = await fetch(ENDPOINTS.history);
       if (res.ok) {
         const data = await res.json();
-        // Prevent duplicate arrays from rendering by passing through deduplication mapping
-        setPoHistory(ensureUniqueHistory(data));
+        setPoHistory(enforceUniqueRecords(data));
       } else {
         throw new Error('Failed to retrieve history logs');
       }
@@ -648,7 +650,6 @@ const POReceives = () => {
     setFormData(prev => {
       const updated = { ...prev, [name]: value };
       
-      // Auto-scan for duplicate PO Number while typing
       if (name === 'batch_reference') {
         const query = value.trim().toLowerCase();
         if (query === '') {
@@ -668,14 +669,18 @@ const POReceives = () => {
 
   const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
-    if (isDuplicate || loading || !formData.batch_reference.trim()) return;
+    
+    // Strict block guard using both State and immediate Ref lock
+    if (isDuplicate || loading || isSubmittingRef.current || !formData.batch_reference.trim()) return;
 
+    isSubmittingRef.current = true;
     setLoading(true);
     setMessage({ type: '', text: '' });
 
+    const cleanRef = formData.batch_reference.trim();
     const payload = {
       ...formData,
-      batch_reference: formData.batch_reference.trim(),
+      batch_reference: cleanRef,
       amount: parseFloat(formData.amount) || 0,
     };
 
@@ -692,22 +697,22 @@ const POReceives = () => {
         throw new Error(result.error || 'Failed to save purchase order');
       }
 
-      showNotice('success', `PO successfully saved: ${formData.batch_reference}`);
+      showNotice('success', `PO successfully saved: ${cleanRef}`);
       
-      // Optimistically append or instantly parse unique rows without multi-entries
-      setPoHistory(prev => ensureUniqueHistory([result.data || payload, ...prev]));
+      // Instantly push and deduplicate records on client state list
+      setPoHistory(prev => enforceUniqueRecords([result.data || payload, ...prev]));
 
       setFormData(getInitialFormData());
       setIsDuplicate(false);
       setStagingStatus({ po_attachment: false, dr_attachment: false });
       
-      // Sync fresh records safely
       fetchPoHistory(); 
 
     } catch (err) {
       showNotice('error', err.message);
     } finally {
       setLoading(false);
+      isSubmittingRef.current = false;
     }
   }, [formData, isDuplicate, loading, showNotice, fetchPoHistory]);
 
