@@ -134,6 +134,20 @@ const getInitialFormData = () => ({
   status: 'pending'
 });
 
+// Helper function to deduplicate array data based on batch reference or fallback ID
+const ensureUniqueHistory = (items) => {
+  if (!Array.isArray(items)) return [];
+  const map = new Map();
+  items.forEach((item, index) => {
+    const key = (item.batch_reference || item.po_number || item.id || `row-${index}`).toString().trim().toLowerCase();
+    // Keep latest or first occurrence uniquely
+    if (!map.has(key)) {
+      map.set(key, item);
+    }
+  });
+  return Array.from(map.values());
+};
+
 // ============================================================================
 // SUB-COMPONENTS
 // ============================================================================
@@ -331,32 +345,35 @@ const POHistoryTable = React.memo(({ poHistory, isSyncing, styles, onRefresh, on
               <td colSpan="8" style={styles.emptyTd}>No recorded purchase order transactions saved in this session cluster logs.</td>
             </tr>
           ) : (
-            poHistory.map((row, idx) => (
-              <tr key={row.batch_reference || row.id || idx} style={styles.tableRow}>
-                <td style={{ ...styles.td, fontFamily: 'monospace', fontWeight: 'bold', color: '#38bdf8' }}>{row.batch_reference || row.po_number || 'N/A'}</td>
-                <td style={styles.td}>{row.customer_name || row.customer_id || 'N/A'}</td>
-                <td style={styles.td}>{row.po_date}</td>
-                <td style={styles.td}><span style={styles.termsBadge}>{row.po_terms}</span></td>
-                <td style={styles.tdAmount}>{formatPHP(row.amount)}</td>
-                <td style={styles.td}>
-                  <span style={{ ...styles.statusBadge, ...(row.status === 'served' ? styles.statusServed : styles.statusPending) }}>
-                    {row.status}
-                  </span>
-                </td>
-                <td style={styles.td}>
-                  {row.po_attachment || row.dr_attachment ? (
-                    <button type="button" onClick={() => onViewDocs(row)} style={styles.viewAttachmentBtn}>👁️ View Docs</button>
-                  ) : (
-                    <span style={styles.mutedText}>—</span>
-                  )}
-                </td>
-                <td style={styles.tdRight}>
-                  <button onClick={() => onUploadBatch(row.batch_reference)} style={styles.rowAttachmentBtn}>
-                    {row.po_attachment ? '🔄 Re-upload' : '📄 Scan / Upload'}
-                  </button>
-                </td>
-              </tr>
-            ))
+            poHistory.map((row, idx) => {
+              const uniqueKey = row.batch_reference || row.po_number || row.id || `row-${idx}`;
+              return (
+                <tr key={uniqueKey} style={styles.tableRow}>
+                  <td style={{ ...styles.td, fontFamily: 'monospace', fontWeight: 'bold', color: '#38bdf8' }}>{row.batch_reference || row.po_number || 'N/A'}</td>
+                  <td style={styles.td}>{row.customer_name || row.customer_id || 'N/A'}</td>
+                  <td style={styles.td}>{row.po_date}</td>
+                  <td style={styles.td}><span style={styles.termsBadge}>{row.po_terms}</span></td>
+                  <td style={styles.tdAmount}>{formatPHP(row.amount)}</td>
+                  <td style={styles.td}>
+                    <span style={{ ...styles.statusBadge, ...(row.status === 'served' ? styles.statusServed : styles.statusPending) }}>
+                      {row.status}
+                    </span>
+                  </td>
+                  <td style={styles.td}>
+                    {row.po_attachment || row.dr_attachment ? (
+                      <button type="button" onClick={() => onViewDocs(row)} style={styles.viewAttachmentBtn}>👁️ View Docs</button>
+                    ) : (
+                      <span style={styles.mutedText}>—</span>
+                    )}
+                  </td>
+                  <td style={styles.tdRight}>
+                    <button onClick={() => onUploadBatch(row.batch_reference)} style={styles.rowAttachmentBtn}>
+                      {row.po_attachment ? '🔄 Re-upload' : '📄 Scan / Upload'}
+                    </button>
+                  </td>
+                </tr>
+              );
+            })
           )}
         </tbody>
       </table>
@@ -551,7 +568,8 @@ const POReceives = () => {
       const res = await fetch(ENDPOINTS.history);
       if (res.ok) {
         const data = await res.json();
-        setPoHistory(data);
+        // Prevent duplicate arrays from rendering by passing through deduplication mapping
+        setPoHistory(ensureUniqueHistory(data));
       } else {
         throw new Error('Failed to retrieve history logs');
       }
@@ -650,7 +668,7 @@ const POReceives = () => {
 
   const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
-    if (isDuplicate || !formData.batch_reference.trim()) return;
+    if (isDuplicate || loading || !formData.batch_reference.trim()) return;
 
     setLoading(true);
     setMessage({ type: '', text: '' });
@@ -675,11 +693,15 @@ const POReceives = () => {
       }
 
       showNotice('success', `PO successfully saved: ${formData.batch_reference}`);
+      
+      // Optimistically append or instantly parse unique rows without multi-entries
+      setPoHistory(prev => ensureUniqueHistory([result.data || payload, ...prev]));
+
       setFormData(getInitialFormData());
       setIsDuplicate(false);
       setStagingStatus({ po_attachment: false, dr_attachment: false });
       
-      // Async re-fetch history
+      // Sync fresh records safely
       fetchPoHistory(); 
 
     } catch (err) {
@@ -687,7 +709,7 @@ const POReceives = () => {
     } finally {
       setLoading(false);
     }
-  }, [formData, isDuplicate, showNotice, fetchPoHistory]);
+  }, [formData, isDuplicate, loading, showNotice, fetchPoHistory]);
 
   // ========== Zoom Handlers ==========
   const adjustZoom = useCallback((setZoom, setPan, factor) => {
