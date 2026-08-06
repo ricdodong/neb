@@ -9,7 +9,7 @@ const MobileUpload2 = () => {
     const [uploading, setUploading] = useState(false);
     const [status, setStatus] = useState('');
 
-    // Helper to convert raw files into clean base64 string bytes for JSON transportation
+    // Helper to convert raw files into clean bytes
     const fileToUint8Array = (file) => {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
@@ -26,14 +26,10 @@ const MobileUpload2 = () => {
         setStatus('PROCESSING FILE...');
 
         try {
-            // Read file array bytes directly
             const rawBytes = await fileToUint8Array(file);
-            
-            // We fake a single chunk payload structure to work perfectly with your Worker!
-            // This satisfies your Worker's: const { uploadId, totalChunks, filename... } = await request.json();
             const uploadId = `mobile-${Date.now()}`;
             
-            // First step: Upload the file data array directly to your chunk receiver storage
+            // Step 1: Upload chunk to Cloudflare storage
             const chunkFormData = new FormData();
             chunkFormData.append('uploadId', uploadId);
             chunkFormData.append('chunkIndex', '0');
@@ -43,30 +39,33 @@ const MobileUpload2 = () => {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
 
-            // Second step: Call finalize with a clean, pure JSON payload body
+            setStatus('SAVING TO DATABASE...');
+
+            // Step 2: Finalize payload (Adjust keys if your backend expects camelCase like batchReference)
             const finalizePayload = {
                 uploadId: uploadId,
-                totalChunks: 1, // Only 1 part uploaded from mobile
+                totalChunks: 1,
                 filename: file.name,
-                batch_reference: batchRef,
-                type: docType
+                batch_reference: batchRef, // Double-check if your worker expects batchReference
+                type: docType             // Double-check if your worker expects docType or documentType
             };
 
             const response = await axios.post(
                 'https://dpsapi.ricalgen.eu.org/api/transactions/finalize-po-staging', 
-                finalizePayload, // Sent as direct JavaScript object (Axios converts this to clean JSON automatically)
+                finalizePayload,
                 { headers: { 'Content-Type': 'application/json' } }
             );
 
-            if (response.data.success) {
-                setStatus('UPLOAD SUCCESSFUL ✅');
+            if (response.data && (response.data.success || response.data.message)) {
+                setStatus('UPLOAD & DATABASE RECORD SUCCESSFUL ✅');
                 setFile(null);
             } else {
                 setStatus(`FAILED: ${response.data.error || 'Server processing error'}`);
             }
         } catch (err) {
-            console.error(err);
-            setStatus(`UPLOAD FAILED: ${err.response?.data?.error || err.message}`);
+            console.error('Upload Error Details:', err.response || err);
+            const serverErrorMessage = err.response?.data?.error || err.response?.data?.message || err.message;
+            setStatus(`UPLOAD FAILED: ${serverErrorMessage}`);
         } finally {
             setUploading(false);
         }
@@ -90,10 +89,11 @@ const MobileUpload2 = () => {
                     Target Batch Reference: <span style={{ color: '#00ff88', fontFamily: 'monospace', fontWeight: 'bold' }}>{batchRef}</span>
                 </p>
 
-                <form onSubmit={handleUpload} style={{ display: 'flex', flexFree: 'column', flexDirection: 'column', gap: '20px' }}>
+                <form onSubmit={handleUpload} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                     <div>
                         <label style={{ fontSize: '0.65rem', fontWeight: '800', letterSpacing: '1.5px', color: '#888', display: 'block', marginBottom: '8px' }}>DOCUMENT TYPE</label>
                         <select 
+                            value={docType}
                             onChange={(e) => setDocType(e.target.value)}
                             style={{ width: '100%', background: '#111', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', padding: '12px', borderRadius: '12px' }}
                         >
