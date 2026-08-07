@@ -10,6 +10,7 @@ const ENDPOINTS = {
   clients: `${API_BASE}/api/po-receives/clients`,
   history: `${API_BASE}/api/po-receives/history`,
   records: `${API_BASE}/api/po-receives`,
+  updateRecord: (ref) => `${API_BASE}/api/po-receives/${encodeURIComponent(ref)}`,
   checkStaging: (ref) => `${API_BASE}/api/po-receives/check-staging/${encodeURIComponent(ref)}`,
   serverInfo: `${API_BASE}/api/server-info`,
   mobileUploads2: (ref) => `/#/mobile-upload2/${encodeURIComponent(ref)}`,
@@ -52,7 +53,6 @@ const styles = {
   formGroup: { display:'flex', flexDirection:'column', gap:'8px', flex:'1 1', minWidth:0 },
   label: { fontSize:'12px', fontWeight:'600', color:'#94a3b8', textTransform:'uppercase', letterSpacing:'0.03em' },
   input: { background:'#1f2937', border:'1px solid #374151', borderRadius:'6px', padding:'12px 14px', color:'#fff', fontSize:'14px', width:'100%', boxSizing:'border-box' },
-  inputError: { borderColor:'#ef4444', background:'rgba(239, 68, 68, 0.05)' },
   select: { background:'#1f2937', border:'1px solid #374151', borderRadius:'6px', padding:'12px 14px', color:'#fff', fontSize:'14px', width:'100%', boxSizing:'border-box', cursor:'pointer' },
   submitBtn: { background:'#00ff88', color:'#0b0f19', border:'none', borderRadius:'6px', padding:'16px 20px', fontSize:'14px', fontWeight:'700', cursor:'pointer', width:'100%' },
   submitBtnLoading: { background:'#1e293b', color:'#64748b', cursor:'not-allowed' },
@@ -113,7 +113,6 @@ const styles = {
   viewAttachmentBtn: { background: '#1e3a8a', color: '#60a5fa', border: '1px solid #2563eb', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: '600' },
   rowAttachmentBtn: { background: 'transparent', border: '1px solid #0284c7', color: '#38bdf8', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: '600' },
   mutedText: { color: '#4b5563', fontSize: '14px' },
-  errorHint: { color: '#ef4444', fontSize: '11px', fontWeight: '700', marginTop: '4px' },
   successHint: { color: '#00ff88', fontSize: '11px', fontWeight: '700', marginTop: '4px' }
 };
 
@@ -134,7 +133,6 @@ const getInitialFormData = () => ({
   status: 'pending'
 });
 
-// Strict unique deduplication mapped strictly by lowercase batch_reference key
 const enforceUniqueRecords = (items) => {
   if (!Array.isArray(items)) return [];
   const map = new Map();
@@ -152,109 +150,121 @@ const enforceUniqueRecords = (items) => {
 // SUB-COMPONENTS
 // ============================================================================
 
-const POFormSection = React.memo(({ formData, clients, loading, styles, onInputChange, onSubmit }) => (
-  <div className="po-form-container" style={styles.card}>
-    <h3 style={styles.cardTitle}>PO Metadata Parameters</h3>
-    <form onSubmit={onSubmit} style={styles.form}>
-      
-      <div style={styles.formGroup}>
-        <label style={styles.label}>PO Number</label>
-        <input 
-          type="text" 
-          name="batch_reference"
-          placeholder="Enter Physical PO Number (e.g. PO-2026-001)"
-          value={formData.batch_reference} 
-          onChange={onInputChange} 
-          style={styles.input} 
-          required 
-        />
-        {formData.batch_reference.trim() !== '' && (
-          <span style={styles.successHint}>✓ READY TO SYNC / ATTACH OR UPDATE RECORD</span>
-        )}
-      </div>
+const POFormSection = React.memo(({ formData, clients, stagingStatus, loading, styles, onInputChange, onSubmit }) => {
+  const bothStaged = stagingStatus.po_attachment && stagingStatus.dr_attachment;
 
-      <div style={styles.formGroup}>
-        <label style={styles.label}>Select Client / Customer Link</label>
-        <select 
-          name="customer_id" 
-          value={formData.customer_id} 
-          onChange={onInputChange} 
-          style={styles.select}
-          required
-        >
-          <option value="">-- Choose Corporate Account --</option>
-          {clients.map(client => (
-            <option key={client.id} value={client.id}>{client.name}</option>
-          ))}
-        </select>
-      </div>
-
-      <div style={styles.formGroup}>
-        <label style={styles.label}>Total PO Value Amount (PHP)</label>
-        <input 
-          type="number" 
-          name="amount" 
-          step="0.01"
-          placeholder="0.00"
-          value={formData.amount} 
-          onChange={onInputChange} 
-          style={styles.input}
-          required 
-        />
-      </div>
-
-      <div style={styles.formRow}>
+  return (
+    <div className="po-form-container" style={styles.card}>
+      <h3 style={styles.cardTitle}>PO Metadata Parameters</h3>
+      <form onSubmit={onSubmit} style={styles.form}>
+        
         <div style={styles.formGroup}>
-          <label style={styles.label}>PO Document Date</label>
+          <label style={styles.label}>PO Number</label>
           <input 
-            type="date" 
-            name="po_date" 
-            value={formData.po_date} 
+            type="text" 
+            name="batch_reference"
+            placeholder="Enter Physical PO Number (e.g. PO-2026-001)"
+            value={formData.batch_reference} 
+            onChange={onInputChange} 
+            style={styles.input} 
+            required 
+          />
+          {formData.batch_reference.trim() !== '' && (
+            <span style={{ 
+              color: bothStaged ? '#00ff88' : '#fbbf24', 
+              fontSize: '11px', 
+              fontWeight: '700', 
+              marginTop: '4px' 
+            }}>
+              {bothStaged ? '✓ BOTH PO & DR STAGED — READY TO SAVE RECORD' : '⚠️ BOTH PO AND DR MUST BE SCANNED/STAGED TO ENABLE SAVING'}
+            </span>
+          )}
+        </div>
+
+        <div style={styles.formGroup}>
+          <label style={styles.label}>Select Client / Customer Link</label>
+          <select 
+            name="customer_id" 
+            value={formData.customer_id} 
+            onChange={onInputChange} 
+            style={styles.select}
+            required
+          >
+            <option value="">-- Choose Corporate Account --</option>
+            {clients.map(client => (
+              <option key={client.id} value={client.id}>{client.name}</option>
+            ))}
+          </select>
+        </div>
+
+        <div style={styles.formGroup}>
+          <label style={styles.label}>Total PO Value Amount (PHP)</label>
+          <input 
+            type="number" 
+            name="amount" 
+            step="0.01"
+            placeholder="0.00"
+            value={formData.amount} 
             onChange={onInputChange} 
             style={styles.input}
             required 
           />
         </div>
 
+        <div style={styles.formRow}>
+          <div style={styles.formGroup}>
+            <label style={styles.label}>PO Document Date</label>
+            <input 
+              type="date" 
+              name="po_date" 
+              value={formData.po_date} 
+              onChange={onInputChange} 
+              style={styles.input}
+              required 
+            />
+          </div>
+
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Contract Terms</label>
+            <select 
+              name="po_terms" 
+              value={formData.po_terms} 
+              onChange={onInputChange} 
+              style={styles.select}
+            >
+              {PO_TERMS.map(term => (
+                <option key={term.value} value={term.value}>{term.label}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
         <div style={styles.formGroup}>
-          <label style={styles.label}>Contract Terms</label>
+          <label style={styles.label}>Initial Pipeline Status</label>
           <select 
-            name="po_terms" 
-            value={formData.po_terms} 
+            name="status" 
+            value={formData.status} 
             onChange={onInputChange} 
             style={styles.select}
           >
-            {PO_TERMS.map(term => (
-              <option key={term.value} value={term.value}>{term.label}</option>
+            {PO_STATUS.map(status => (
+              <option key={status.value} value={status.value}>{status.label}</option>
             ))}
           </select>
         </div>
-      </div>
 
-      <div style={styles.formGroup}>
-        <label style={styles.label}>Initial Pipeline Status</label>
-        <select 
-          name="status" 
-          value={formData.status} 
-          onChange={onInputChange} 
-          style={styles.select}
+        <button 
+          type="submit" 
+          style={{ ...styles.submitBtn, ...(loading || !bothStaged || !formData.batch_reference.trim() ? styles.submitBtnLoading : {}) }}
+          disabled={loading || !bothStaged || !formData.batch_reference.trim()}
+          title={!bothStaged ? "Both PO and DR attachments must be scanned via mobile before saving" : "Save Record"}
         >
-          {PO_STATUS.map(status => (
-            <option key={status.value} value={status.value}>{status.label}</option>
-          ))}
-        </select>
-      </div>
-
-      <button 
-        type="submit" 
-        style={{ ...styles.submitBtn, ...(loading || !formData.batch_reference.trim() ? styles.submitBtnLoading : {}) }}
-        disabled={loading || !formData.batch_reference.trim()}
-      >
-        {loading ? 'COMMITTING TRANSACTION...' : 'SAVE PURCHASE ORDER RECORD'}
-      </button>
-    </form>
-  </div>
-));
+          {loading ? 'COMMITTING TRANSACTION...' : bothStaged ? 'SAVE PURCHASE ORDER RECORD' : '🔒 PENDING BOTH ATTACHMENTS (PO & DR)'}
+        </button>
+      </form>
+    </div>
+  );
+});
 
 const POScannerSection = React.memo(({ mobileScannerUrl, stagingStatus, batchReference, styles }) => (
   <div className="po-qr-container" style={{ ...styles.card, ...styles.scannerCard }}>
@@ -537,7 +547,6 @@ const POReceives = () => {
   const [activeInspectionBatch, setActiveInspectionBatch] = useState(null);
   const [viewDocsRow, setViewDocsRow] = useState(null);
 
-  // Instant Ref Lock to prevent rapid fire multi-submissions before state processes
   const isSubmittingRef = useRef(false);
 
   // Zoom and pan states for document viewers
@@ -647,7 +656,12 @@ const POReceives = () => {
   const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
     
-    // Strict block guard using both State and immediate Ref lock
+    // Strict block guard if files are not staged
+    if (!stagingStatus.po_attachment || !stagingStatus.dr_attachment) {
+      showNotice('error', 'Both PO and DR attachments must be scanned/staged before saving the record.');
+      return;
+    }
+
     if (loading || isSubmittingRef.current || !formData.batch_reference.trim()) return;
 
     isSubmittingRef.current = true;
@@ -662,21 +676,39 @@ const POReceives = () => {
     };
 
     try {
-      const res = await fetch(ENDPOINTS.records, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+      // Check if a record with this batch_reference already exists in the history state/database
+      const existingRow = poHistory.find(row => {
+        const ref = (row.batch_reference || row.po_number || '').toString().trim().toLowerCase();
+        return ref === cleanRef.toLowerCase();
       });
 
-      const result = await res.json();
+      let res, result;
 
-      if (!res.ok || result.success === false) {
-        throw new Error(result.error || 'Failed to save purchase order');
+      if (existingRow) {
+        // Update/patch existing record to avoid duplicate rows
+        res = await fetch(ENDPOINTS.updateRecord(cleanRef), {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      } else {
+        // Fallback or create if not found in history ledger list
+        res = await fetch(ENDPOINTS.records, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
       }
 
-      showNotice('success', `PO successfully saved & synchronized: ${cleanRef}`);
+      result = await res.json();
+
+      if (!res.ok || result.success === false) {
+        throw new Error(result.error || 'Failed to save or update purchase order record');
+      }
+
+      showNotice('success', `PO successfully saved & updated: ${cleanRef}`);
       
-      // Update local state cleanly: filter out any existing row with this ref and put the fresh one at the top
+      // Update local state cleanly: filter out duplicate and prepend updated record
       setPoHistory(prev => {
         const filtered = prev.filter(row => {
           const ref = (row.batch_reference || row.po_number || '').toString().trim().toLowerCase();
@@ -696,7 +728,7 @@ const POReceives = () => {
       setLoading(false);
       isSubmittingRef.current = false;
     }
-  }, [formData, loading, showNotice, fetchPoHistory]);
+  }, [formData, stagingStatus, loading, poHistory, showNotice, fetchPoHistory]);
 
   // ========== Zoom Handlers ==========
   const adjustZoom = useCallback((setZoom, setPan, factor) => {
@@ -791,6 +823,7 @@ const POReceives = () => {
         <POFormSection 
           formData={formData}
           clients={clients}
+          stagingStatus={stagingStatus}
           loading={loading}
           styles={styles}
           onInputChange={handleInputChange}
