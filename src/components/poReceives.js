@@ -146,6 +146,16 @@ const enforceUniqueRecords = (items) => {
   return Array.from(map.values());
 };
 
+// Robust helper to parse JSON safely and prevent "Unexpected token 'N', 'Not Found' is not valid JSON" crashes
+const parseApiResponse = async (res) => {
+  const text = await res.text();
+  try {
+    return JSON.parse(text);
+  } catch (err) {
+    throw new Error(text || `Server returned invalid response (Status: ${res.status})`);
+  }
+};
+
 // ============================================================================
 // SUB-COMPONENTS
 // ============================================================================
@@ -573,15 +583,15 @@ const POReceives = () => {
     setIsSyncing(true);
     try {
       const res = await fetch(ENDPOINTS.history);
+      const data = await parseApiResponse(res);
       if (res.ok) {
-        const data = await res.json();
         setPoHistory(enforceUniqueRecords(data));
       } else {
-        throw new Error('Failed to retrieve history logs');
+        throw new Error(data.error || 'Failed to retrieve history logs');
       }
     } catch (err) {
       console.error("Failed to fetch PO history:", err);
-      showNotice('error', 'Could not refresh logs. Server unreachable.');
+      showNotice('error', err.message || 'Could not refresh logs. Server unreachable.');
     } finally {
       setIsSyncing(false);
     }
@@ -590,8 +600,8 @@ const POReceives = () => {
   const fetchClients = useCallback(async () => {
     try {
       const res = await fetch(ENDPOINTS.clients);
-      if (!res.ok) throw new Error('Failed to load clients');
-      const data = await res.json();
+      const data = await parseApiResponse(res);
+      if (!res.ok) throw new Error(data.error || 'Failed to load clients');
       setClients(data);
     } catch (err) {
       showNotice('error', `Error loading clients: ${err.message}`);
@@ -610,8 +620,8 @@ const POReceives = () => {
     if (!formData.batch_reference.trim()) return;
     try {
       const res = await fetch(ENDPOINTS.checkStaging(formData.batch_reference.trim()));
+      const data = await parseApiResponse(res);
       if (res.ok) {
-        const data = await res.json();
         setStagingStatus({
           po_attachment: !!data.po_attachment,
           dr_attachment: !!data.dr_attachment
@@ -700,7 +710,7 @@ const POReceives = () => {
         });
       }
 
-      result = await res.json();
+      result = await parseApiResponse(res);
 
       if (!res.ok || result.success === false) {
         throw new Error(result.error || 'Failed to save or update purchase order record');
