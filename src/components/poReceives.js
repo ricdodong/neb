@@ -863,6 +863,7 @@ const POReceives = () => {
       />
     </div>
   );
+  
 };
 
 export default POReceives;
