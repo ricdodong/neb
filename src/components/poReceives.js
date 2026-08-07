@@ -152,7 +152,7 @@ const enforceUniqueRecords = (items) => {
 // SUB-COMPONENTS
 // ============================================================================
 
-const POFormSection = React.memo(({ formData, clients, isDuplicate, loading, styles, onInputChange, onSubmit }) => (
+const POFormSection = React.memo(({ formData, clients, loading, styles, onInputChange, onSubmit }) => (
   <div className="po-form-container" style={styles.card}>
     <h3 style={styles.cardTitle}>PO Metadata Parameters</h3>
     <form onSubmit={onSubmit} style={styles.form}>
@@ -165,17 +165,11 @@ const POFormSection = React.memo(({ formData, clients, isDuplicate, loading, sty
           placeholder="Enter Physical PO Number (e.g. PO-2026-001)"
           value={formData.batch_reference} 
           onChange={onInputChange} 
-          style={{ 
-            ...styles.input, 
-            ...(isDuplicate ? styles.inputError : {}) 
-          }} 
+          style={styles.input} 
           required 
         />
-        {isDuplicate && (
-          <span style={styles.errorHint}>⚠️ DUPLICATE PO NUMBER DETECTED IN RECORDS</span>
-        )}
-        {!isDuplicate && formData.batch_reference.trim() !== '' && (
-          <span style={styles.successHint}>✓ PO NUMBER IS AVAILABLE</span>
+        {formData.batch_reference.trim() !== '' && (
+          <span style={styles.successHint}>✓ READY TO SYNC / ATTACH OR UPDATE RECORD</span>
         )}
       </div>
 
@@ -253,8 +247,8 @@ const POFormSection = React.memo(({ formData, clients, isDuplicate, loading, sty
 
       <button 
         type="submit" 
-        style={{ ...styles.submitBtn, ...(loading || isDuplicate || !formData.batch_reference.trim() ? styles.submitBtnLoading : {}) }}
-        disabled={loading || isDuplicate || !formData.batch_reference.trim()}
+        style={{ ...styles.submitBtn, ...(loading || !formData.batch_reference.trim() ? styles.submitBtnLoading : {}) }}
+        disabled={loading || !formData.batch_reference.trim()}
       >
         {loading ? 'COMMITTING TRANSACTION...' : 'SAVE PURCHASE ORDER RECORD'}
       </button>
@@ -536,7 +530,6 @@ const POReceives = () => {
   const [clients, setClients] = useState([]);
   const [poHistory, setPoHistory] = useState([]); 
   const [formData, setFormData] = useState(getInitialFormData());
-  const [isDuplicate, setIsDuplicate] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
@@ -645,35 +638,17 @@ const POReceives = () => {
     }
   }, [viewDocsRow]);
 
-  // ========== Duplicate Check & Input Handler ==========
+  // ========== Input Handler ==========
   const handleInputChange = useCallback((e) => {
     const { name, value } = e.target;
-    
-    setFormData(prev => {
-      const updated = { ...prev, [name]: value };
-      
-      if (name === 'batch_reference') {
-        const query = value.trim().toLowerCase();
-        if (query === '') {
-          setIsDuplicate(false);
-        } else {
-          const exists = poHistory.some(row => {
-            const ref = (row.batch_reference || row.po_number || '').toString().trim().toLowerCase();
-            return ref === query;
-          });
-          setIsDuplicate(exists);
-        }
-      }
-      
-      return updated;
-    });
-  }, [poHistory]);
+    setFormData(prev => ({ ...prev, [name]: value }));
+  }, []);
 
   const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
     
     // Strict block guard using both State and immediate Ref lock
-    if (isDuplicate || loading || isSubmittingRef.current || !formData.batch_reference.trim()) return;
+    if (loading || isSubmittingRef.current || !formData.batch_reference.trim()) return;
 
     isSubmittingRef.current = true;
     setLoading(true);
@@ -699,13 +674,18 @@ const POReceives = () => {
         throw new Error(result.error || 'Failed to save purchase order');
       }
 
-      showNotice('success', `PO successfully saved: ${cleanRef}`);
+      showNotice('success', `PO successfully saved & synchronized: ${cleanRef}`);
       
-      // Instantly push and deduplicate records on client state list
-      setPoHistory(prev => enforceUniqueRecords([result.data || payload, ...prev]));
+      // Update local state cleanly: filter out any existing row with this ref and put the fresh one at the top
+      setPoHistory(prev => {
+        const filtered = prev.filter(row => {
+          const ref = (row.batch_reference || row.po_number || '').toString().trim().toLowerCase();
+          return ref !== cleanRef.toLowerCase();
+        });
+        return enforceUniqueRecords([result.data || payload, ...filtered]);
+      });
 
       setFormData(getInitialFormData());
-      setIsDuplicate(false);
       setStagingStatus({ po_attachment: false, dr_attachment: false });
       
       fetchPoHistory(); 
@@ -716,7 +696,7 @@ const POReceives = () => {
       setLoading(false);
       isSubmittingRef.current = false;
     }
-  }, [formData, isDuplicate, loading, showNotice, fetchPoHistory]);
+  }, [formData, loading, showNotice, fetchPoHistory]);
 
   // ========== Zoom Handlers ==========
   const adjustZoom = useCallback((setZoom, setPan, factor) => {
@@ -811,7 +791,6 @@ const POReceives = () => {
         <POFormSection 
           formData={formData}
           clients={clients}
-          isDuplicate={isDuplicate}
           loading={loading}
           styles={styles}
           onInputChange={handleInputChange}
@@ -863,7 +842,6 @@ const POReceives = () => {
       />
     </div>
   );
-  
 };
 
 export default POReceives;
