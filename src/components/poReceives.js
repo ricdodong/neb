@@ -53,6 +53,7 @@ const styles = {
   formGroup: { display:'flex', flexDirection:'column', gap:'8px', flex:'1 1', minWidth:0 },
   label: { fontSize:'12px', fontWeight:'600', color:'#94a3b8', textTransform:'uppercase', letterSpacing:'0.03em' },
   input: { background:'#1f2937', border:'1px solid #374151', borderRadius:'6px', padding:'12px 14px', color:'#fff', fontSize:'14px', width:'100%', boxSizing:'border-box' },
+  textarea: { background:'#1f2937', border:'1px solid #374151', borderRadius:'6px', padding:'12px 14px', color:'#fff', fontSize:'14px', width:'100%', boxSizing:'border-box', minHeight:'80px', resize:'vertical' },
   select: { background:'#1f2937', border:'1px solid #374151', borderRadius:'6px', padding:'12px 14px', color:'#fff', fontSize:'14px', width:'100%', boxSizing:'border-box', cursor:'pointer' },
   submitBtn: { background:'#00ff88', color:'#0b0f19', border:'none', borderRadius:'6px', padding:'16px 20px', fontSize:'14px', fontWeight:'700', cursor:'pointer', width:'100%' },
   submitBtnLoading: { background:'#1e293b', color:'#64748b', cursor:'not-allowed' },
@@ -70,7 +71,7 @@ const styles = {
   refreshBtn: { background:'#1f2937', border:'1px solid #374151', color:'#cbd5e1', padding:'8px 16px', borderRadius:'6px', cursor:'pointer', display:'inline-flex', alignItems:'center', gap:'8px', transition:'background 0.2s' },
   refreshBtnDisabled: { opacity: 0.6, cursor: 'not-allowed' },
   tableWrapper: { width:'100%', overflowX:'auto', border:'1px solid #1f2937', borderRadius:'8px' },
-  table: { width:'100%', borderCollapse:'collapse', textAlign:'left', minWidth:'850px' },
+  table: { width:'100%', borderCollapse:'collapse', textAlign:'left', minWidth:'950px' },
   th: { padding:'16px', borderBottom:'2px solid #1f2937', color:'#94a3b8', fontSize:'11px', fontWeight:'700', textTransform:'uppercase', background:'#0f172a' },
   tableRow: { borderBottom:'1px solid #1f2937', background:'#111827' },
   td: { padding:'16px', fontSize:'14px', color:'#e2e8f0' },
@@ -83,6 +84,7 @@ const styles = {
   statusServed: { background:'rgba(16,185,129,.1)', color:'#34d399', border:'1px solid rgba(16,185,129,.2)' },
   modalOverlay: { position:'fixed', inset:0, background:'rgba(3,7,18,.85)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:1000, padding:'16px', boxSizing:'border-box' },
   modalContent: { background:'#111827', border:'1px solid #1f2937', borderRadius:'16px', width:'100%', maxWidth:'420px', padding:'32px', boxSizing:'border-box' },
+  editModalContent: { background:'#111827', border:'1px solid #1f2937', borderRadius:'16px', width:'100%', maxWidth:'600px', padding:'32px', boxSizing:'border-box', maxHeight:'90vh', overflowY:'auto' },
   modalHeader: { display:'flex', justifyContent:'space-between', alignItems:'center', borderBottom:'1px solid #1f2937', paddingBottom:'16px', marginBottom:'24px' },
   modalTitle: { fontSize:'14px', fontWeight:'800', color:'#00ff88', textTransform:'uppercase' },
   modalCloseBtn: { background:'transparent', border:'none', color:'#94a3b8', fontSize:'22px', cursor:'pointer' },
@@ -112,6 +114,7 @@ const styles = {
   modalQrWrapper: { background: '#090d16', padding: '16px', border: '1px solid #1f2937', borderRadius: '12px', margin: '20px 0', display: 'flex', alignItems: 'center', justifyContent: 'center' },
   viewAttachmentBtn: { background: '#1e3a8a', color: '#60a5fa', border: '1px solid #2563eb', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: '600' },
   rowAttachmentBtn: { background: 'transparent', border: '1px solid #0284c7', color: '#38bdf8', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: '600' },
+  editBtn: { background: 'rgba(234,179,8,.1)', border: '1px solid rgba(234,179,8,.3)', color: '#facc15', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: '600', marginRight: '8px' },
   mutedText: { color: '#4b5563', fontSize: '14px' },
   successHint: { color: '#00ff88', fontSize: '11px', fontWeight: '700', marginTop: '4px' }
 };
@@ -130,7 +133,8 @@ const getInitialFormData = () => ({
   amount: '',
   po_date: new Date().toISOString().split('T')[0],
   po_terms: 'COD',
-  status: 'pending'
+  status: 'pending',
+  remarks: ''
 });
 
 const enforceUniqueRecords = (items) => {
@@ -146,7 +150,6 @@ const enforceUniqueRecords = (items) => {
   return Array.from(map.values());
 };
 
-// Robust helper to parse JSON safely and prevent "Unexpected token 'N', 'Not Found' is not valid JSON" crashes
 const parseApiResponse = async (res) => {
   const text = await res.text();
   try {
@@ -263,6 +266,17 @@ const POFormSection = React.memo(({ formData, clients, stagingStatus, loading, s
           </select>
         </div>
 
+        <div style={styles.formGroup}>
+          <label style={styles.label}>Notes / Remarks</label>
+          <textarea
+            name="remarks"
+            placeholder="Enter optional notes or remarks for this PO receive..."
+            value={formData.remarks || ''}
+            onChange={onInputChange}
+            style={styles.textarea}
+          />
+        </div>
+
         <button 
           type="submit" 
           style={{ ...styles.submitBtn, ...(loading || !bothStaged || !formData.batch_reference.trim() ? styles.submitBtnLoading : {}) }}
@@ -316,7 +330,7 @@ const POScannerSection = React.memo(({ mobileScannerUrl, stagingStatus, batchRef
   </div>
 ));
 
-const POHistoryTable = React.memo(({ poHistory, isSyncing, styles, onRefresh, onViewDocs, onUploadBatch }) => (
+const POHistoryTable = React.memo(({ poHistory, isSyncing, userRole, styles, onRefresh, onViewDocs, onUploadBatch, onEditRow }) => (
   <div style={styles.tableSection}>
     <div style={styles.tableHeaderContainer}>
       <h3 style={styles.tableTitle}>Registered Purchase Orders Ledger</h3>
@@ -349,6 +363,7 @@ const POHistoryTable = React.memo(({ poHistory, isSyncing, styles, onRefresh, on
             <th style={styles.th}>Terms</th>
             <th style={styles.th}>Amount</th>
             <th style={styles.th}>PO Status</th>
+            <th style={styles.th}>Notes / Remarks</th>
             <th style={styles.th}>Attached Files</th>
             <th style={{ ...styles.th, textAlign: 'right' }}>Action Controller</th>
           </tr>
@@ -356,7 +371,7 @@ const POHistoryTable = React.memo(({ poHistory, isSyncing, styles, onRefresh, on
         <tbody>
           {poHistory.length === 0 ? (
             <tr>
-              <td colSpan="8" style={styles.emptyTd}>No recorded purchase order transactions saved in this session cluster logs.</td>
+              <td colSpan="9" style={styles.emptyTd}>No recorded purchase order transactions saved in this session cluster logs.</td>
             </tr>
           ) : (
             poHistory.map((row, idx) => {
@@ -373,6 +388,9 @@ const POHistoryTable = React.memo(({ poHistory, isSyncing, styles, onRefresh, on
                       {row.status}
                     </span>
                   </td>
+                  <td style={{ ...styles.td, maxWidth: '200px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {row.remarks || <span style={styles.mutedText}>—</span>}
+                  </td>
                   <td style={styles.td}>
                     {row.po_attachment || row.dr_attachment ? (
                       <button type="button" onClick={() => onViewDocs(row)} style={styles.viewAttachmentBtn}>👁️ View Docs</button>
@@ -381,6 +399,11 @@ const POHistoryTable = React.memo(({ poHistory, isSyncing, styles, onRefresh, on
                     )}
                   </td>
                   <td style={styles.tdRight}>
+                    {userRole === 'admin' && (
+                      <button onClick={() => onEditRow(row)} style={styles.editBtn}>
+                        ✏️ Edit
+                      </button>
+                    )}
                     <button onClick={() => onUploadBatch(row.batch_reference || row.po_number)} style={styles.rowAttachmentBtn}>
                       {row.po_attachment ? '🔄 Re-upload' : '📄 Scan / Upload'}
                     </button>
@@ -542,11 +565,194 @@ const UploadModal = React.memo(({ activeInspectionBatch, styles, onClose }) => {
   );
 });
 
+// Admin Modal to edit full record fields
+const EditRecordModal = React.memo(({ editingRow, clients, styles, onClose, onSave }) => {
+  const [editFormData, setEditFormData] = useState({
+    batch_reference: '',
+    customer_id: '',
+    amount: '',
+    po_date: '',
+    po_terms: 'COD',
+    status: 'pending',
+    remarks: ''
+  });
+  const [isSaving, setIsSaving] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+
+  useEffect(() => {
+    if (editingRow) {
+      setEditFormData({
+        batch_reference: editingRow.batch_reference || editingRow.po_number || '',
+        customer_id: editingRow.customer_id || '',
+        amount: editingRow.amount || '',
+        po_date: editingRow.po_date || new Date().toISOString().split('T')[0],
+        po_terms: editingRow.po_terms || 'COD',
+        status: editingRow.status || 'pending',
+        remarks: editingRow.remarks || ''
+      });
+      setErrorMsg('');
+    }
+  }, [editingRow]);
+
+  if (!editingRow) return null;
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setEditFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsSaving(true);
+    setErrorMsg('');
+    try {
+      await onSave(editFormData);
+      onClose();
+    } catch (err) {
+      setErrorMsg(err.message || 'Failed to update PO record');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  return (
+    <div style={styles.modalOverlay} onClick={onClose}>
+      <div style={styles.editModalContent} onClick={(e) => e.stopPropagation()}>
+        <div style={styles.modalHeader}>
+          <h4 style={styles.modalTitle}>EDIT PURCHASE ORDER RECORD</h4>
+          <button style={styles.modalCloseBtn} onClick={onClose}>✕</button>
+        </div>
+
+        {errorMsg && (
+          <div style={{ ...styles.alert, ...styles.alertError }}>
+            ❌ {errorMsg}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} style={styles.form}>
+          <div style={styles.formGroup}>
+            <label style={styles.label}>PO Number (Reference)</label>
+            <input
+              type="text"
+              name="batch_reference"
+              value={editFormData.batch_reference}
+              onChange={handleChange}
+              style={styles.input}
+              required
+              readOnly
+            />
+          </div>
+
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Customer / Client</label>
+            <select
+              name="customer_id"
+              value={editFormData.customer_id}
+              onChange={handleChange}
+              style={styles.select}
+              required
+            >
+              <option value="">-- Select Client --</option>
+              {clients.map(client => (
+                <option key={client.id} value={client.id}>{client.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Total PO Value Amount (PHP)</label>
+            <input
+              type="number"
+              name="amount"
+              step="0.01"
+              value={editFormData.amount}
+              onChange={handleChange}
+              style={styles.input}
+              required
+            />
+          </div>
+
+          <div style={styles.formRow}>
+            <div style={styles.formGroup}>
+              <label style={styles.label}>PO Document Date</label>
+              <input
+                type="date"
+                name="po_date"
+                value={editFormData.po_date}
+                onChange={handleChange}
+                style={styles.input}
+                required
+              />
+            </div>
+
+            <div style={styles.formGroup}>
+              <label style={styles.label}>Contract Terms</label>
+              <select
+                name="po_terms"
+                value={editFormData.po_terms}
+                onChange={handleChange}
+                style={styles.select}
+              >
+                {PO_TERMS.map(term => (
+                  <option key={term.value} value={term.value}>{term.label}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Pipeline Status</label>
+            <select
+              name="status"
+              value={editFormData.status}
+              onChange={handleChange}
+              style={styles.select}
+            >
+              {PO_STATUS.map(status => (
+                <option key={status.value} value={status.value}>{status.label}</option>
+              ))}
+            </select>
+          </div>
+
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Notes / Remarks</label>
+            <textarea
+              name="remarks"
+              value={editFormData.remarks}
+              onChange={handleChange}
+              style={styles.textarea}
+              placeholder="Enter remarks or notes..."
+            />
+          </div>
+
+          <div style={{ display: 'flex', gap: '12px', marginTop: '12px' }}>
+            <button
+              type="submit"
+              disabled={isSaving}
+              style={{ ...styles.submitBtn, ...(isSaving ? styles.submitBtnLoading : {}) }}
+            >
+              {isSaving ? 'UPDATING...' : 'UPDATE RECORD'}
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              style={styles.closeActionBtn}
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+});
+
 // ============================================================================
 // MAIN COMPONENT
 // ============================================================================
 
 const POReceives = () => {
+  const [userRole] = useState('admin'); // Account access type (e.g. 'admin')
   const [clients, setClients] = useState([]);
   const [poHistory, setPoHistory] = useState([]); 
   const [formData, setFormData] = useState(getInitialFormData());
@@ -556,6 +762,7 @@ const POReceives = () => {
   const [stagingStatus, setStagingStatus] = useState({ po_attachment: false, dr_attachment: false });
   const [activeInspectionBatch, setActiveInspectionBatch] = useState(null);
   const [viewDocsRow, setViewDocsRow] = useState(null);
+  const [editingRow, setEditingRow] = useState(null);
 
   const isSubmittingRef = useRef(false);
 
@@ -686,7 +893,6 @@ const POReceives = () => {
     };
 
     try {
-      // Check if a record with this batch_reference already exists in the history state/database
       const existingRow = poHistory.find(row => {
         const ref = (row.batch_reference || row.po_number || '').toString().trim().toLowerCase();
         return ref === cleanRef.toLowerCase();
@@ -695,14 +901,12 @@ const POReceives = () => {
       let res, result;
 
       if (existingRow) {
-        // Update/patch existing record to avoid duplicate rows
         res = await fetch(ENDPOINTS.updateRecord(cleanRef), {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
       } else {
-        // Fallback or create if not found in history ledger list
         res = await fetch(ENDPOINTS.records, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -718,7 +922,6 @@ const POReceives = () => {
 
       showNotice('success', `PO successfully saved & updated: ${cleanRef}`);
       
-      // Update local state cleanly: filter out duplicate and prepend updated record
       setPoHistory(prev => {
         const filtered = prev.filter(row => {
           const ref = (row.batch_reference || row.po_number || '').toString().trim().toLowerCase();
@@ -739,6 +942,41 @@ const POReceives = () => {
       isSubmittingRef.current = false;
     }
   }, [formData, stagingStatus, loading, poHistory, showNotice, fetchPoHistory]);
+
+  // ========== Update Record Handler (for Edit Modal) ==========
+  const handleUpdateRecord = useCallback(async (updatedData) => {
+    const cleanRef = updatedData.batch_reference.trim();
+    const selectedClient = clients.find(c => String(c.id) === String(updatedData.customer_id));
+    const payload = {
+      ...updatedData,
+      amount: parseFloat(updatedData.amount) || 0,
+      customer_name: selectedClient ? selectedClient.name : updatedData.customer_id
+    };
+
+    const res = await fetch(ENDPOINTS.updateRecord(cleanRef), {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    const result = await parseApiResponse(res);
+
+    if (!res.ok || result.success === false) {
+      throw new Error(result.error || 'Failed to update record');
+    }
+
+    showNotice('success', `PO record successfully updated: ${cleanRef}`);
+
+    setPoHistory(prev => prev.map(row => {
+      const ref = (row.batch_reference || row.po_number || '').toString().trim().toLowerCase();
+      if (ref === cleanRef.toLowerCase()) {
+        return { ...row, ...payload, ...(result.data || {}) };
+      }
+      return row;
+    }));
+
+    fetchPoHistory();
+  }, [clients, fetchPoHistory, showNotice]);
 
   // ========== Zoom Handlers ==========
   const adjustZoom = useCallback((setZoom, setPan, factor) => {
@@ -792,7 +1030,7 @@ const POReceives = () => {
         .pan-canvas-grab { cursor: grab; }
         .pan-canvas-grab:active { cursor: grabbing; }
         
-        input:focus, select:focus {
+        input:focus, select:focus, textarea:focus {
           border-color: #00ff88 !important;
           box-shadow: 0 0 0 2px rgba(0, 255, 136, 0.15) !important;
         }
@@ -850,16 +1088,26 @@ const POReceives = () => {
       <POHistoryTable
         poHistory={poHistory}
         isSyncing={isSyncing}
+        userRole={userRole}
         styles={styles}
         onRefresh={fetchPoHistory}
         onViewDocs={setViewDocsRow}
         onUploadBatch={setActiveInspectionBatch}
+        onEditRow={setEditingRow}
       />
 
       <UploadModal 
         activeInspectionBatch={activeInspectionBatch}
         styles={styles}
         onClose={() => setActiveInspectionBatch(null)}
+      />
+
+      <EditRecordModal
+        editingRow={editingRow}
+        clients={clients}
+        styles={styles}
+        onClose={() => setEditingRow(null)}
+        onSave={handleUpdateRecord}
       />
 
       <DocumentViewerModal
