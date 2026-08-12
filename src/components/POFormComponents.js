@@ -400,12 +400,13 @@ const PODetailsModal = ({ row, userRole, styles, onClose, onViewDocs, onUploadBa
 };
 
 // ============================================================================
-// 4. MAIN PO HISTORY TABLE WITH KPI METRICS & FILTER BAR
+// 4. MAIN PO HISTORY TABLE WITH KPI, SEARCH BAR, & FILTERS
 // ============================================================================
 export const POHistoryTable = React.memo(({ poHistory, isSyncing, userRole, styles, onRefresh, onViewDocs, onUploadBatch, onEditRow }) => {
   const [selectedRow, setSelectedRow] = useState(null);
   const [hoveredIndex, setHoveredIndex] = useState(null);
   const [activeFilter, setActiveFilter] = useState('all'); // 'all', 'pending', 'served', 'attention', 'missing_docs'
+  const [searchQuery, setSearchQuery] = useState(''); // Search query for PO number or customer
 
   // Calculate Metrics Overview
   const metrics = useMemo(() => {
@@ -433,21 +434,32 @@ export const POHistoryTable = React.memo(({ poHistory, isSyncing, userRole, styl
     return { total: poHistory.length, completed, pending, dueSoonOrOverdue, missingDocs };
   }, [poHistory]);
 
-  // Filtered List based on Active Quick Filter Tab
+  // Filtered List based on Quick Filters AND Search Query
   const filteredHistory = useMemo(() => {
     return poHistory.filter((row) => {
-      if (activeFilter === 'pending') return row.status !== 'served';
-      if (activeFilter === 'served') return row.status === 'served';
-      if (activeFilter === 'attention') {
+      // 1. Status Filter Tab Match
+      let matchesTab = true;
+      if (activeFilter === 'pending') matchesTab = row.status !== 'served';
+      else if (activeFilter === 'served') matchesTab = row.status === 'served';
+      else if (activeFilter === 'attention') {
         const due = getDueDateInfo(row.po_date, row.po_terms, row.status);
-        return row.status !== 'served' && (due.isOverdue || due.label.includes('DUE SOON'));
+        matchesTab = row.status !== 'served' && (due.isOverdue || due.label.includes('DUE SOON'));
       }
-      if (activeFilter === 'missing_docs') {
-        return !row.po_attachment || !row.dr_attachment;
+      else if (activeFilter === 'missing_docs') {
+        matchesTab = !row.po_attachment || !row.dr_attachment;
       }
-      return true;
+
+      if (!matchesTab) return false;
+
+      // 2. Search Query Match (PO Number or Customer Name)
+      if (!searchQuery.trim()) return true;
+      const query = searchQuery.toLowerCase().trim();
+      const poRef = (row.batch_reference || row.po_number || '').toLowerCase();
+      const customer = (row.customer_name || row.customer_id || '').toLowerCase();
+
+      return poRef.includes(query) || customer.includes(query);
     });
-  }, [poHistory, activeFilter]);
+  }, [poHistory, activeFilter, searchQuery]);
 
   return (
     <div style={styles.tableSection}>
@@ -497,36 +509,81 @@ export const POHistoryTable = React.memo(({ poHistory, isSyncing, userRole, styl
         </div>
       </div>
 
-      {/* Interactive Quick Filter Bar */}
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', overflowX: 'auto', paddingBottom: '4px' }}>
-        {[
-          { id: 'all', label: `All (${metrics.total})` },
-          { id: 'pending', label: `Pending (${metrics.pending})` },
-          { id: 'attention', label: `⚠️ Needs Attention (${metrics.dueSoonOrOverdue})` },
-          { id: 'served', label: `Completed (${metrics.completed})` },
-          { id: 'missing_docs', label: `Missing Docs (${metrics.missingDocs})` }
-        ].map((tab) => {
-          const isActive = activeFilter === tab.id;
-          return (
+      {/* Search Input Bar & Filter Tabs Container */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '16px' }}>
+        {/* Search Bar */}
+        <div style={{ position: 'relative', width: '100%' }}>
+          <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', fontSize: '16px', pointerEvents: 'none' }}>
+            🔍
+          </span>
+          <input
+            type="text"
+            placeholder="Search by PO Number (e.g. PO-2026-001) or Customer Name..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            style={{
+              width: '100%',
+              background: '#0f172a',
+              border: '1px solid #1e293b',
+              borderRadius: '8px',
+              padding: '10px 14px 10px 38px',
+              color: '#f8fafc',
+              fontSize: '14px',
+              outline: 'none',
+              boxSizing: 'border-box'
+            }}
+          />
+          {searchQuery && (
             <button
-              key={tab.id}
-              onClick={() => setActiveFilter(tab.id)}
+              onClick={() => setSearchQuery('')}
               style={{
-                background: isActive ? '#1e293b' : '#0f172a',
-                color: isActive ? '#38bdf8' : '#94a3b8',
-                border: `1px solid ${isActive ? '#38bdf8' : '#1e293b'}`,
-                padding: '6px 14px',
-                borderRadius: '20px',
-                fontSize: '12px',
-                fontWeight: '600',
+                position: 'absolute',
+                right: '12px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                background: 'transparent',
+                border: 'none',
+                color: '#94a3b8',
                 cursor: 'pointer',
-                whiteSpace: 'nowrap'
+                fontSize: '14px'
               }}
             >
-              {tab.label}
+              ✕ Clear
             </button>
-          );
-        })}
+          )}
+        </div>
+
+        {/* Quick Status Filter Tabs */}
+        <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px' }}>
+          {[
+            { id: 'all', label: `All (${metrics.total})` },
+            { id: 'pending', label: `Pending (${metrics.pending})` },
+            { id: 'attention', label: `⚠️ Needs Attention (${metrics.dueSoonOrOverdue})` },
+            { id: 'served', label: `Completed (${metrics.completed})` },
+            { id: 'missing_docs', label: `Missing Docs (${metrics.missingDocs})` }
+          ].map((tab) => {
+            const isActive = activeFilter === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveFilter(tab.id)}
+                style={{
+                  background: isActive ? '#1e293b' : '#0f172a',
+                  color: isActive ? '#38bdf8' : '#94a3b8',
+                  border: `1px solid ${isActive ? '#38bdf8' : '#1e293b'}`,
+                  padding: '6px 14px',
+                  borderRadius: '20px',
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap'
+                }}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* DESKTOP TABLE VIEW */}
@@ -546,7 +603,7 @@ export const POHistoryTable = React.memo(({ poHistory, isSyncing, userRole, styl
           <tbody>
             {filteredHistory.length === 0 ? (
               <tr>
-                <td colSpan="7" style={styles.emptyTd}>No purchase orders matched the active filter.</td>
+                <td colSpan="7" style={styles.emptyTd}>No purchase orders matched your search or filter criteria.</td>
               </tr>
             ) : (
               filteredHistory.map((row, idx) => {
@@ -611,7 +668,7 @@ export const POHistoryTable = React.memo(({ poHistory, isSyncing, userRole, styl
       <div className="po-mobile-card-list" style={{ flexDirection: 'column', gap: '12px', width: '100%' }}>
         {filteredHistory.length === 0 ? (
           <div style={{ ...styles.emptyTd, background: '#111827', borderRadius: '8px', border: '1px solid #1f2937' }}>
-            No purchase orders matched the active filter.
+            No purchase orders matched your search or filter criteria.
           </div>
         ) : (
           filteredHistory.map((row, idx) => {
