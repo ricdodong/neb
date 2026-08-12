@@ -89,7 +89,7 @@ export const DocumentGalleryModal = React.memo(({ row, onClose, onOpenLightbox }
   if (!row) return null;
 
   const documents = [
-    row.po_attachment ? { frameurl: etFixedUrl(row.po_attachment), label: 'Purchase Order (PO)' } : null,
+    row.po_attachment ? { frameurl: getFixedUrl(row.po_attachment), label: 'Purchase Order (PO)' } : null,
     row.dr_attachment ? { frameurl: getFixedUrl(row.dr_attachment), label: 'Delivery Receipt (DR)' } : null,
     row.invoice_attachment ? { frameurl: getFixedUrl(row.invoice_attachment), label: 'Sales Invoice (SI)' } : null
   ].filter(Boolean);
