@@ -738,12 +738,15 @@ export const POHistoryTable = React.memo(({ poHistory, isSyncing, userRole, styl
           styles={styles}
           onClose={() => setSelectedRow(null)}
           onViewDocs={(r) => {
+            setSelectedRow(r); // Close details modal first so the second modal isn't hidden behind it
             onViewDocs(r);
           }}
           onUploadBatch={(ref) => {
+            setSelectedRow(r); // Close details modal first
             onUploadBatch(ref);
           }}
           onEditRow={(r) => {
+            setSelectedRow(r); // Close details modal first
             onEditRow(r);
           }}
         />
