@@ -300,7 +300,6 @@ const JadeSystem = ({ userRole, onLogout, username }) => {
         { id: 'services', label: 'Repair Lab', icon: 'fa-screwdriver-wrench', roles: ['admin', 'technical'] },
         { id: 'call logs', label: 'Call Logs', icon: 'fa-headset', roles: ['admin', 'technical', 'sales'] },
         { id: 'po receives', label: 'PO Receives', icon: 'fa-file-import', roles: ['admin', 'technical', 'sales'] },
-        { id: 'purchase order', label: 'Purchase Order', icon: 'fa-file-import', roles: ['admin', 'technical', 'sales'] },
     ];
 
     const SidebarContent = () => (
