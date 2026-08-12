@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { PO_TERMS, PO_STATUS, formatPHP } from './poReceivesConfig';
 
@@ -169,94 +169,121 @@ export const POScannerSection = React.memo(({ mobileScannerUrl, stagingStatus, b
   </div>
 ));
 
-export const POHistoryTable = React.memo(({ poHistory, isSyncing, userRole, styles, onRefresh, onViewDocs, onUploadBatch, onEditRow }) => (
-  <div style={styles.tableSection}>
-    <div style={styles.tableHeaderContainer}>
-      <h3 style={styles.tableTitle}>Registered Purchase Orders Ledger</h3>
-      <button 
-        onClick={onRefresh} 
-        disabled={isSyncing}
-        style={{ 
-          ...styles.refreshBtn, 
-          ...(isSyncing ? styles.refreshBtnDisabled : {}) 
-        }}
-      >
-        <span style={{ 
-          display: 'inline-block', 
-          transform: isSyncing ? 'rotate(360deg)' : 'none', 
-          transition: 'transform 1s linear infinite' 
-        }}>
-          🔄
-        </span> 
-        {isSyncing ? 'Syncing...' : 'Sync Logs'}
-      </button>
-    </div>
-    
-    <div style={styles.tableWrapper}>
-      <table style={styles.table}>
-        <thead>
-          <tr>
-            <th style={styles.th}>PO Number</th>
-            <th style={styles.th}>Customer</th>
-            <th style={styles.th}>PO Date</th>
-            <th style={styles.th}>Terms</th>
-            <th style={styles.th}>Amount</th>
-            <th style={styles.th}>PO Status</th>
-            <th style={styles.th}>Notes / Remarks</th>
-            <th style={styles.th}>Attached Files</th>
-            {/* Sticky pinned header cell */}
-            <th style={styles.thAction}>Action Controller</th>
-          </tr>
-        </thead>
-        <tbody>
-          {poHistory.length === 0 ? (
+export const POHistoryTable = React.memo(({ poHistory, isSyncing, userRole, styles, onRefresh, onViewDocs, onUploadBatch, onEditRow }) => {
+  const tableContainerRef = useRef(null);
+
+  // Auto-scroll row into full view on mouse enter
+  const handleRowMouseEnter = () => {
+    if (tableContainerRef.current) {
+      tableContainerRef.current.scrollTo({
+        left: tableContainerRef.current.scrollWidth,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  // Reset scroll on mouse leave
+  const handleRowMouseLeave = () => {
+    if (tableContainerRef.current) {
+      tableContainerRef.current.scrollTo({
+        left: 0,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  return (
+    <div style={styles.tableSection}>
+      <div style={styles.tableHeaderContainer}>
+        <h3 style={styles.tableTitle}>Registered Purchase Orders Ledger</h3>
+        <button 
+          onClick={onRefresh} 
+          disabled={isSyncing}
+          style={{ 
+            ...styles.refreshBtn, 
+            ...(isSyncing ? styles.refreshBtnDisabled : {}) 
+          }}
+        >
+          <span style={{ 
+            display: 'inline-block', 
+            transform: isSyncing ? 'rotate(360deg)' : 'none', 
+            transition: 'transform 1s linear infinite' 
+          }}>
+            🔄
+          </span> 
+          {isSyncing ? 'Syncing...' : 'Sync Logs'}
+        </button>
+      </div>
+      
+      <div style={styles.tableWrapper} ref={tableContainerRef}>
+        <table style={styles.table}>
+          <thead>
             <tr>
-              <td colSpan="9" style={styles.emptyTd}>No recorded purchase order transactions saved in this session cluster logs.</td>
+              <th style={styles.th}>PO Number</th>
+              <th style={styles.th}>Customer</th>
+              <th style={styles.th}>PO Date</th>
+              <th style={styles.th}>Terms</th>
+              <th style={styles.th}>Amount</th>
+              <th style={styles.th}>PO Status</th>
+              <th style={styles.th}>Notes / Remarks</th>
+              <th style={styles.th}>Attached Files</th>
+              <th style={styles.thAction}>Action Controller</th>
             </tr>
-          ) : (
-            poHistory.map((row, idx) => {
-              const uniqueKey = (row.batch_reference || row.po_number || row.id || `row-${idx}`).toString().trim().toLowerCase();
-              return (
-                <tr key={uniqueKey} style={styles.tableRow}>
-                  <td style={{ ...styles.td, fontFamily: 'monospace', fontWeight: 'bold', color: '#38bdf8' }}>{row.batch_reference || row.po_number || 'N/A'}</td>
-                  <td style={styles.td}>{row.customer_name || row.customer_id || 'N/A'}</td>
-                  <td style={styles.td}>{row.po_date}</td>
-                  <td style={styles.td}><span style={styles.termsBadge}>{row.po_terms}</span></td>
-                  <td style={styles.tdAmount}>{formatPHP(row.amount)}</td>
-                  <td style={styles.td}>
-                    <span style={{ ...styles.statusBadge, ...(row.status === 'served' ? styles.statusServed : styles.statusPending) }}>
-                      {row.status}
-                    </span>
-                  </td>
-                  <td style={{ ...styles.td, maxWidth: '200px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {row.remarks || <span style={styles.mutedText}>—</span>}
-                  </td>
-                  <td style={styles.td}>
-                    {row.po_attachment || row.dr_attachment ? (
-                      <button type="button" onClick={() => onViewDocs(row)} style={styles.viewAttachmentBtn}>👁️ View Docs</button>
-                    ) : (
-                      <span style={styles.mutedText}>—</span>
-                    )}
-                  </td>
-                  {/* Sticky pinned data cell */}
-                  <td style={styles.tdRightSticky}>
-                    <div style={styles.actionButtonGroup}>
-                      {userRole === 'admin' && (
-                        <button onClick={() => onEditRow(row)} style={styles.editBtn}>
-                          ✏️ Edit
-                        </button>
+          </thead>
+          <tbody>
+            {poHistory.length === 0 ? (
+              <tr>
+                <td colSpan="9" style={styles.emptyTd}>No recorded purchase order transactions saved in this session cluster logs.</td>
+              </tr>
+            ) : (
+              poHistory.map((row, idx) => {
+                const uniqueKey = (row.batch_reference || row.po_number || row.id || `row-${idx}`).toString().trim().toLowerCase();
+                return (
+                  <tr 
+                    key={uniqueKey} 
+                    style={styles.tableRow}
+                    onMouseEnter={handleRowMouseEnter}
+                    onMouseLeave={handleRowMouseLeave}
+                  >
+                    <td style={{ ...styles.td, fontFamily: 'monospace', fontWeight: 'bold', color: '#38bdf8' }}>{row.batch_reference || row.po_number || 'N/A'}</td>
+                    <td style={styles.td}>{row.customer_name || row.customer_id || 'N/A'}</td>
+                    <td style={styles.td}>{row.po_date}</td>
+                    <td style={styles.td}><span style={styles.termsBadge}>{row.po_terms}</span></td>
+                    <td style={styles.tdAmount}>{formatPHP(row.amount)}</td>
+                    <td style={styles.td}>
+                      <span style={{ ...styles.statusBadge, ...(row.status === 'served' ? styles.statusServed : styles.statusPending) }}>
+                        {row.status}
+                      </span>
+                    </td>
+                    <td style={{ ...styles.td, maxWidth: '200px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {row.remarks || <span style={styles.mutedText}>—</span>}
+                    </td>
+                    <td style={styles.td}>
+                      {row.po_attachment || row.dr_attachment ? (
+                        <button type="button" onClick={() => onViewDocs(row)} style={styles.viewAttachmentBtn}>👁️ View Docs</button>
+                      ) : (
+                        <span style={styles.mutedText}>—</span>
                       )}
-                      <button onClick={() => onUploadBatch(row.batch_reference || row.po_number)} style={styles.rowAttachmentBtn}>
-                        {row.po_attachment ? '🔄 Re-upload' : '📄 Scan'}
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })
-          )}
-        </tbody>
-      </table>
+                    </td>
+                    <td style={styles.tdRightSticky}>
+                      <div style={styles.actionButtonGroup}>
+                        {userRole === 'admin' && (
+                          <button onClick={() => onEditRow(row)} style={styles.editBtn}>
+                            ✏️ Edit
+                          </button>
+                        )}
+                        <button onClick={() => onUploadBatch(row.batch_reference || row.po_number)} style={styles.rowAttachmentBtn}>
+                          {row.po_attachment ? '🔄 Re-upload' : '📄 Scan'}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
-  </div>
-));
+  );
+});

@@ -70,11 +70,20 @@ export const styles = {
   tableTitle: { fontSize:'14px', fontWeight:'700', color:'#fff', textTransform:'uppercase', borderLeft:'3px solid #38bdf8', paddingLeft:'10px' },
   refreshBtn: { background:'#1f2937', border:'1px solid #374151', color:'#cbd5e1', padding:'8px 16px', borderRadius:'6px', cursor:'pointer', display:'inline-flex', alignItems:'center', gap:'8px', transition:'background 0.2s' },
   refreshBtnDisabled: { opacity: 0.6, cursor: 'not-allowed' },
-  tableWrapper: { width:'100%', overflowX:'auto', border:'1px solid #1f2937', borderRadius:'8px', position: 'relative' },
-  table: { width:'100%', borderCollapse:'collapse', textAlign:'left', minWidth:'950px' },
+  
+  // Table Scroll Container
+  tableWrapper: { 
+    width:'100%', 
+    overflowX:'auto', 
+    border:'1px solid #1f2937', 
+    borderRadius:'8px', 
+    position: 'relative',
+    scrollBehavior: 'smooth'
+  },
+  table: { width:'100%', borderCollapse:'collapse', textAlign:'left', minWidth:'1000px' },
   th: { padding:'16px', borderBottom:'2px solid #1f2937', color:'#94a3b8', fontSize:'11px', fontWeight:'700', textTransform:'uppercase', background:'#0f172a' },
   
-  // Sticky Column Header for Action Controller
+  // Sticky Action Header
   thAction: { 
     padding: '16px', 
     borderBottom: '2px solid #1f2937', 
@@ -90,12 +99,17 @@ export const styles = {
     boxShadow: '-6px 0 12px rgba(0,0,0,0.4)'
   },
   
-  tableRow: { borderBottom:'1px solid #1f2937', background:'#111827' },
-  td: { padding:'16px', fontSize:'14px', color:'#e2e8f0' },
-  tdAmount: { padding:'16px', fontSize:'14px', color:'#fff', fontWeight:'600', fontFamily:'monospace' },
+  tableRow: { 
+    borderBottom:'1px solid #1f2937', 
+    background:'#111827',
+    transition: 'background-color 0.2s ease'
+  },
+  
+  td: { padding:'16px', fontSize:'14px', color:'#e2e8f0', whiteSpace: 'nowrap' },
+  tdAmount: { padding:'16px', fontSize:'14px', color:'#fff', fontWeight:'600', fontFamily:'monospace', whiteSpace: 'nowrap' },
   tdRight: { padding:'16px', textAlign:'right' },
   
-  // Sticky Column Body Cell for Action Controller
+  // Sticky Action Cell
   tdRightSticky: { 
     padding: '16px', 
     textAlign: 'right',
