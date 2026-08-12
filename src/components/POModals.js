@@ -301,7 +301,7 @@ export const DocumentGalleryModal = React.memo(({ row, onClose, onOpenLightbox }
 
   if (!row) return null;
 
-  // Helper to format attachment values correctly using FILE_BASE
+  // Robust URL builder using FILE_BASE correctly
   const formatAttachmentUrl = (path) => {
     if (!path) return null;
     if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('blob:') || path.startsWith('data:')) {
@@ -320,7 +320,8 @@ export const DocumentGalleryModal = React.memo(({ row, onClose, onOpenLightbox }
 
   const poRef = row.batch_reference || row.po_number || 'N/A';
 
-  const handleCardClick = (idx) => {
+  const handleCardClick = (idx, e) => {
+    e.stopPropagation();
     if (onOpenLightbox) {
       onOpenLightbox(documents, idx);
     } else {
@@ -379,7 +380,7 @@ export const DocumentGalleryModal = React.memo(({ row, onClose, onOpenLightbox }
               documents.map((doc, idx) => (
                 <div 
                   key={idx}
-                  onClick={() => handleCardClick(idx)}
+                  onClick={(e) => handleCardClick(idx, e)}
                   style={{
                     background: '#090d16',
                     border: '1px solid #1e293b',
@@ -417,7 +418,7 @@ export const DocumentGalleryModal = React.memo(({ row, onClose, onOpenLightbox }
 
           <div style={{ padding: '16px 20px', borderTop: '1px solid #1f2937', background: '#0f172a', display: 'flex', justifyContent: 'flex-end' }}>
             <button onClick={onClose} style={{ background: '#1f2937', color: '#cbd5e1', border: '1px solid #374151', padding: '10px 18px', borderRadius: '6px', cursor: 'pointer', fontWeight: '600', fontSize: '12px' }}>
-              Close Gallery Gallery
+              Close Gallery
             </button>
           </div>
         </div>
