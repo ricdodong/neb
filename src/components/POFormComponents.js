@@ -97,7 +97,7 @@ const DocumentLightboxModal = ({ images, initialIndex = 0, onClose }) => {
 
     if (currentItem.url) {
       const img = new Image();
-      img.src = FILE_BASE + currentItem.url;
+      img.src =  currentItem.url;
       img.onload = () => {
         // Smart orientation detection: if image is landscape (width > height), 
         // document scans might require a 90deg adjustment depending on layout, 
@@ -361,7 +361,7 @@ const DocumentLightboxModal = ({ images, initialIndex = 0, onClose }) => {
                 transition: 'all 0.2s'
               }}
             >
-              <img src={img.url} alt={img.label} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <img src={FILE_BASE + img.url} alt={img.label} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             </div>
           ))}
         </div>
@@ -461,7 +461,7 @@ const DocumentGalleryModal = ({ row, onClose }) => {
                   }}
                 >
                   <div style={{ height: '160px', width: '100%', background: '#000', overflow: 'hidden', position: 'relative' }}>
-                    <img src={doc.url} alt={doc.label} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.85 }} />
+                    <img src={FILE_BASE + doc.url} alt={doc.label} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.85 }} />
                     <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(3,7,18,0.8), transparent)', display: 'flex', alignItems: 'flex-end', padding: '10px' }}>
                       <span style={{ fontSize: '11px', color: '#38bdf8', fontWeight: '700' }}>🔍 Click to Expand & Zoom</span>
                     </div>
