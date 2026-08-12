@@ -3,126 +3,126 @@ import { QRCodeSVG } from 'qrcode.react';
 import { FILE_BASE, ENDPOINTS, PO_TERMS, PO_STATUS } from './poReceivesConfig';
 import { getFixedUrl } from './POFormComponents';
 
-export const DocumentFrame = React.memo(({
-  docType,
-  frameUrl,
-  zoom,
-  pan,
-  styles,
-  onZoomIn,
-  onZoomOut,
-  onZoomReset,
-  onDragStart,
-  onDragMove,
-  onDragEnd
-}) => {
-  const fixedUrl = getFixedUrl(frameUrl);
+// ============================================================================
+// DOCUMENT GALLERY / LIGHTBOX MODAL
+// ============================================================================
+export const DocumentGalleryModal = React.memo(({ row, onClose, onOpenLightbox }) => {
+  if (!row) return null;
+
+  const documents = [
+    row.po_attachment ? { frameurl: getFixedUrl(row.po_attachment), label: 'Purchase Order (PO)' } : null,
+    row.dr_attachment ? { frameurl: getFixedUrl(row.dr_attachment), label: 'Delivery Receipt (DR)' } : null,
+    row.invoice_attachment ? { frameurl: getFixedUrl(row.invoice_attachment), label: 'Sales Invoice (SI)' } : null
+  ].filter(Boolean);
+
+  const poRef = row.batch_reference || row.po_number || 'N/A';
 
   return (
-    <div className="po-doc-frame" style={styles.documentFrame}>
-      <div style={styles.docFrameHeader}>
-        <h5 style={styles.docFrameTitle}>{docType} ATTACHMENT</h5>
-        {fixedUrl && (
-          <div style={styles.zoomControls}>
-            <button style={styles.zoomBtn} onClick={onZoomOut}>—</button>
-            <span style={styles.zoomIndicator}>{Math.round(zoom * 100)}%</span>
-            <button style={styles.zoomBtn} onClick={onZoomIn}>+</button>
-            <button style={styles.zoomBtn} onClick={onZoomReset}>↺</button>
-          </div>
-        )}
-      </div>
+    <div 
+      style={{
+        position: 'fixed',
+        inset: 0,
+        backgroundColor: 'rgba(3, 7, 18, 0.85)',
+        backdropFilter: 'blur(8px)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 1200,
+        padding: '16px'
+      }}
+      onClick={onClose}
+    >
       <div 
-        className={zoom > 1 ? "pan-canvas-grab" : ""}
-        style={styles.imageCanvas}
-        onMouseDown={(e) => onDragStart(e.clientX, e.clientY)}
-        onMouseMove={(e) => onDragMove(e.clientX, e.clientY)}
-        onMouseUp={onDragEnd}
-        onMouseLeave={onDragEnd}
-        onTouchStart={(e) => e.touches.length === 1 && onDragStart(e.touches[0].clientX, e.touches[0].clientY)}
-        onTouchMove={(e) => e.touches.length === 1 && onDragMove(e.touches[0].clientX, e.touches[0].clientY)}
-        onTouchEnd={onDragEnd}
+        style={{
+          background: '#111827',
+          border: '1px solid #1f2937',
+          borderRadius: '16px',
+          width: '100%',
+          maxWidth: '720px',
+          maxHeight: '90vh',
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.7)',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden'
+        }}
+        onClick={(e) => e.stopPropagation()}
       >
-        {fixedUrl ? (
-          <img 
-            src={fixedUrl} 
-            alt={`${docType} Frame`}
-            draggable="false"
-            style={{ 
-              ...styles.embeddedDocImg, 
-              transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})` 
-            }}
-            onError={(e) => { e.target.style.display = 'none'; if(e.target.nextSibling) e.target.nextSibling.style.display = 'block'; }}
-          />
-        ) : null}
-        <div style={{...styles.imgFallbackText, display: fixedUrl ? 'none' : 'block'}}>
-          ⚠️ No Digital {docType} File Parsed
+        <div style={{ padding: '16px 20px', borderBottom: '1px solid #1f2937', background: '#0f172a', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <span style={{ fontSize: '20px' }}>🖼️</span>
+            <div>
+              <h3 style={{ margin: 0, fontSize: '15px', fontWeight: '800', color: '#fff' }}>Verified Document Gallery</h3>
+              <span style={{ fontSize: '12px', color: '#38bdf8', fontFamily: 'monospace' }}>Record: {poRef}</span>
+            </div>
+          </div>
+          <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: '#94a3b8', fontSize: '20px', cursor: 'pointer' }}>✕</button>
+        </div>
+
+        <div style={{ padding: '24px', overflowY: 'auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+          {documents.length === 0 ? (
+            <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '40px', color: '#64748b' }}>
+              No document attachments found for this record.
+            </div>
+          ) : (
+            documents.map((doc, idx) => (
+              <div 
+                key={idx}
+                onClick={() => onOpenLightbox ? onOpenLightbox(documents, idx) : null}
+                style={{
+                  background: '#090d16',
+                  border: '1px solid #1e293b',
+                  borderRadius: '12px',
+                  overflow: 'hidden',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  transition: 'all 0.2s ease',
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.3)'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = '#38bdf8';
+                  e.currentTarget.style.transform = 'translateY(-3px)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = '#1e293b';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                }}
+              >
+                <div style={{ height: '160px', width: '100%', background: '#000', overflow: 'hidden', position: 'relative' }}>
+                  <img src={doc.frameurl} alt={doc.label} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.85 }} />
+                  <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(3,7,18,0.8), transparent)', display: 'flex', alignItems: 'flex-end', padding: '10px' }}>
+                    <span style={{ fontSize: '11px', color: '#38bdf8', fontWeight: '700' }}>🔍 Click to Expand & Zoom</span>
+                  </div>
+                </div>
+                <div style={{ padding: '12px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <span style={{ fontSize: '13px', fontWeight: '700', color: '#f8fafc' }}>{doc.label}</span>
+                  <span style={{ fontSize: '10px', color: '#00ff88', fontWeight: '600' }}>✓ Verified Staged File</span>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        <div style={{ padding: '16px 20px', borderTop: '1px solid #1f2937', background: '#0f172a', display: 'flex', justifyContent: 'flex-end' }}>
+          <button onClick={onClose} style={{ background: '#1f2937', color: '#cbd5e1', border: '1px solid #374151', padding: '10px 18px', borderRadius: '6px', cursor: 'pointer', fontWeight: '600', fontSize: '12px' }}>
+            Close Gallery
+          </button>
         </div>
       </div>
     </div>
   );
 });
 
-export const DocumentViewerModal = React.memo(({ 
-  viewDocsRow, 
-  styles, 
-  onClose, 
-  drZoom, 
-  poZoom, 
-  drPan, 
-  poPan, 
-  onDrZoomIn, onDrZoomOut, onDrZoomReset,
-  onPoZoomIn, onPoZoomOut, onPoZoomReset,
-  onDrDragStart, onDrDragMove, onDrDragEnd,
-  onPoDragStart, onPoDragMove, onPoDragEnd
-}) => {
-  if (!viewDocsRow) return null;
-
-  const drUrl = viewDocsRow.dr_attachment ? `${FILE_BASE}${viewDocsRow.dr_attachment}` : '';
-  const poUrl = viewDocsRow.po_attachment ? `${FILE_BASE}${viewDocsRow.po_attachment}` : '';
-
+// ============================================================================
+// DOCUMENT VIEWER MODAL (ALIAS / WRAPPER FOR BACKWARD COMPATIBILITY)
+// ============================================================================
+export const DocumentViewerModal = React.memo(({ viewDocsRow, styles, onClose, onOpenLightbox }) => {
   return (
-    <div style={styles.modalOverlay} onClick={onClose}>
-      <div className="po-large-modal-content" style={styles.largeModalContent} onClick={(e) => e.stopPropagation()}>
-        <div style={styles.modalHeader}>
-          <h4 style={styles.modalTitle}>ATTACHED DOCUMENTS ({viewDocsRow.customer_name || 'Account Logs'})</h4>
-          <button style={styles.modalCloseBtn} onClick={onClose}>✕</button>
-        </div>
-        
-        <div className="po-docs-viewer-grid" style={styles.documentViewerGrid}>
-          <DocumentFrame
-            docType="DR (Delivery Receipt)"
-            frameUrl={drUrl}
-            zoom={drZoom}
-            pan={drPan}
-            styles={styles}
-            onZoomIn={onDrZoomIn}
-            onZoomOut={onDrZoomOut}
-            onZoomReset={onDrZoomReset}
-            onDragStart={onDrDragStart}
-            onDragMove={onDrDragMove}
-            onDragEnd={onDrDragEnd}
-          />
-          <DocumentFrame
-            docType="PO (Purchase Order)"
-            frameUrl={poUrl}
-            zoom={poZoom}
-            pan={poPan}
-            styles={styles}
-            onZoomIn={onPoZoomIn}
-            onZoomOut={onPoZoomOut}
-            onZoomReset={onPoZoomReset}
-            onDragStart={onPoDragStart}
-            onDragMove={onPoDragMove}
-            onDragEnd={onPoDragEnd}
-          />
-        </div>
-        
-        <div style={styles.modalFooter}>
-          <span style={styles.footerRefText}>PO Number: {viewDocsRow.batch_reference || viewDocsRow.po_number}</span>
-          <button style={styles.closeActionBtn} onClick={onClose}>Dismiss Canvas View</button>
-        </div>
-      </div>
-    </div>
+    <DocumentGalleryModal 
+      row={viewDocsRow} 
+      onClose={onClose} 
+      onOpenLightbox={onOpenLightbox} 
+    />
   );
 });
 
