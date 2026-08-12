@@ -1005,8 +1005,7 @@ const EditRecordModal = React.memo(({ editingRow, clients, styles, onClose, onSa
               placeholder="Enter remarks or notes..."
             />
           </div>
-
-          <div style={{ display: 'flex', gap: '12px', marginTop: '12px' }}>
+<div style={{ display: 'flex', gap: '12px', marginTop: '12px' }}>
             <button
               type="submit"
               disabled={isSaving}
