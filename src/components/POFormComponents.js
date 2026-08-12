@@ -738,16 +738,12 @@ export const POHistoryTable = React.memo(({ poHistory, isSyncing, userRole, styl
           styles={styles}
           onClose={() => setSelectedRow(null)}
           onViewDocs={(r) => {
-            // NOTE: Removed setSelectedRow(null) so closing the sub-modal/action modal 
-            // will not wipe out or close this underlying PODetailsModal.
             onViewDocs(r);
           }}
           onUploadBatch={(ref) => {
-            // NOTE: Removed setSelectedRow(null) here as well.
             onUploadBatch(ref);
           }}
           onEditRow={(r) => {
-            // NOTE: Removed setSelectedRow(null) here as well.
             onEditRow(r);
           }}
         />
