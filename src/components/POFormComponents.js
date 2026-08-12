@@ -83,6 +83,116 @@ export const getDueDateInfo = (poDate, terms, status) => {
 };
 
 // ============================================================================
+// STUNNING GALLERY & DOCUMENT VIEWER MODAL
+// ============================================================================
+export const DocumentGalleryModal = React.memo(({ row, onClose, onOpenLightbox }) => {
+  if (!row) return null;
+
+  const documents = [
+    row.po_attachment ? { frameurl: getFixedUrl(row.po_attachment), label: 'Purchase Order (PO)' } : null,
+    row.dr_attachment ? { frameurl: getFixedUrl(row.dr_attachment), label: 'Delivery Receipt (DR)' } : null,
+    row.invoice_attachment ? { frameurl: getFixedUrl(row.invoice_attachment), label: 'Sales Invoice (SI)' } : null
+  ].filter(Boolean);
+
+  const poRef = row.batch_reference || row.po_number || 'N/A';
+
+  return (
+    <div 
+      style={{
+        position: 'fixed',
+        inset: 0,
+        backgroundColor: 'rgba(3, 7, 18, 0.85)',
+        backdropFilter: 'blur(8px)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 1200,
+        padding: '16px'
+      }}
+      onClick={onClose}
+    >
+      <div 
+        style={{
+          background: '#111827',
+          border: '1px solid #1f2937',
+          borderRadius: '16px',
+          width: '100%',
+          maxWidth: '720px',
+          maxHeight: '90vh',
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.7)',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden'
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div style={{ padding: '16px 20px', borderBottom: '1px solid #1f2937', background: '#0f172a', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <span style={{ fontSize: '20px' }}>🖼️</span>
+            <div>
+              <h3 style={{ margin: 0, fontSize: '15px', fontWeight: '800', color: '#fff' }}>Verified Document Gallery</h3>
+              <span style={{ fontSize: '12px', color: '#38bdf8', fontFamily: 'monospace' }}>Record: {poRef}</span>
+            </div>
+          </div>
+          <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: '#94a3b8', fontSize: '20px', cursor: 'pointer' }}>✕</button>
+        </div>
+
+        <div style={{ padding: '24px', overflowY: 'auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+          {documents.length === 0 ? (
+            <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '40px', color: '#64748b' }}>
+              No document attachments found for this record.
+            </div>
+          ) : (
+            documents.map((doc, idx) => (
+              <div 
+                key={idx}
+                onClick={() => onOpenLightbox ? onOpenLightbox(documents, idx) : null}
+                style={{
+                  background: '#090d16',
+                  border: '1px solid #1e293b',
+                  borderRadius: '12px',
+                  overflow: 'hidden',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  transition: 'all 0.2s ease',
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.3)'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = '#38bdf8';
+                  e.currentTarget.style.transform = 'translateY(-3px)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = '#1e293b';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                }}
+              >
+                <div style={{ height: '160px', width: '100%', background: '#000', overflow: 'hidden', position: 'relative' }}>
+                  <img src={FILE_BASE + doc.frameurl} alt={doc.label} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.85 }} />
+                  <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(3,7,18,0.8), transparent)', display: 'flex', alignItems: 'flex-end', padding: '10px' }}>
+                    <span style={{ fontSize: '11px', color: '#38bdf8', fontWeight: '700' }}>🔍 Click to Expand & Zoom</span>
+                  </div>
+                </div>
+                <div style={{ padding: '12px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <span style={{ fontSize: '13px', fontWeight: '700', color: '#f8fafc' }}>{doc.label}</span>
+                  <span style={{ fontSize: '10px', color: '#00ff88', fontWeight: '600' }}>✓ Verified Staged File</span>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        <div style={{ padding: '16px 20px', borderTop: '1px solid #1f2937', background: '#0f172a', display: 'flex', justifyContent: 'flex-end' }}>
+          <button onClick={onClose} style={{ background: '#1f2937', color: '#cbd5e1', border: '1px solid #374151', padding: '10px 18px', borderRadius: '6px', cursor: 'pointer', fontWeight: '600', fontSize: '12px' }}>
+            Close Gallery
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+});
+
+// ============================================================================
 // 1. PO FORM SECTION
 // ============================================================================
 export const POFormSection = React.memo(({ formData, clients, stagingStatus, loading, styles, onInputChange, onSubmit }) => {
@@ -630,36 +740,30 @@ export const POHistoryTable = React.memo(({ poHistory, isSyncing, userRole, styl
                     <td style={styles.td}>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                         <span style={{ fontSize: '12px', color: '#e2e8f0' }}>{row.po_terms || 'COD'}</span>
-                        <span style={{ fontSize: '10px', color: due.color, fontWeight: '700' }}>{due.dueDateStr} ({due.label})</span>
+                        <span style={{ fontSize: '10px', color: due.color, fontWeight: '700' }}>
+                          {due.dueDateStr !== 'N/A' && due.dueDateStr !== 'Fulfilled' ? `Due: ${due.dueDateStr}` : ''}
+                        </span>
                       </div>
                     </td>
-                    <td style={{ ...styles.td, fontFamily: 'monospace', fontWeight: 'bold', color: '#00ff88' }}>
+                    <td style={styles.tdAmount}>
                       {formatPHP(row.amount)}
                     </td>
                     <td style={styles.td}>
-                      <span style={{ ...styles.statusBadge, ...(row.status === 'served' ? styles.statusServed : styles.statusPending) }}>
-                        {row.status}
-                      </span>
-                    </td>
-                    <td style={{ ...styles.td, textAlign: 'right' }} onClick={(e) => e.stopPropagation()}>
-                      <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
-                        {(row.po_attachment || row.dr_attachment || row.invoice_attachment) && (
-                          <button 
-                            onClick={() => setGalleryRow(row)}
-                            style={styles.viewAttachmentBtn}
-                            title="View Document Gallery"
-                          >
-                            🖼️
-                          </button>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span style={{ ...styles.statusBadge, ...(row.status === 'served' ? styles.statusServed : styles.statusPending) }}>
+                          {row.status}
+                        </span>
+                        {row.status !== 'served' && (
+                          <span style={{ fontSize: '10px', fontWeight: '800', color: due.color, background: due.bg, padding: '2px 6px', borderRadius: '4px', border: `1px solid ${due.borderColor}` }}>
+                            {due.label}
+                          </span>
                         )}
-                        <button 
-                          onClick={() => setSelectedRow(row)}
-                          style={styles.actionBtn}
-                          title="View Details"
-                        >
-                          👁️ View
-                        </button>
                       </div>
+                    </td>
+                    <td style={{ ...styles.td, textAlign: 'right' }}>
+                      <span style={{ color: '#38bdf8', fontSize: '12px', fontWeight: '600' }}>
+                        View Details →
+                      </span>
                     </td>
                   </tr>
                 );
@@ -669,83 +773,64 @@ export const POHistoryTable = React.memo(({ poHistory, isSyncing, userRole, styl
         </table>
       </div>
 
-      {/* MOBILE CARD VIEW */}
-      <div className="po-mobile-card-list" style={{ display: 'none', flexDirection: 'column', gap: '12px' }}>
+      <div className="po-mobile-card-list" style={{ flexDirection: 'column', gap: '12px', width: '100%' }}>
         {filteredHistory.length === 0 ? (
-          <div style={{ ...styles.emptyTd, padding: '24px', textAlign: 'center', background: '#111827', borderRadius: '12px' }}>
+          <div style={{ ...styles.emptyTd, background: '#111827', borderRadius: '8px', border: '1px solid #1f2937' }}>
             No purchase orders matched your search or filter criteria.
           </div>
         ) : (
           filteredHistory.map((row, idx) => {
-            const uniqueKey = (row.batch_reference || row.po_number || row.id || `mobile-row-${idx}`).toString().trim().toLowerCase();
+            const uniqueKey = (row.batch_reference || row.po_number || row.id || `mob-${idx}`).toString().trim().toLowerCase();
             const due = getDueDateInfo(row.po_date, row.po_terms, row.status);
 
             return (
-              <div 
+              <div
                 key={uniqueKey}
                 onClick={() => setSelectedRow(row)}
                 style={{
                   background: '#111827',
                   border: '1px solid #1f2937',
-                  borderRadius: '12px',
-                  padding: '16px',
+                  borderRadius: '10px',
+                  padding: '14px 16px',
                   display: 'flex',
                   flexDirection: 'column',
-                  gap: '12px',
+                  gap: '10px',
                   cursor: 'pointer',
-                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.3)'
+                  boxSizing: 'border-box'
                 }}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <div>
-                    <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '700' }}>PO NUMBER</span>
-                    <div style={{ fontSize: '15px', fontFamily: 'monospace', fontWeight: '800', color: '#38bdf8' }}>
-                      {row.batch_reference || row.po_number || 'N/A'}
-                    </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontFamily: 'monospace', fontWeight: 'bold', color: '#38bdf8', fontSize: '14px' }}>
+                    {row.batch_reference || row.po_number || 'N/A'}
+                  </span>
+                  <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                    <span style={{ ...styles.statusBadge, ...(row.status === 'served' ? styles.statusServed : styles.statusPending), fontSize: '10px' }}>
+                      {row.status}
+                    </span>
+                    {row.status !== 'served' && (
+                      <span style={{ fontSize: '9px', fontWeight: '800', color: due.color, background: due.bg, padding: '2px 5px', borderRadius: '4px', border: `1px solid ${due.borderColor}` }}>
+                        {due.label}
+                      </span>
+                    )}
                   </div>
-                  <span style={{ ...styles.statusBadge, ...(row.status === 'served' ? styles.statusServed : styles.statusPending) }}>
-                    {row.status}
+                </div>
+
+                <div style={{ fontSize: '14px', fontWeight: '600', color: '#f8fafc' }}>
+                  {row.customer_name || row.customer_id || 'N/A'}
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #1e293b', paddingTop: '8px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <span style={{ fontSize: '11px', color: '#94a3b8' }}>📅 {row.po_date || 'N/A'}</span>
+                    <span style={{ fontSize: '10px', color: '#64748b' }}>Terms: {row.po_terms || 'COD'}</span>
+                  </div>
+                  <span style={{ fontFamily: 'monospace', fontWeight: 'bold', color: '#00ff88', fontSize: '14px' }}>
+                    {formatPHP(row.amount)}
                   </span>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', fontSize: '13px', background: '#090d16', padding: '10px', borderRadius: '8px', border: '1px solid #1e293b' }}>
-                  <div>
-                    <span style={{ fontSize: '10px', color: '#94a3b8', display: 'block' }}>CUSTOMER</span>
-                    <span style={{ color: '#f8fafc', fontWeight: '600' }}>{row.customer_name || row.customer_id || 'N/A'}</span>
-                  </div>
-                  <div>
-                    <span style={{ fontSize: '10px', color: '#94a3b8', display: 'block' }}>TOTAL AMOUNT</span>
-                    <span style={{ color: '#00ff88', fontFamily: 'monospace', fontWeight: '700' }}>{formatPHP(row.amount)}</span>
-                  </div>
-                  <div>
-                    <span style={{ fontSize: '10px', color: '#94a3b8', display: 'block' }}>PO DATE</span>
-                    <span style={{ color: '#e2e8f0' }}>{row.po_date || 'N/A'}</span>
-                  </div>
-                  <div>
-                    <span style={{ fontSize: '10px', color: '#94a3b8', display: 'block' }}>TERMS / SCHEDULE</span>
-                    <span style={{ color: due.color, fontWeight: '700' }}>{due.dueDateStr}</span>
-                  </div>
-                </div>
-
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '4px', borderTop: '1px solid #1f2937' }}>
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    <span style={{ fontSize: '11px', color: row.po_attachment ? '#00ff88' : '#f87171', fontWeight: '600' }}>
-                      {row.po_attachment ? '✓ PO' : '❌ PO'}
-                    </span>
-                    <span style={{ fontSize: '11px', color: row.dr_attachment ? '#38bdf8' : '#f87171', fontWeight: '600' }}>
-                      {row.dr_attachment ? '✓ DR' : '❌ DR'}
-                    </span>
-                  </div>
-                  <div style={{ display: 'flex', gap: '8px' }} onClick={(e) => e.stopPropagation()}>
-                    {(row.po_attachment || row.dr_attachment || row.invoice_attachment) && (
-                      <button onClick={() => setGalleryRow(row)} style={{ ...styles.viewAttachmentBtn, padding: '6px 10px', fontSize: '11px' }}>
-                        🖼️ Gallery
-                      </button>
-                    )}
-                    <button onClick={() => setSelectedRow(row)} style={{ ...styles.actionBtn, padding: '6px 12px', fontSize: '11px' }}>
-                      👁️ Details
-                    </button>
-                  </div>
+                <div style={{ textAlign: 'right', fontSize: '11px', color: '#38bdf8', fontWeight: '600' }}>
+                  Tap for details →
                 </div>
               </div>
             );
@@ -753,165 +838,33 @@ export const POHistoryTable = React.memo(({ poHistory, isSyncing, userRole, styl
         )}
       </div>
 
-      <PODetailsModal 
-        row={selectedRow}
-        userRole={userRole}
-        styles={styles}
-        onClose={() => setSelectedRow(null)}
-        onViewDocs={(r) => { setSelectedRow(null); setGalleryRow(r); }}
-        onUploadBatch={onUploadBatch}
-        onEditRow={onEditRow}
-      />
+      {selectedRow && (
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          <PODetailsModal 
+            row={selectedRow}
+            userRole={userRole}
+            styles={styles}
+            onClose={() => setSelectedRow(null)}
+            onViewDocs={(r) => {
+              setGalleryRow(r);
+            }}
+            onUploadBatch={(ref) => {
+              onUploadBatch(ref);
+            }}
+            onEditRow={(r) => {
+              onEditRow(r);
+            }}
+          />
+        </div>
+      )}
 
       {galleryRow && (
         <DocumentGalleryModal 
           row={galleryRow}
           onClose={() => setGalleryRow(null)}
           onOpenLightbox={onOpenLightbox}
-          styles={styles}
         />
       )}
     </div>
   );
 });
-
-// ============================================================================
-// 5. DOCUMENT GALLERY MODAL (ATTACHMENT LIGHTBOX & GRID VIEWER)
-// ============================================================================
-export const DocumentGalleryModal = ({ row, onClose, onOpenLightbox, styles }) => {
-  if (!row) return null;
-
-  const poRef = row.batch_reference || row.po_number || 'N/A';
-
-  const documents = [
-    { label: 'Purchase Order (PO)', url: getFixedUrl(row.po_attachment), type: 'PO' },
-    { label: 'Delivery Receipt (DR)', url: getFixedUrl(row.dr_attachment), type: 'DR' },
-    { label: 'Sales Invoice', url: getFixedUrl(row.invoice_attachment), type: 'Invoice' }
-  ].filter(doc => Boolean(doc.url));
-
-  const modalStyle = {
-    position: 'fixed',
-    inset: 0,
-    backgroundColor: 'rgba(3, 7, 18, 0.88)',
-    backdropFilter: 'blur(8px)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 1200,
-    padding: '16px'
-  };
-
-  const cardStyle = {
-    background: '#111827',
-    border: '1px solid #1f2937',
-    borderRadius: '16px',
-    width: '100%',
-    maxWidth: '720px',
-    maxHeight: '90vh',
-    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.7)',
-    overflow: 'hidden',
-    display: 'flex',
-    flexDirection: 'column'
-  };
-
-  return (
-    <div style={modalStyle} onClick={onClose}>
-      <div style={cardStyle} onClick={(e) => e.stopPropagation()}>
-        
-        <div style={{ padding: '16px 20px', borderBottom: '1px solid #1f2937', background: '#0f172a', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <span style={{ fontSize: '20px' }}>🖼️</span>
-            <div>
-              <h3 style={{ margin: 0, fontSize: '15px', fontWeight: '800', color: '#fff' }}>Document Attachment Gallery</h3>
-              <span style={{ fontSize: '12px', color: '#38bdf8', fontFamily: 'monospace' }}>Ref: {poRef}</span>
-            </div>
-          </div>
-          <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: '#94a3b8', fontSize: '20px', cursor: 'pointer' }}>✕</button>
-        </div>
-
-        <div style={{ padding: '20px', overflowY: 'auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
-          {documents.length === 0 ? (
-            <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '32px', color: '#94a3b8', background: '#090d16', borderRadius: '12px', border: '1px solid #1e293b' }}>
-              No document attachments found for this record.
-            </div>
-          ) : (
-            documents.map((doc, idx) => (
-              <div 
-                key={idx}
-                style={{
-                  background: '#090d16',
-                  border: '1px solid #1e293b',
-                  borderRadius: '12px',
-                  padding: '12px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '10px'
-                }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: '12px', fontWeight: '700', color: '#f8fafc' }}>{doc.label}</span>
-                  <span style={{ fontSize: '10px', color: '#38bdf8', background: 'rgba(56, 189, 248, 0.1)', padding: '2px 6px', borderRadius: '4px', border: '1px solid rgba(56, 189, 248, 0.2)' }}>
-                    {doc.type}
-                  </span>
-                </div>
-
-                <div 
-                  onClick={() => onOpenLightbox && onOpenLightbox(doc.url, doc.label)}
-                  style={{
-                    width: '100%',
-                    height: '160px',
-                    borderRadius: '8px',
-                    overflow: 'hidden',
-                    background: '#000',
-                    cursor: 'pointer',
-                    position: 'relative',
-                    border: '1px solid #1f2937',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}
-                  title="Click to expand/zoom document"
-                >
-                  <img 
-                    src={doc.url} 
-                    alt={doc.label} 
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                    onError={(e) => {
-                      e.target.style.display = 'none';
-                    }}
-                  />
-                  <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0, transition: 'opacity 0.2s ease' }}
-                    onMouseEnter={(e) => e.currentTarget.style.opacity = 1}
-                    onMouseLeave={(e) => e.currentTarget.style.opacity = 0}
-                  >
-                    <span style={{ background: 'rgba(15, 23, 42, 0.8)', color: '#fff', padding: '6px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: '600' }}>
-                      🔍 Zoom Image
-                    </span>
-                  </div>
-                </div>
-
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <a 
-                    href={doc.url} 
-                    target="_blank" 
-                    rel="noopener noreferrer" 
-                    style={{ flex: 1, textAlign: 'center', background: '#1e293b', color: '#38bdf8', border: '1px solid #334155', padding: '6px', borderRadius: '6px', fontSize: '11px', fontWeight: '600', textDecoration: 'none' }}
-                  >
-                    Open Original ↗
-                  </a>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-
-        <div style={{ padding: '16px 20px', borderTop: '1px solid #1f2937', background: '#0f172a', display: 'flex', justifyContent: 'flex-end' }}>
-          <button onClick={onClose} style={{ background: '#1f2937', color: '#cbd5e1', border: '1px solid #374151', padding: '8px 18px', borderRadius: '6px', cursor: 'pointer', fontWeight: '600', fontSize: '12px' }}>
-            Close Gallery
-          </button>
-        </div>
-
-      </div>
-    </div>
-  );
-};
