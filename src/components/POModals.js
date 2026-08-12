@@ -298,7 +298,7 @@ export const EditRecordModal = React.memo(({ editingRow, clients, styles, onClos
               style={styles.select}
             >
               {PO_STATUS.map(status => (
-                <option key={status.value} value={status.value}>{domainToStatus(status)}</option>
+                <option key={status.value} value={status.value}>{status.label}</option>
               ))}
             </select>
           </div>
