@@ -1,132 +1,46 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 
 // ============================================================================
-// CONSTANTS
+// CONSTANTS & ENDPOINTS
 // ============================================================================
-const API_BASE = 'https://dpsapi.ricalgen.eu.org';
-const FILE_BASE = 'https://jadefile.ricalgen.eu.org';
+const FILE_BASE = process.env.REACT_APP_FILE_BASE || 'http://localhost:5000/uploads/';
+
 const ENDPOINTS = {
-  clients: `${API_BASE}/api/po-receives/clients`,
-  history: `${API_BASE}/api/po-receives/history`,
-  records: `${API_BASE}/api/po-receives`,
-  updateRecord: (ref) => `${API_BASE}/api/po-receives/${encodeURIComponent(ref)}`,
-  checkStaging: (ref) => `${API_BASE}/api/po-receives/check-staging/${encodeURIComponent(ref)}`,
-  serverInfo: `${API_BASE}/api/server-info`,
-  mobileUploads2: (ref) => `/#/mobile-upload2/${encodeURIComponent(ref)}`,
-  mobileUploadsBatch: (ref) => `/#/mobile-upload/${encodeURIComponent(ref)}`,
+  history: '/api/po-receives/history',
+  clients: '/api/clients',
+  serverInfo: '/api/server-info',
+  records: '/api/po-receives',
+  updateRecord: (ref) => `/api/po-receives/${encodeURIComponent(ref)}`,
+  checkStaging: (ref) => `/api/po-receives/staging-status?batch_reference=${encodeURIComponent(ref)}`,
+  mobileUploadsBatch: (ref) => `${window.location.origin}/mobile-upload?batch=${encodeURIComponent(ref)}`,
+  mobileUploads2: (ref) => `${window.location.origin}/mobile-upload?batch=${encodeURIComponent(ref)}`,
 };
 
-const POLLING_INTERVAL = 3000;
-const SUCCESS_MESSAGE_DURATION = 6000;
-const DEFAULT_ZOOM = 1;
-const MAX_ZOOM = 5;
-const ZOOM_STEP = 0.25;
-
 const PO_TERMS = [
-  { value: 'COD', label: 'Cash on Delivery (COD)' },
-  { value: 'Terms-15', label: 'Terms 15 Days' },
-  { value: 'Terms-30', label: 'Terms 30 Days' },
-  { value: 'Terms-60', label: 'Terms 60 Days' },
-  { value: 'Dated-Check', label: 'Post-Dated Check' },
+  { value: 'COD', label: 'Cash On Delivery (COD)' },
+  { value: 'NET7', label: 'Net 7 Days' },
+  { value: 'NET15', label: 'Net 15 Days' },
+  { value: 'NET30', label: 'Net 30 Days' },
+  { value: 'NET60', label: 'Net 60 Days' },
 ];
 
 const PO_STATUS = [
-  { value: 'pending', label: 'Pending Review / Unserved' },
-  { value: 'served', label: 'Served / Stock Transferred' },
+  { value: 'pending', label: 'Pending Verification' },
+  { value: 'verified', label: 'Verified & Logged' },
+  { value: 'fulfilled', label: 'Fulfilled / Received' },
+  { value: 'cancelled', label: 'Cancelled' },
 ];
 
-// ============================================================================
-// STYLES - REFINE HIGH-CONTRAST DESIGN SYSTEM
-// ============================================================================
-const styles = {
-  container: { padding:'24px', background:'#0a0b0d', color:'#f8fafc', minHeight:'100vh', fontFamily:'system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif', boxSizing:'border-box' },
-  header: { marginBottom:'32px', borderBottom:'1px solid #1e293b', paddingBottom:'20px' },
-  title: { fontSize:'24px', fontWeight:'800', letterSpacing:'-0.02em', color:'#fff', margin:'0 0 8px 0', textTransform:'uppercase' },
-  subtitle: { fontSize:'14px', color:'#94a3b8', margin:0, lineHeight:'1.5' },
-  layoutGrid: { display:'flex', gap:'24px', alignItems:'start', width:'100%' },
-  card: { background:'#111827', border:'1px solid #1f2937', borderRadius:'12px', padding:'24px', boxSizing:'border-box', boxShadow:'0 10px 15px -3px rgba(0,0,0,.3)', width:'100%' },
-  scannerCard: { border:'1px solid #374151', background:'#13151a', display:'flex', flexDirection:'column', alignItems:'center', textAlign:'center' },
-  cardTitle: { fontSize:'14px', fontWeight:'700', color:'#00ff88', margin:'0 0 24px 0', alignSelf:'flex-start', textTransform:'uppercase', letterSpacing:'0.05em', borderLeft:'3px solid #00ff88', paddingLeft:'10px' },
-  form: { display:'flex', flexDirection:'column', gap:'20px' },
-  formRow: { display:'flex', gap:'20px', flexWrap:'wrap', width:'100%' },
-  formGroup: { display:'flex', flexDirection:'column', gap:'8px', flex:'1 1', minWidth:0 },
-  label: { fontSize:'12px', fontWeight:'600', color:'#94a3b8', textTransform:'uppercase', letterSpacing:'0.03em' },
-  input: { background:'#1f2937', border:'1px solid #374151', borderRadius:'6px', padding:'12px 14px', color:'#fff', fontSize:'14px', width:'100%', boxSizing:'border-box' },
-  textarea: { background:'#1f2937', border:'1px solid #374151', borderRadius:'6px', padding:'12px 14px', color:'#fff', fontSize:'14px', width:'100%', boxSizing:'border-box', minHeight:'80px', resize:'vertical' },
-  select: { background:'#1f2937', border:'1px solid #374151', borderRadius:'6px', padding:'12px 14px', color:'#fff', fontSize:'14px', width:'100%', boxSizing:'border-box', cursor:'pointer' },
-  submitBtn: { background:'#00ff88', color:'#0b0f19', border:'none', borderRadius:'6px', padding:'16px 20px', fontSize:'14px', fontWeight:'700', cursor:'pointer', width:'100%' },
-  submitBtnLoading: { background:'#1e293b', color:'#64748b', cursor:'not-allowed' },
-  redirectBtn: { display:'block', background:'rgba(0,255,136,.05)', color:'#00ff88', border:'1px solid #00ff88', borderRadius:'6px', padding:'14px 20px', textDecoration:'none', textAlign:'center', width:'100%' },
-  redirectBtnDisabled: { borderColor:'#1e293b', color:'#475569', background:'transparent', cursor:'not-allowed' },
-  scannerInstructions: { fontSize:'13px', color:'#94a3b8', lineHeight:'1.6', margin:'0 0 24px 0' },
-  qrContainer: { background:'#090d16', padding:'16px', borderRadius:'12px', border:'1px solid #1f2937', marginBottom:'24px', display:'inline-flex', alignItems:'center', justifyContent:'center', minHeight:'172px' },
-  syncText: { width:140, height:140, display:'flex', alignItems:'center', justifyContent:'center', color:'#475569', fontSize:'13px' },
-  batchBadge: { background:'#0f172a', border:'1px solid #1e293b', padding:'14px', borderRadius:'6px', width:'100%', textAlign:'left', boxSizing:'border-box' },
-  badgeLabel: { display:'block', fontSize:'10px', color:'#64748b', fontWeight:'700' },
-  badgeCode: { color:'#38bdf8', fontFamily:'monospace', fontSize:'13px', fontWeight:'600', wordBreak:'break-all' },
-  tableSection: { marginTop:'32px', background:'#111827', border:'1px solid #1f2937', borderRadius:'12px', padding:'24px', boxSizing:'border-box' },
-  tableHeaderContainer: { display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'20px', flexWrap:'wrap', gap:'12px' },
-  tableTitle: { fontSize:'14px', fontWeight:'700', color:'#fff', textTransform:'uppercase', borderLeft:'3px solid #38bdf8', paddingLeft:'10px' },
-  refreshBtn: { background:'#1f2937', border:'1px solid #374151', color:'#cbd5e1', padding:'8px 16px', borderRadius:'6px', cursor:'pointer', display:'inline-flex', alignItems:'center', gap:'8px', transition:'background 0.2s' },
-  refreshBtnDisabled: { opacity: 0.6, cursor: 'not-allowed' },
-  tableWrapper: { width:'100%', overflowX:'auto', border:'1px solid #1f2937', borderRadius:'8px' },
-  table: { width:'100%', borderCollapse:'collapse', textAlign:'left', minWidth:'950px' },
-  th: { padding:'16px', borderBottom:'2px solid #1f2937', color:'#94a3b8', fontSize:'11px', fontWeight:'700', textTransform:'uppercase', background:'#0f172a' },
-  tableRow: { borderBottom:'1px solid #1f2937', background:'#111827' },
-  td: { padding:'16px', fontSize:'14px', color:'#e2e8f0' },
-  tdAmount: { padding:'16px', fontSize:'14px', color:'#fff', fontWeight:'600', fontFamily:'monospace' },
-  tdRight: { padding:'16px', textAlign:'right' },
-  emptyTd: { padding:'48px', textAlign:'center', color:'#64748b', fontStyle:'italic' },
-  termsBadge: { background:'#1f2937', padding:'4px 8px', borderRadius:'4px', border:'1px solid #374151' },
-  statusBadge: { padding:'4px 10px', borderRadius:'20px', fontSize:'11px', fontWeight:'700', textTransform:'uppercase' },
-  statusPending: { background:'rgba(245,158,11,.1)', color:'#fbbf24', border:'1px solid rgba(245,158,11,.2)' },
-  statusServed: { background:'rgba(16,185,129,.1)', color:'#34d399', border:'1px solid rgba(16,185,129,.2)' },
-  modalOverlay: { position:'fixed', inset:0, background:'rgba(3,7,18,.85)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:1000, padding:'16px', boxSizing:'border-box' },
-  modalContent: { background:'#111827', border:'1px solid #1f2937', borderRadius:'16px', width:'100%', maxWidth:'420px', padding:'32px', boxSizing:'border-box' },
-  editModalContent: { background:'#111827', border:'1px solid #1f2937', borderRadius:'16px', width:'100%', maxWidth:'600px', padding:'32px', boxSizing:'border-box', maxHeight:'90vh', overflowY:'auto' },
-  modalHeader: { display:'flex', justifyContent:'space-between', alignItems:'center', borderBottom:'1px solid #1f2937', paddingBottom:'16px', marginBottom:'24px' },
-  modalTitle: { fontSize:'14px', fontWeight:'800', color:'#00ff88', textTransform:'uppercase' },
-  modalCloseBtn: { background:'transparent', border:'none', color:'#94a3b8', fontSize:'22px', cursor:'pointer' },
-  modalBody: { display:'flex', flexDirection:'column', alignItems:'center', textAlign:'center' },
-  modalInstructions: { fontSize:'13px', color:'#94a3b8', lineHeight:'1.6' },
-  alert: { padding:'14px 18px', borderRadius:'8px', fontSize:'14px', fontWeight:'600', display:'flex', alignItems:'center', marginBottom: '20px', boxSizing:'border-box' },
-  alertError: { background:'rgba(220,38,38,.1)', color:'#fca5a5', border:'1px solid rgba(220,38,38,.2)' },
-  alertSuccess: { background:'rgba(16,185,129,.1)', color:'#a7f3d0', border:'1px solid rgba(16,185,129,.2)' },
-  closeActionBtn: { background:'#1f2937', color:'#fff', border:'1px solid #374151', padding:'10px 20px', borderRadius:'6px', cursor:'pointer' },
-  stagingRow: { display:'flex', width:'100%', gap:'10px', marginTop:'12px', justifyContent:'space-between' },
-  stagedIndicator: { flex:1, padding:'10px', borderRadius:'6px', fontSize:'11px', fontWeight:'700', textTransform:'uppercase', border:'1px solid #222', background:'#14161d', textAlign:'center' },
-  largeModalContent: { background: '#111827', border: '1px solid #1f2937', borderRadius: '16px', width: '100%', maxWidth: '1100px', height: '85vh', display: 'flex', flexDirection: 'column', boxSizing:'border-box' },
-  documentViewerGrid: { display: 'flex', gap: '16px', padding: '16px', flex: 1, minHeight: 0, boxSizing:'border-box' },
-  documentFrame: { background: '#090d16', border: '1px solid #1f2937', borderRadius: '8px', display: 'flex', flexDirection: 'column', flex: '1 1 50%', minHeight: 0, boxSizing:'border-box' },
-  docFrameHeader: { background: '#0f172a', padding: '10px 16px', borderBottom: '1px solid #1f2937', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderRadius: '8px 8px 0 0', boxSizing:'border-box' },
-  docFrameTitle: { fontSize: '12px', color: '#94a3b8', fontWeight: '700', margin: 0 },
-  zoomControls: { display: 'flex', alignItems: 'center', gap: '6px' },
-  zoomBtn: { background: '#1f2937', border: '1px solid #374151', color: '#cbd5e1', padding: '4px 10px', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', fontWeight: 'bold' },
-  zoomIndicator: { fontSize: '11px', color: '#64748b', width: '42px', textAlign: 'center', fontFamily: 'monospace' },
-  imageCanvas: { flex: 1, overflow: 'hidden', position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'default' },
-  embeddedDocImg: { maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', transition: 'transform 0.1s ease-out', userSelect: 'none' },
-  imgFallbackText: { color: '#475569', fontSize: '12px', textTransform: 'uppercase', fontWeight: '600' },
-  modalFooter: { background: '#0f172a', padding: '16px', borderTop: '1px solid #1f2937', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderRadius: '0 0 16px 16px', boxSizing:'border-box' },
-  footerRefText: { fontSize: '12px', color: '#64748b', fontFamily: 'monospace', wordBreak: 'break-all' },
-  modalActionLink: { display: 'block', width: '100%', background: '#00ff88', color: '#0b0f19', textAlign: 'center', textDecoration: 'none', fontSize: '13px', fontWeight: '700', padding: '12px', borderRadius: '6px', textTransform: 'uppercase', marginTop: '16px', boxSizing: 'border-box' },
-  modalBadgeDisplay: { background: '#0f172a', padding: '10px', border: '1px solid #1f2937', borderRadius: '6px', width: '100%', boxSizing: 'border-box', textAlign: 'center', marginTop: '8px', wordBreak: 'break-all', fontFamily: 'monospace', color: '#38bdf8' },
-  modalQrWrapper: { background: '#090d16', padding: '16px', border: '1px solid #1f2937', borderRadius: '12px', margin: '20px 0', display: 'flex', alignItems: 'center', justifyContent: 'center' },
-  viewAttachmentBtn: { background: '#1e3a8a', color: '#60a5fa', border: '1px solid #2563eb', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: '600' },
-  rowAttachmentBtn: { background: 'transparent', border: '1px solid #0284c7', color: '#38bdf8', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: '600' },
-  editBtn: { background: 'rgba(234,179,8,.1)', border: '1px solid rgba(234,179,8,.3)', color: '#facc15', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: '600', marginRight: '8px' },
-  mutedText: { color: '#4b5563', fontSize: '14px' },
-  successHint: { color: '#00ff88', fontSize: '11px', fontWeight: '700', marginTop: '4px' }
-};
+const DEFAULT_ZOOM = 1;
+const MAX_ZOOM = 3;
+const ZOOM_STEP = 0.25;
+const SUCCESS_MESSAGE_DURATION = 4000;
+const POLLING_INTERVAL = 3000;
 
 // ============================================================================
-// UTILITY FUNCTIONS
+// HELPER FUNCTIONS
 // ============================================================================
-const formatPHP = (val) => {
-  const numericVal = typeof val === 'string' ? parseFloat(val) : val;
-  return new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(numericVal || 0);
-};
-
 const getInitialFormData = () => ({
   batch_reference: '',
   customer_id: '',
@@ -134,353 +48,707 @@ const getInitialFormData = () => ({
   po_date: new Date().toISOString().split('T')[0],
   po_terms: 'COD',
   status: 'pending',
-  remarks: ''
+  remarks: '',
 });
 
-const enforceUniqueRecords = (items) => {
-  if (!Array.isArray(items)) return [];
-  const map = new Map();
-  items.forEach((item, index) => {
-    const rawRef = item.batch_reference || item.po_number || item.id || `row-${index}`;
-    const key = rawRef.toString().trim().toLowerCase();
-    if (key && !map.has(key)) {
-      map.set(key, item);
-    }
-  });
-  return Array.from(map.values());
+const parseApiResponse = async (res) => {
+  try {
+    return await res.json();
+  } catch (err) {
+    return { success: false, error: 'Invalid JSON response from server' };
+  }
 };
 
-const parseApiResponse = async (res) => {
-  const text = await res.text();
-  try {
-    return JSON.parse(text);
-  } catch (err) {
-    throw new Error(text || `Server returned invalid response (Status: ${res.status})`);
-  }
+const enforceUniqueRecords = (records) => {
+  const seen = new Set();
+  return (records || []).filter((row) => {
+    const key = (row.batch_reference || row.po_number || '').toString().trim().toLowerCase();
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+};
+
+// ============================================================================
+// STYLING SYSTEM
+// ============================================================================
+const styles = {
+  container: {
+    padding: '24px',
+    backgroundColor: '#0f172a',
+    color: '#f8fafc',
+    minHeight: '100vh',
+    fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    boxSizing: 'border-box',
+  },
+  header: {
+    marginBottom: '24px',
+  },
+  title: {
+    fontSize: '24px',
+    fontWeight: '700',
+    color: '#00ff88',
+    margin: '0 0 6px 0',
+    letterSpacing: '-0.5px',
+  },
+  subtitle: {
+    fontSize: '14px',
+    color: '#94a3b8',
+    margin: 0,
+  },
+  alert: {
+    padding: '12px 16px',
+    borderRadius: '8px',
+    marginBottom: '20px',
+    display: 'flex',
+    alignItems: 'center',
+    fontWeight: '500',
+    fontSize: '14px',
+  },
+  alertError: {
+    backgroundColor: '#450a0a',
+    border: '1px solid #dc2626',
+    color: '#fca5a5',
+  },
+  alertSuccess: {
+    backgroundColor: '#022c22',
+    border: '1px solid #059669',
+    color: '#6ee7b7',
+  },
+  layoutGrid: {
+    display: 'flex',
+    gap: '20px',
+    marginBottom: '28px',
+    flexWrap: 'wrap',
+  },
+  card: {
+    backgroundColor: '#1e293b',
+    borderRadius: '12px',
+    padding: '20px',
+    border: '1px solid #334155',
+    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
+  },
+  sectionTitle: {
+    fontSize: '16px',
+    fontWeight: '600',
+    color: '#f1f5f9',
+    marginTop: 0,
+    marginBottom: '16px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+  },
+  form: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '14px',
+  },
+  formGroup: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '6px',
+    flex: 1,
+  },
+  formRow: {
+    display: 'flex',
+    gap: '12px',
+    flexWrap: 'wrap',
+  },
+  label: {
+    fontSize: '12px',
+    fontWeight: '600',
+    color: '#cbd5e1',
+    textTransform: 'uppercase',
+    letterSpacing: '0.5px',
+  },
+  input: {
+    backgroundColor: '#0f172a',
+    border: '1px solid #334155',
+    borderRadius: '6px',
+    padding: '10px 12px',
+    color: '#f8fafc',
+    fontSize: '14px',
+    outline: 'none',
+    transition: 'all 0.2s ease',
+  },
+  select: {
+    backgroundColor: '#0f172a',
+    border: '1px solid #334155',
+    borderRadius: '6px',
+    padding: '10px 12px',
+    color: '#f8fafc',
+    fontSize: '14px',
+    outline: 'none',
+    cursor: 'pointer',
+  },
+  textarea: {
+    backgroundColor: '#0f172a',
+    border: '1px solid #334155',
+    borderRadius: '6px',
+    padding: '10px 12px',
+    color: '#f8fafc',
+    fontSize: '14px',
+    outline: 'none',
+    minHeight: '70px',
+    resize: 'vertical',
+  },
+  submitBtn: {
+    backgroundColor: '#00ff88',
+    color: '#0f172a',
+    fontWeight: '700',
+    border: 'none',
+    borderRadius: '6px',
+    padding: '12px 18px',
+    fontSize: '14px',
+    cursor: 'pointer',
+    transition: 'all 0.2s ease',
+    marginTop: '6px',
+  },
+  submitBtnDisabled: {
+    backgroundColor: '#334155',
+    color: '#64748b',
+    cursor: 'not-allowed',
+  },
+  scannerContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyConcent: 'center',
+    textAlign: 'center',
+    height: '100%',
+    boxSizing: 'border-box',
+  },
+  qrCard: {
+    padding: '16px',
+    backgroundColor: '#0f172a',
+    borderRadius: '10px',
+    border: '1px solid #334155',
+    marginBottom: '14px',
+  },
+  badge: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '6px',
+    padding: '4px 10px',
+    borderRadius: '20px',
+    fontSize: '12px',
+    fontWeight: '600',
+  },
+  badgeSuccess: {
+    backgroundColor: '#022c22',
+    color: '#00ff88',
+    border: '1px solid #059669',
+  },
+  badgePending: {
+    backgroundColor: '#451a03',
+    color: '#fbbf24',
+    border: '1px solid #d97706',
+  },
+  tableWrapper: {
+    overflowX: 'auto',
+    borderRadius: '8px',
+    border: '1px solid #334155',
+    backgroundColor: '#0f172a',
+    position: 'relative',
+  },
+  table: {
+    width: '100%',
+    borderCollapse: 'collapse',
+    textAlign: 'left',
+    fontSize: '13px',
+  },
+  th: {
+    backgroundColor: '#1e293b',
+    color: '#94a3b8',
+    padding: '12px 14px',
+    fontWeight: '600',
+    borderBottom: '1px solid #334155',
+    whiteSpace: 'nowrap',
+  },
+  stickyTh: {
+    position: 'sticky',
+    right: 0,
+    backgroundColor: '#1e293b',
+    zIndex: 10,
+    boxShadow: '-4px 0 8px rgba(0, 0, 0, 0.3)',
+  },
+  td: {
+    padding: '12px 14px',
+    borderBottom: '1px solid #1e293b',
+    color: '#e2e8f0',
+    whiteSpace: 'nowrap',
+  },
+  stickyTd: {
+    position: 'sticky',
+    right: 0,
+    backgroundColor: '#0f172a',
+    zIndex: 5,
+    boxShadow: '-4px 0 8px rgba(0, 0, 0, 0.3)',
+  },
+  btnGroup: {
+    display: 'flex',
+    gap: '6px',
+    alignItems: 'center',
+  },
+  actionBtn: {
+    padding: '6px 10px',
+    borderRadius: '6px',
+    border: 'none',
+    fontSize: '12px',
+    fontWeight: '600',
+    cursor: 'pointer',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '4px',
+    transition: 'opacity 0.2s',
+  },
+  btnPrimary: { backgroundColor: '#3b82f6', color: '#fff' },
+  btnSecondary: { backgroundColor: '#10b981', color: '#fff' },
+  btnWarning: { backgroundColor: '#f59e0b', color: '#0f172a' },
+  modalOverlay: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    backdropFilter: 'blur(4px)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1000,
+    padding: '16px',
+  },
+  modalContent: {
+    backgroundColor: '#1e293b',
+    borderRadius: '12px',
+    border: '1px solid #334155',
+    width: '100%',
+    maxWidth: '500px',
+    padding: '24px',
+    boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)',
+  },
+  editModalContent: {
+    backgroundColor: '#1e293b',
+    borderRadius: '12px',
+    border: '1px solid #334155',
+    width: '100%',
+    maxWidth: '600px',
+    padding: '24px',
+    maxHeight: '90vh',
+    overflowY: 'auto',
+  },
+  largeModalContent: {
+    backgroundColor: '#1e293b',
+    borderRadius: '12px',
+    border: '1px solid #334155',
+    width: '95vw',
+    maxWidth: '1200px',
+    height: '90vh',
+    display: 'flex',
+    flexDirection: 'column',
+    padding: '20px',
+  },
+  modalHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '16px',
+    borderBottom: '1px solid #334155',
+    paddingBottom: '12px',
+  },
+  modalTitle: {
+    margin: 0,
+    fontSize: '16px',
+    fontWeight: '700',
+    color: '#00ff88',
+  },
+  modalCloseBtn: {
+    background: 'none',
+    border: 'none',
+    color: '#94a3b8',
+    fontSize: '20px',
+    cursor: 'pointer',
+  },
+  documentViewerGrid: {
+    display: 'flex',
+    gap: '16px',
+    flex: 1,
+    minHeight: 0,
+  },
+  documentFrameContainer: {
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'column',
+    backgroundColor: '#0f172a',
+    borderRadius: '8px',
+    border: '1px solid #334155',
+    overflow: 'hidden',
+  },
+  frameToolbar: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: '8px 12px',
+    backgroundColor: '#1e293b',
+    borderBottom: '1px solid #334155',
+  },
+  frameContent: {
+    flex: 1,
+    position: 'relative',
+    overflow: 'hidden',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalFooter: {
+    marginTop: '16px',
+    paddingTop: '12px',
+    borderTop: '1px solid #334155',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  closeActionBtn: {
+    backgroundColor: '#334155',
+    color: '#f8fafc',
+    border: 'none',
+    borderRadius: '6px',
+    padding: '8px 16px',
+    fontSize: '13px',
+    cursor: 'pointer',
+  },
+  footerRefText: {
+    color: '#94a3b8',
+    fontSize: '13px',
+  },
+  modalBody: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    textAlign: 'center',
+  },
+  modalInstructions: {
+    fontSize: '13px',
+    color: '#cbd5e1',
+    margin: '8px 0',
+  },
+  modalBadgeDisplay: {
+    backgroundColor: '#0f172a',
+    padding: '6px 12px',
+    borderRadius: '6px',
+    marginBottom: '16px',
+  },
+  modalQrWrapper: {
+    padding: '16px',
+    backgroundColor: '#111827',
+    borderRadius: '10px',
+    border: '1px solid #334155',
+    marginBottom: '16px',
+  },
+  modalActionLink: {
+    display: 'inline-block',
+    marginTop: '12px',
+    color: '#00ff88',
+    textDecoration: 'none',
+    fontWeight: '600',
+    fontSize: '13px',
+  },
 };
 
 // ============================================================================
 // SUB-COMPONENTS
 // ============================================================================
 
+const DocumentFrame = React.memo(({
+  docType, frameUrl, zoom, pan, styles,
+  onZoomIn, onZoomOut, onZoomReset,
+  onDragStart, onDragMove, onDragEnd
+}) => {
+  return (
+    <div style={styles.documentFrameContainer} className="po-doc-frame">
+      <div style={styles.frameToolbar}>
+        <span style={{ fontSize: '12px', fontWeight: '700', color: '#cbd5e1' }}>{docType}</span>
+        {frameUrl && (
+          <div style={{ display: 'flex', gap: '4px' }}>
+            <button style={{ ...styles.actionBtn, backgroundColor: '#334155' }} onClick={onZoomOut}>–</button>
+            <button style={{ ...styles.actionBtn, backgroundColor: '#334155' }} onClick={onZoomReset}>Reset</button>
+            <button style={{ ...styles.actionBtn, backgroundColor: '#334155' }} onClick={onZoomIn}>+</button>
+          </div>
+        )}
+      </div>
+      <div 
+        style={styles.frameContent}
+        className="pan-canvas-grab"
+        onMouseDown={(e) => onDragStart(e.clientX, e.clientY)}
+        onMouseMove={(e) => onDragMove(e.clientX, e.clientY)}
+        onMouseUp={onDragEnd}
+        onTouchStart={(e) => e.touches[0] && onDragStart(e.touches[0].clientX, e.touches[0].clientY)}
+        onTouchMove={(e) => e.touches[0] && onDragMove(e.touches[0].clientX, e.touches[0].clientY)}
+        onTouchEnd={onDragEnd}
+      >
+        {frameUrl ? (
+          <img
+            src={frameUrl}
+            alt={docType}
+            style={{
+              maxHeight: '100%',
+              maxWidth: '100%',
+              objectFit: 'contain',
+              transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
+              transition: zoom === 1 ? 'transform 0.2s ease' : 'none',
+              userSelect: 'none',
+              pointerEvents: 'none',
+            }}
+          />
+        ) : (
+          <div style={{ color: '#64748b', fontSize: '13px' }}>No Document Attached</div>
+        )}
+      </div>
+    </div>
+  );
+});
+
 const POFormSection = React.memo(({ formData, clients, stagingStatus, loading, styles, onInputChange, onSubmit }) => {
-  const bothStaged = stagingStatus.po_attachment && stagingStatus.dr_attachment;
+  const isReady = stagingStatus.po_attachment && stagingStatus.dr_attachment;
 
   return (
     <div className="po-form-container" style={styles.card}>
-      <h3 style={styles.cardTitle}>PO Metadata Parameters</h3>
+      <h3 style={styles.sectionTitle}>📋 Create PO Entry</h3>
       <form onSubmit={onSubmit} style={styles.form}>
-        
-        <div style={styles.formGroup}>
-          <label style={styles.label}>PO Number</label>
-          <input 
-            type="text" 
-            name="batch_reference"
-            placeholder="Enter Physical PO Number (e.g. PO-2026-001)"
-            value={formData.batch_reference} 
-            onChange={onInputChange} 
-            style={styles.input} 
-            required 
-          />
-          {formData.batch_reference.trim() !== '' && (
-            <span style={{ 
-              color: bothStaged ? '#00ff88' : '#fbbf24', 
-              fontSize: '11px', 
-              fontWeight: '700', 
-              marginTop: '4px' 
-            }}>
-              {bothStaged ? '✓ BOTH PO & DR STAGED — READY TO SAVE RECORD' : '⚠️ BOTH PO AND DR MUST BE SCANNED/STAGED TO ENABLE SAVING'}
-            </span>
-          )}
-        </div>
-
-        <div style={styles.formGroup}>
-          <label style={styles.label}>Select Client / Customer Link</label>
-          <select 
-            name="customer_id" 
-            value={formData.customer_id} 
-            onChange={onInputChange} 
-            style={styles.select}
-            required
-          >
-            <option value="">-- Choose Corporate Account --</option>
-            {clients.map(client => (
-              <option key={client.id} value={client.id}>{client.name}</option>
-            ))}
-          </select>
-        </div>
-
-        <div style={styles.formGroup}>
-          <label style={styles.label}>Total PO Value Amount (PHP)</label>
-          <input 
-            type="number" 
-            name="amount" 
-            step="0.01"
-            placeholder="0.00"
-            value={formData.amount} 
-            onChange={onInputChange} 
-            style={styles.input}
-            required 
-          />
+        <div style={styles.formRow}>
+          <div style={styles.formGroup}>
+            <label style={styles.label}>PO Reference Batch #</label>
+            <input
+              type="text"
+              name="batch_reference"
+              value={formData.batch_reference}
+              onChange={onInputChange}
+              placeholder="e.g. PO-2026-889"
+              style={styles.input}
+              required
+            />
+          </div>
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Client / Customer</label>
+            <select
+              name="customer_id"
+              value={formData.customer_id}
+              onChange={onInputChange}
+              style={styles.select}
+              required
+            >
+              <option value="">-- Select Client --</option>
+              {clients.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+          </div>
         </div>
 
         <div style={styles.formRow}>
           <div style={styles.formGroup}>
-            <label style={styles.label}>PO Document Date</label>
-            <input 
-              type="date" 
-              name="po_date" 
-              value={formData.po_date} 
-              onChange={onInputChange} 
+            <label style={styles.label}>Total Amount (PHP)</label>
+            <input
+              type="number"
+              step="0.01"
+              name="amount"
+              value={formData.amount}
+              onChange={onInputChange}
+              placeholder="0.00"
               style={styles.input}
-              required 
+              required
             />
           </div>
+          <div style={styles.formGroup}>
+            <label style={styles.label}>PO Date</label>
+            <input
+              type="date"
+              name="po_date"
+              value={formData.po_date}
+              onChange={onInputChange}
+              style={styles.input}
+              required
+            />
+          </div>
+        </div>
 
+        <div style={styles.formRow}>
           <div style={styles.formGroup}>
             <label style={styles.label}>Contract Terms</label>
-            <select 
-              name="po_terms" 
-              value={formData.po_terms} 
-              onChange={onInputChange} 
-              style={styles.select}
-            >
-              {PO_TERMS.map(term => (
-                <option key={term.value} value={term.value}>{term.label}</option>
+            <select name="po_terms" value={formData.po_terms} onChange={onInputChange} style={styles.select}>
+              {PO_TERMS.map((t) => (
+                <option key={t.value} value={t.value}>{t.label}</option>
+              ))}
+            </select>
+          </div>
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Initial Status</label>
+            <select name="status" value={formData.status} onChange={onInputChange} style={styles.select}>
+              {PO_STATUS.map((s) => (
+                <option key={s.value} value={s.value}>{s.label}</option>
               ))}
             </select>
           </div>
         </div>
 
         <div style={styles.formGroup}>
-          <label style={styles.label}>Initial Pipeline Status</label>
-          <select 
-            name="status" 
-            value={formData.status} 
-            onChange={onInputChange} 
-            style={styles.select}
-          >
-            {PO_STATUS.map(status => (
-              <option key={status.value} value={status.value}>{status.label}</option>
-            ))}
-          </select>
-        </div>
-
-        <div style={styles.formGroup}>
-          <label style={styles.label}>Notes / Remarks</label>
+          <label style={styles.label}>Remarks / Order Details</label>
           <textarea
             name="remarks"
-            placeholder="Enter optional notes or remarks for this PO receive..."
-            value={formData.remarks || ''}
+            value={formData.remarks}
             onChange={onInputChange}
+            placeholder="Enter additional remarks..."
             style={styles.textarea}
           />
         </div>
 
-        <button 
-          type="submit" 
-          style={{ ...styles.submitBtn, ...(loading || !bothStaged || !formData.batch_reference.trim() ? styles.submitBtnLoading : {}) }}
-          disabled={loading || !bothStaged || !formData.batch_reference.trim()}
-          title={!bothStaged ? "Both PO and DR attachments must be scanned via mobile before saving" : "Save Record"}
+        <button
+          type="submit"
+          disabled={loading || !isReady}
+          style={{
+            ...styles.submitBtn,
+            ...(!isReady || loading ? styles.submitBtnDisabled : {}),
+          }}
         >
-          {loading ? 'COMMITTING TRANSACTION...' : bothStaged ? 'SAVE PURCHASE ORDER RECORD' : '🔒 PENDING BOTH ATTACHMENTS (PO & DR)'}
+          {loading ? 'SAVING RECORD...' : isReady ? 'SAVE PO ENTRY' : 'SCAN ATTACHMENTS TO UNLOCK'}
         </button>
       </form>
     </div>
   );
 });
 
-const POScannerSection = React.memo(({ mobileScannerUrl, stagingStatus, batchReference, styles }) => (
-  <div className="po-qr-container" style={{ ...styles.card, ...styles.scannerCard }}>
-    <h3 style={styles.cardTitle}>Active Transaction Session</h3>
-    <p style={styles.scannerInstructions}>
-      Scan the target route mapping using a mobile device node to attach camera document snaps seamlessly.
-    </p>
-    <div style={styles.qrContainer}>
-      {mobileScannerUrl && batchReference ? (
-        <QRCodeSVG value={mobileScannerUrl} size={140} bgColor={"#13151a"} fgColor={"#00ff88"} level={"M"} includeMargin={false} />
-      ) : (
-        <div style={styles.syncText}>Enter PO Number...</div>
-      )}
-    </div>
-
-    <a 
-      href={mobileScannerUrl || '#'}
-      target={mobileScannerUrl ? "_blank" : "_self"} 
-      rel="noopener noreferrer" 
-      style={{ ...styles.redirectBtn, ...(!mobileScannerUrl || !batchReference ? styles.redirectBtnDisabled : {}) }}
-      onClick={(e) => (!mobileScannerUrl || !batchReference) && e.preventDefault()}
-    >
-      📸 OPEN CAMERA LINK
-    </a>
-
-    <div style={styles.stagingRow}>
-      <div style={{ ...styles.stagedIndicator, color: stagingStatus.po_attachment ? '#00ff88' : '#475569', borderColor: stagingStatus.po_attachment ? '#00ff88' : '#222' }}>
-        {stagingStatus.po_attachment ? '✓ PO STAGED' : '⌛ PO PENDING'}
+const POScannerSection = React.memo(({ mobileScannerUrl, stagingStatus, batchReference, styles }) => {
+  return (
+    <div className="po-qr-container" style={styles.card}>
+      <div style={styles.scannerContainer}>
+        <h3 style={styles.sectionTitle}>📱 Document Attachment Bridge</h3>
+        {batchReference.trim() ? (
+          <>
+            <div style={styles.qrCard}>
+              <QRCodeSVG
+                value={mobileScannerUrl}
+                size={140}
+                bgColor="#0f172a"
+                fgColor="#00ff88"
+                level="M"
+              />
+            </div>
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+              <span style={{ ...styles.badge, ...(stagingStatus.po_attachment ? styles.badgeSuccess : styles.badgePending) }}>
+                PO: {stagingStatus.po_attachment ? '✓ Ready' : 'Pending'}
+              </span>
+              <span style={{ ...styles.badge, ...(stagingStatus.dr_attachment ? styles.badgeSuccess : styles.badgePending) }}>
+                DR: {stagingStatus.dr_attachment ? '✓ Ready' : 'Pending'}
+              </span>
+            </div>
+            <p style={{ fontSize: '12px', color: '#94a3b8', margin: 0 }}>
+              Scan QR code with your mobile device to attach Delivery Receipt and Purchase Order photos.
+            </p>
+          </>
+        ) : (
+          <div style={{ color: '#64748b', fontSize: '13px', margin: 'auto 0' }}>
+            Enter a PO Reference Batch Number above to activate mobile document scanning.
+          </div>
+        )}
       </div>
-      <div style={{ ...styles.stagedIndicator, color: stagingStatus.dr_attachment ? '#38bdf8' : '#475569', borderColor: stagingStatus.dr_attachment ? '#38bdf8' : '#222' }}>
-        {stagingStatus.dr_attachment ? '✓ DR STAGED' : '⌛ DR PENDING'}
+    </div>
+  );
+});
+
+const POHistoryTable = React.memo(({
+  poHistory, isSyncing, userRole, styles,
+  onRefresh, onViewDocs, onUploadBatch, onEditRow
+}) => {
+  return (
+    <div style={styles.card}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+        <h3 style={{ ...styles.sectionTitle, margin: 0 }}>📜 PO Log History ({poHistory.length})</h3>
+        <button
+          onClick={onRefresh}
+          disabled={isSyncing}
+          style={{ ...styles.actionBtn, backgroundColor: '#334155', color: '#f8fafc' }}
+        >
+          {isSyncing ? 'Syncing...' : '🔄 Refresh Logs'}
+        </button>
       </div>
-    </div>
 
-    <div style={styles.batchBadge}>
-      <span style={styles.badgeLabel}>ACTIVE TRACK STAMP</span>
-      <code style={styles.badgeCode}>{batchReference || 'AWAITING PO NUMBER'}</code>
-    </div>
-  </div>
-));
-
-const POHistoryTable = React.memo(({ poHistory, isSyncing, userRole, styles, onRefresh, onViewDocs, onUploadBatch, onEditRow }) => (
-  <div style={styles.tableSection}>
-    <div style={styles.tableHeaderContainer}>
-      <h3 style={styles.tableTitle}>Registered Purchase Orders Ledger</h3>
-      <button 
-        onClick={onRefresh} 
-        disabled={isSyncing}
-        style={{ 
-          ...styles.refreshBtn, 
-          ...(isSyncing ? styles.refreshBtnDisabled : {}) 
-        }}
-      >
-        <span style={{ 
-          display: 'inline-block', 
-          transform: isSyncing ? 'rotate(360deg)' : 'none', 
-          transition: 'transform 1s linear infinite' 
-        }}>
-          🔄
-        </span> 
-        {isSyncing ? 'Syncing...' : 'Sync Logs'}
-      </button>
-    </div>
-    
-    <div style={styles.tableWrapper}>
-      <table style={styles.table}>
-        <thead>
-          <tr>
-            <th style={styles.th}>PO Number</th>
-            <th style={styles.th}>Customer</th>
-            <th style={styles.th}>PO Date</th>
-            <th style={styles.th}>Terms</th>
-            <th style={styles.th}>Amount</th>
-            <th style={styles.th}>PO Status</th>
-            <th style={styles.th}>Notes / Remarks</th>
-            <th style={styles.th}>Attached Files</th>
-            <th style={{ ...styles.th, textAlign: 'right' }}>Action Controller</th>
-          </tr>
-        </thead>
-        <tbody>
-          {poHistory.length === 0 ? (
+      <div style={styles.tableWrapper}>
+        <table style={styles.table}>
+          <thead>
             <tr>
-              <td colSpan="9" style={styles.emptyTd}>No recorded purchase order transactions saved in this session cluster logs.</td>
+              <th style={styles.th}>PO / Batch Reference</th>
+              <th style={styles.th}>Customer</th>
+              <th style={styles.th}>Amount</th>
+              <th style={styles.th}>Date</th>
+              <th style={styles.th}>Terms</th>
+              <th style={styles.th}>Status</th>
+              <th style={{ ...styles.th, ...styles.stickyTh }}>Actions</th>
             </tr>
-          ) : (
-            poHistory.map((row, idx) => {
-              const uniqueKey = (row.batch_reference || row.po_number || row.id || `row-${idx}`).toString().trim().toLowerCase();
-              return (
-                <tr key={uniqueKey} style={styles.tableRow}>
-                  <td style={{ ...styles.td, fontFamily: 'monospace', fontWeight: 'bold', color: '#38bdf8' }}>{row.batch_reference || row.po_number || 'N/A'}</td>
-                  <td style={styles.td}>{row.customer_name || row.customer_id || 'N/A'}</td>
-                  <td style={styles.td}>{row.po_date}</td>
-                  <td style={styles.td}><span style={styles.termsBadge}>{row.po_terms}</span></td>
-                  <td style={styles.tdAmount}>{formatPHP(row.amount)}</td>
-                  <td style={styles.td}>
-                    <span style={{ ...styles.statusBadge, ...(row.status === 'served' ? styles.statusServed : styles.statusPending) }}>
-                      {row.status}
-                    </span>
-                  </td>
-                  <td style={{ ...styles.td, maxWidth: '200px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {row.remarks || <span style={styles.mutedText}>—</span>}
-                  </td>
-                  <td style={styles.td}>
-                    {row.po_attachment || row.dr_attachment ? (
-                      <button type="button" onClick={() => onViewDocs(row)} style={styles.viewAttachmentBtn}>👁️ View Docs</button>
-                    ) : (
-                      <span style={styles.mutedText}>—</span>
-                    )}
-                  </td>
-                  <td style={styles.tdRight}>
-                    {userRole === 'admin' && (
-                      <button onClick={() => onEditRow(row)} style={styles.editBtn}>
-                        ✏️ Edit
-                      </button>
-                    )}
-                    <button onClick={() => onUploadBatch(row.batch_reference || row.po_number)} style={styles.rowAttachmentBtn}>
-                      {row.po_attachment ? '🔄 Re-upload' : '📄 Scan / Upload'}
-                    </button>
-                  </td>
-                </tr>
-              );
-            })
-          )}
-        </tbody>
-      </table>
-    </div>
-  </div>
-));
-
-const DocumentFrame = React.memo(({
-  docType,
-  frameUrl,
-  zoom,
-  pan,
-  styles,
-  onZoomIn,
-  onZoomOut,
-  onZoomReset,
-  onDragStart,
-  onDragMove,
-  onDragEnd
-}) => (
-  <div className="po-doc-frame" style={styles.documentFrame}>
-    <div style={styles.docFrameHeader}>
-      <h5 style={styles.docFrameTitle}>{docType} ATTACHMENT</h5>
-      {frameUrl && (
-        <div style={styles.zoomControls}>
-          <button style={styles.zoomBtn} onClick={onZoomOut}>—</button>
-          <span style={styles.zoomIndicator}>{Math.round(zoom * 100)}%</span>
-          <button style={styles.zoomBtn} onClick={onZoomIn}>+</button>
-          <button style={styles.zoomBtn} onClick={onZoomReset}>↺</button>
-        </div>
-      )}
-    </div>
-    <div 
-      className={zoom > 1 ? "pan-canvas-grab" : ""}
-      style={styles.imageCanvas}
-      onMouseDown={(e) => onDragStart(e.clientX, e.clientY)}
-      onMouseMove={(e) => onDragMove(e.clientX, e.clientY)}
-      onMouseUp={onDragEnd}
-      onMouseLeave={onDragEnd}
-      onTouchStart={(e) => e.touches.length === 1 && onDragStart(e.touches[0].clientX, e.touches[0].clientY)}
-      onTouchMove={(e) => e.touches.length === 1 && onDragMove(e.touches[0].clientX, e.touches[0].clientY)}
-      onTouchEnd={onDragEnd}
-    >
-      {frameUrl ? (
-        <img 
-          src={frameUrl} 
-          alt={`${docType} Frame`}
-          draggable="false"
-          style={{ 
-            ...styles.embeddedDocImg, 
-            transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})` 
-          }}
-          onError={(e) => { e.target.style.display = 'none'; if(e.target.nextSibling) e.target.nextSibling.style.display = 'block'; }}
-        />
-      ) : null}
-      <div style={{...styles.imgFallbackText, display: frameUrl ? 'none' : 'block'}}>
-        ⚠️ No Digital {docType} File Parsed
+          </thead>
+          <tbody>
+            {poHistory.length === 0 ? (
+              <tr>
+                <td colSpan="7" style={{ ...styles.td, textAlign: 'center', color: '#64748b' }}>
+                  No PO records logged yet.
+                </td>
+              </tr>
+            ) : (
+              poHistory.map((row, idx) => {
+                const ref = row.batch_reference || row.po_number || `REF-${idx}`;
+                return (
+                  <tr key={ref}>
+                    <td style={{ ...styles.td, fontWeight: '600', color: '#00ff88' }}>{ref}</td>
+                    <td style={styles.td}>{row.customer_name || row.customer_id || '-'}</td>
+                    <td style={styles.td}>₱{parseFloat(row.amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                    <td style={styles.td}>{row.po_date || '-'}</td>
+                    <td style={styles.td}>{row.po_terms || 'COD'}</td>
+                    <td style={styles.td}>
+                      <span style={{ ...styles.badge, ...styles.badgeSuccess }}>
+                        {row.status || 'pending'}
+                      </span>
+                    </td>
+                    <td style={{ ...styles.td, ...styles.stickyTd }}>
+                      <div style={styles.btnGroup}>
+                        <button
+                          style={{ ...styles.actionBtn, ...styles.btnPrimary }}
+                          onClick={() => onViewDocs(row)}
+                          title="View Attached Documents"
+                        >
+                          👁️ View
+                        </button>
+                        <button
+                          style={{ ...styles.actionBtn, ...styles.btnSecondary }}
+                          onClick={() => onUploadBatch(ref)}
+                          title="Mobile Scanner Bridge"
+                        >
+                          📱 Upload
+                        </button>
+                        {userRole === 'admin' && (
+                          <button
+                            style={{ ...styles.actionBtn, ...styles.btnWarning }}
+                            onClick={() => onEditRow(row)}
+                            title="Edit Record"
+                          >
+                            ✏️ Edit
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
       </div>
     </div>
-  </div>
-));
+  );
+});
 
 const DocumentViewerModal = React.memo(({ 
-  viewDocsRow, 
-  styles, 
-  onClose, 
-  drZoom, 
-  poZoom, 
-  drPan, 
-  poPan, 
+  viewDocsRow, styles, onClose, 
+  drZoom, poZoom, drPan, poPan, 
   onDrZoomIn, onDrZoomOut, onDrZoomReset,
   onPoZoomIn, onPoZoomOut, onPoZoomReset,
   onDrDragStart, onDrDragMove, onDrDragEnd,
@@ -565,7 +833,6 @@ const UploadModal = React.memo(({ activeInspectionBatch, styles, onClose }) => {
   );
 });
 
-// Admin Modal to edit full record fields
 const EditRecordModal = React.memo(({ editingRow, clients, styles, onClose, onSave }) => {
   const [editFormData, setEditFormData] = useState({
     batch_reference: '',
@@ -729,7 +996,7 @@ const EditRecordModal = React.memo(({ editingRow, clients, styles, onClose, onSa
             <button
               type="submit"
               disabled={isSaving}
-              style={{ ...styles.submitBtn, ...(isSaving ? styles.submitBtnLoading : {}) }}
+              style={{ ...styles.submitBtn, ...(isSaving ? styles.submitBtnDisabled : {}) }}
             >
               {isSaving ? 'UPDATING...' : 'UPDATE RECORD'}
             </button>
@@ -748,11 +1015,11 @@ const EditRecordModal = React.memo(({ editingRow, clients, styles, onClose, onSa
 });
 
 // ============================================================================
-// MAIN COMPONENT
+// MAIN ROOT COMPONENT
 // ============================================================================
 
 const POReceives = () => {
-  const [userRole] = useState('admin'); // Account access type (e.g. 'admin')
+  const [userRole] = useState('admin');
   const [clients, setClients] = useState([]);
   const [poHistory, setPoHistory] = useState([]); 
   const [formData, setFormData] = useState(getInitialFormData());
@@ -854,6 +1121,20 @@ const POReceives = () => {
     return () => clearInterval(interval);
   }, [formData.batch_reference, checkStagingStatus]);
 
+  // Global mouse release safety for pan/drag events
+  useEffect(() => {
+    const handleGlobalMouseUp = () => {
+      setIsDraggingDr(false);
+      setIsDraggingPo(false);
+    };
+    window.addEventListener('mouseup', handleGlobalMouseUp);
+    window.addEventListener('touchend', handleGlobalMouseUp);
+    return () => {
+      window.removeEventListener('mouseup', handleGlobalMouseUp);
+      window.removeEventListener('touchend', handleGlobalMouseUp);
+    };
+  }, []);
+
   // Reset zoom when modal closes
   useEffect(() => {
     if (!viewDocsRow) {
@@ -873,7 +1154,6 @@ const POReceives = () => {
   const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
     
-    // Strict block guard if files are not staged
     if (!stagingStatus.po_attachment || !stagingStatus.dr_attachment) {
       showNotice('error', 'Both PO and DR attachments must be scanned/staged before saving the record.');
       return;
@@ -943,7 +1223,7 @@ const POReceives = () => {
     }
   }, [formData, stagingStatus, loading, poHistory, showNotice, fetchPoHistory]);
 
-  // ========== Update Record Handler (for Edit Modal) ==========
+  // ========== Update Record Handler ==========
   const handleUpdateRecord = useCallback(async (updatedData) => {
     const cleanRef = updatedData.batch_reference.trim();
     const selectedClient = clients.find(c => String(c.id) === String(updatedData.customer_id));
@@ -1025,8 +1305,8 @@ const POReceives = () => {
     <div style={styles.container}>
       <style dangerouslySetInnerHTML={{__html: `
         .po-master-grid { flex-direction: row; }
-        .po-form-container { flex: 0 0 62%; }
-        .po-qr-container { flex: 0 0 38%; }
+        .po-form-container { flex: 1 1 58%; min-width: 320px; }
+        .po-qr-container { flex: 1 1 38%; min-width: 280px; }
         .pan-canvas-grab { cursor: grab; }
         .pan-canvas-grab:active { cursor: grabbing; }
         
@@ -1034,23 +1314,19 @@ const POReceives = () => {
           border-color: #00ff88 !important;
           box-shadow: 0 0 0 2px rgba(0, 255, 136, 0.15) !important;
         }
-        tr:hover {
-          background: #1f2937 !important;
+        tr:hover td {
+          background-color: #1e293b !important;
         }
         button:hover {
           opacity: 0.9;
         }
-        
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-        
+
+        /* Mobile Card & Table Responsive Improvements */
         @media (max-width: 992px) {
           .po-master-grid { flex-direction: column !important; }
           .po-form-container, .po-qr-container { flex: 1 1 100% !important; width: 100% !important; box-sizing: border-box !important; }
           .po-docs-viewer-grid { flex-direction: column !important; overflow-y: auto !important; }
-          .po-doc-frame { flex: 0 0 auto !important; height: 500px !important; margin-bottom: 15px; }
+          .po-doc-frame { flex: 0 0 auto !important; height: 420px !important; margin-bottom: 15px; }
           .po-large-modal-content { max-height: 95vh !important; overflow-y: auto !important; }
         }
       `}} />
