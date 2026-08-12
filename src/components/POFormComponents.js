@@ -108,19 +108,83 @@ const DocumentLightboxModal = ({ images, initialIndex = 0, onClose }) => {
     }
   }, [currentIndex, currentItem.url]);
 
-  // Handle Wheel Zoom (centered on cursor position)
-  const handleWheel = (e) => {
-    e.preventDefault();
-    const zoomFactor = e.deltaY < 0 ? 1.15 : 0.87;
-    
-    setScale((prevScale) => {
-      const newScale = Math.min(Math.max(prevScale * zoomFactor, 1), 5);
-      if (newScale === 1) {
-        setPosition({ x: 0, y: 0 }); // Reset pan when fully zoomed out
+  // Attach non-passive event listeners via ref to eliminate browser passive warnings
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const handleWheel = (e) => {
+      e.preventDefault();
+      const zoomFactor = e.deltaY < 0 ? 1.15 : 0.87;
+      
+      setScale((prevScale) => {
+        const newScale = Math.min(Math.max(prevScale * zoomFactor, 1), 5);
+        if (newScale === 1) {
+          setPosition({ x: 0, y: 0 });
+        }
+        return newScale;
+      });
+    };
+
+    const handleTouchStart = (e) => {
+      if (e.touches.length === 2) {
+        e.preventDefault();
+        const dist = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+        touchStartDistRef.current = dist;
+        setIsDragging(false);
+      } else if (e.touches.length === 1 && scale > 1) {
+        setIsDragging(true);
+        dragStartRef.current = { 
+          x: e.touches[0].clientX - position.x, 
+          y: e.touches[0].clientY - position.y 
+        };
       }
-      return newScale;
-    });
-  };
+    };
+
+    const handleTouchMove = (e) => {
+      if (e.touches.length === 2 && touchStartDistRef.current) {
+        e.preventDefault();
+        const dist = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+        const factor = dist / touchStartDistRef.current;
+        touchStartDistRef.current = dist;
+        
+        setScale((prev) => {
+          const newScale = Math.min(Math.max(prev * factor, 1), 5);
+          if (newScale === 1) setPosition({ x: 0, y: 0 });
+          return newScale;
+        });
+      } else if (e.touches.length === 1 && isDragging && scale > 1) {
+        e.preventDefault();
+        setPosition({
+          x: e.touches[0].clientX - dragStartRef.current.x,
+          y: e.touches[0].clientY - dragStartRef.current.y
+        });
+      }
+    };
+
+    const handleTouchEnd = (e) => {
+      touchStartDistRef.current = null;
+      setIsDragging(false);
+    };
+
+    container.addEventListener('wheel', handleWheel, { passive: false });
+    container.addEventListener('touchstart', handleTouchStart, { passive: false });
+    container.addEventListener('touchmove', handleTouchMove, { passive: false });
+    container.addEventListener('touchend', handleTouchEnd, { passive: false });
+
+    return () => {
+      container.removeEventListener('wheel', handleWheel);
+      container.removeEventListener('touchstart', handleTouchStart);
+      container.removeEventListener('touchmove', handleTouchMove);
+      container.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [scale, position, isDragging]);
 
   // Mouse Dragging / Panning when Zoomed
   const handleMouseDown = (e) => {
@@ -140,55 +204,6 @@ const DocumentLightboxModal = ({ images, initialIndex = 0, onClose }) => {
   };
 
   const handleMouseUp = () => {
-    setIsDragging(false);
-  };
-
-  // Touch Gestures for Pinch-to-Zoom & Swipe/Drag Pan on Mobile Devices
-  const handleTouchStart = (e) => {
-    if (e.touches.length === 2) {
-      // Pinch-to-zoom initialization
-      const dist = Math.hypot(
-        e.touches[0].clientX - e.touches[1].clientX,
-        e.touches[0].clientY - e.touches[1].clientY
-      );
-      touchStartDistRef.current = dist;
-      setIsDragging(false);
-    } else if (e.touches.length === 1 && scale > 1) {
-      // Touch drag/swipe to pan around zoomed image
-      setIsDragging(true);
-      dragStartRef.current = { 
-        x: e.touches[0].clientX - position.x, 
-        y: e.touches[0].clientY - position.y 
-      };
-    }
-  };
-
-  const handleTouchMove = (e) => {
-    if (e.touches.length === 2 && touchStartDistRef.current) {
-      // Pinch-to-zoom calculation
-      const dist = Math.hypot(
-        e.touches[0].clientX - e.touches[1].clientX,
-        e.touches[0].clientY - e.touches[1].clientY
-      );
-      const factor = dist / touchStartDistRef.current;
-      touchStartDistRef.current = dist;
-      
-      setScale((prev) => {
-        const newScale = Math.min(Math.max(prev * factor, 1), 5);
-        if (newScale === 1) setPosition({ x: 0, y: 0 });
-        return newScale;
-      });
-    } else if (e.touches.length === 1 && isDragging && scale > 1) {
-      // Smooth drag panning across zoomed parts of the picture
-      setPosition({
-        x: e.touches[0].clientX - dragStartRef.current.x,
-        y: e.touches[0].clientY - dragStartRef.current.y
-      });
-    }
-  };
-
-  const handleTouchEnd = () => {
-    touchStartDistRef.current = null;
     setIsDragging(false);
   };
 
@@ -253,7 +268,7 @@ const DocumentLightboxModal = ({ images, initialIndex = 0, onClose }) => {
         </div>
       </div>
 
-      {/* Main Lightbox Viewport with touch-action none for fluid mobile gestures */}
+      {/* Main Lightbox Viewport */}
       <div 
         ref={containerRef}
         style={{
@@ -267,13 +282,9 @@ const DocumentLightboxModal = ({ images, initialIndex = 0, onClose }) => {
           touchAction: 'none',
           cursor: scale > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default'
         }}
-        onWheel={handleWheel}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
         onClick={(e) => e.stopPropagation()}
       >
         <img 
