@@ -2,19 +2,20 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 
 // ============================================================================
-// CONSTANTS & ENDPOINTS
+// CONSTANTS & ENDPOINTS (RESTORED TO ORIGINAL)
 // ============================================================================
+const API_BASE = process.env.REACT_APP_API_BASE || '';
 const FILE_BASE = process.env.REACT_APP_FILE_BASE || 'http://localhost:5000/uploads/';
 
 const ENDPOINTS = {
-  history: '/api/po-receives/history',
-  clients: '/api/clients',
-  serverInfo: '/api/server-info',
-  records: '/api/po-receives',
-  updateRecord: (ref) => `/api/po-receives/${encodeURIComponent(ref)}`,
-  checkStaging: (ref) => `/api/po-receives/staging-status?batch_reference=${encodeURIComponent(ref)}`,
-  mobileUploadsBatch: (ref) => `${window.location.origin}/mobile-upload?batch=${encodeURIComponent(ref)}`,
-  mobileUploads2: (ref) => `${window.location.origin}/mobile-upload?batch=${encodeURIComponent(ref)}`,
+  clients: `${API_BASE}/api/po-receives/clients`,
+  history: `${API_BASE}/api/po-receives/history`,
+  records: `${API_BASE}/api/po-receives`,
+  updateRecord: (ref) => `${API_BASE}/api/po-receives/${encodeURIComponent(ref)}`,
+  checkStaging: (ref) => `${API_BASE}/api/po-receives/check-staging/${encodeURIComponent(ref)}`,
+  serverInfo: `${API_BASE}/api/server-info`,
+  mobileUploads2: (ref) => `/#/mobile-upload2/${encodeURIComponent(ref)}`,
+  mobileUploadsBatch: (ref) => `/#/mobile-upload/${encodeURIComponent(ref)}`,
 };
 
 const PO_TERMS = [
@@ -70,11 +71,11 @@ const enforceUniqueRecords = (records) => {
 };
 
 // ============================================================================
-// STYLING SYSTEM
+// STYLING SYSTEM (OPTIMIZED FOR UI & RESPONSIVENESS)
 // ============================================================================
 const styles = {
   container: {
-    padding: '24px',
+    padding: '20px',
     backgroundColor: '#0f172a',
     color: '#f8fafc',
     minHeight: '100vh',
@@ -82,17 +83,17 @@ const styles = {
     boxSizing: 'border-box',
   },
   header: {
-    marginBottom: '24px',
+    marginBottom: '20px',
   },
   title: {
-    fontSize: '24px',
+    fontSize: '22px',
     fontWeight: '700',
     color: '#00ff88',
-    margin: '0 0 6px 0',
+    margin: '0 0 4px 0',
     letterSpacing: '-0.5px',
   },
   subtitle: {
-    fontSize: '14px',
+    fontSize: '13px',
     color: '#94a3b8',
     margin: 0,
   },
@@ -118,7 +119,7 @@ const styles = {
   layoutGrid: {
     display: 'flex',
     gap: '20px',
-    marginBottom: '28px',
+    marginBottom: '24px',
     flexWrap: 'wrap',
   },
   card: {
@@ -129,7 +130,7 @@ const styles = {
     boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
   },
   sectionTitle: {
-    fontSize: '16px',
+    fontSize: '15px',
     fontWeight: '600',
     color: '#f1f5f9',
     marginTop: 0,
@@ -148,6 +149,7 @@ const styles = {
     flexDirection: 'column',
     gap: '6px',
     flex: 1,
+    minWidth: '220px',
   },
   formRow: {
     display: 'flex',
@@ -169,7 +171,8 @@ const styles = {
     color: '#f8fafc',
     fontSize: '14px',
     outline: 'none',
-    transition: 'all 0.2s ease',
+    boxSizing: 'border-box',
+    width: '100%',
   },
   select: {
     backgroundColor: '#0f172a',
@@ -180,6 +183,8 @@ const styles = {
     fontSize: '14px',
     outline: 'none',
     cursor: 'pointer',
+    boxSizing: 'border-box',
+    width: '100%',
   },
   textarea: {
     backgroundColor: '#0f172a',
@@ -191,6 +196,8 @@ const styles = {
     outline: 'none',
     minHeight: '70px',
     resize: 'vertical',
+    boxSizing: 'border-box',
+    width: '100%',
   },
   submitBtn: {
     backgroundColor: '#00ff88',
@@ -203,6 +210,7 @@ const styles = {
     cursor: 'pointer',
     transition: 'all 0.2s ease',
     marginTop: '6px',
+    width: '100%',
   },
   submitBtnDisabled: {
     backgroundColor: '#334155',
@@ -213,7 +221,7 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    justifyConcent: 'center',
+    justifyContent: 'center',
     textAlign: 'center',
     height: '100%',
     boxSizing: 'border-box',
@@ -250,6 +258,7 @@ const styles = {
     border: '1px solid #334155',
     backgroundColor: '#0f172a',
     position: 'relative',
+    maxWidth: '100%',
   },
   table: {
     width: '100%',
@@ -270,7 +279,7 @@ const styles = {
     right: 0,
     backgroundColor: '#1e293b',
     zIndex: 10,
-    boxShadow: '-4px 0 8px rgba(0, 0, 0, 0.3)',
+    boxShadow: '-6px 0 12px rgba(0, 0, 0, 0.4)',
   },
   td: {
     padding: '12px 14px',
@@ -283,7 +292,7 @@ const styles = {
     right: 0,
     backgroundColor: '#0f172a',
     zIndex: 5,
-    boxShadow: '-4px 0 8px rgba(0, 0, 0, 0.3)',
+    boxShadow: '-6px 0 12px rgba(0, 0, 0, 0.4)',
   },
   btnGroup: {
     display: 'flex',
@@ -300,6 +309,7 @@ const styles = {
     display: 'inline-flex',
     alignItems: 'center',
     gap: '4px',
+    whiteSpace: 'nowrap',
     transition: 'opacity 0.2s',
   },
   btnPrimary: { backgroundColor: '#3b82f6', color: '#fff' },
@@ -311,7 +321,7 @@ const styles = {
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
     backdropFilter: 'blur(4px)',
     display: 'flex',
     alignItems: 'center',
@@ -325,8 +335,9 @@ const styles = {
     border: '1px solid #334155',
     width: '100%',
     maxWidth: '500px',
-    padding: '24px',
+    padding: '20px',
     boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)',
+    boxSizing: 'border-box',
   },
   editModalContent: {
     backgroundColor: '#1e293b',
@@ -334,9 +345,10 @@ const styles = {
     border: '1px solid #334155',
     width: '100%',
     maxWidth: '600px',
-    padding: '24px',
+    padding: '20px',
     maxHeight: '90vh',
     overflowY: 'auto',
+    boxSizing: 'border-box',
   },
   largeModalContent: {
     backgroundColor: '#1e293b',
@@ -348,6 +360,7 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     padding: '20px',
+    boxSizing: 'border-box',
   },
   modalHeader: {
     display: 'flex',
@@ -408,6 +421,8 @@ const styles = {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: '8px',
   },
   closeActionBtn: {
     backgroundColor: '#334155',
@@ -662,7 +677,7 @@ const POHistoryTable = React.memo(({
 }) => {
   return (
     <div style={styles.card}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '8px' }}>
         <h3 style={{ ...styles.sectionTitle, margin: 0 }}>📜 PO Log History ({poHistory.length})</h3>
         <button
           onClick={onRefresh}
@@ -697,7 +712,7 @@ const POHistoryTable = React.memo(({
               poHistory.map((row, idx) => {
                 const ref = row.batch_reference || row.po_number || `REF-${idx}`;
                 return (
-                  <tr key={ref}>
+                  <tr key={ref} className="po-table-row">
                     <td style={{ ...styles.td, fontWeight: '600', color: '#00ff88' }}>{ref}</td>
                     <td style={styles.td}>{row.customer_name || row.customer_id || '-'}</td>
                     <td style={styles.td}>₱{parseFloat(row.amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
@@ -708,7 +723,7 @@ const POHistoryTable = React.memo(({
                         {row.status || 'pending'}
                       </span>
                     </td>
-                    <td style={{ ...styles.td, ...styles.stickyTd }}>
+                    <td style={{ ...styles.td, ...styles.stickyTd }} className="po-sticky-cell">
                       <div style={styles.btnGroup}>
                         <button
                           style={{ ...styles.actionBtn, ...styles.btnPrimary }}
@@ -1314,19 +1329,28 @@ const POReceives = () => {
           border-color: #00ff88 !important;
           box-shadow: 0 0 0 2px rgba(0, 255, 136, 0.15) !important;
         }
-        tr:hover td {
+        
+        /* Table Sticky Actions Cell Hover Fix */
+        .po-table-row:hover td {
           background-color: #1e293b !important;
         }
+        .po-table-row:hover .po-sticky-cell {
+          background-color: #1e293b !important;
+        }
+
         button:hover {
           opacity: 0.9;
         }
 
-        /* Mobile Card & Table Responsive Improvements */
-        @media (max-width: 992px) {
+        /* Responsive Breakpoints */
+        @media (max-width: 1024px) {
           .po-master-grid { flex-direction: column !important; }
           .po-form-container, .po-qr-container { flex: 1 1 100% !important; width: 100% !important; box-sizing: border-box !important; }
+        }
+
+        @media (max-width: 768px) {
           .po-docs-viewer-grid { flex-direction: column !important; overflow-y: auto !important; }
-          .po-doc-frame { flex: 0 0 auto !important; height: 420px !important; margin-bottom: 15px; }
+          .po-doc-frame { flex: 0 0 auto !important; height: 380px !important; margin-bottom: 12px; }
           .po-large-modal-content { max-height: 95vh !important; overflow-y: auto !important; }
         }
       `}} />
