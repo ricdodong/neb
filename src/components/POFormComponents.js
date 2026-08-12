@@ -29,7 +29,6 @@ export const getDueDateInfo = (poDate, terms, status) => {
     };
   }
 
-  // Extract number of credit days from terms string (e.g. "30 Days", "NET 60", "Terms-15")
   const daysMatch = terms ? terms.match(/\d+/) : null;
   const creditDays = daysMatch ? parseInt(daysMatch[0], 10) : 0;
 
@@ -437,7 +436,6 @@ export const POHistoryTable = React.memo(({ poHistory, isSyncing, userRole, styl
   // Filtered List based on Quick Filters AND Search Query
   const filteredHistory = useMemo(() => {
     return poHistory.filter((row) => {
-      // 1. Status Filter Tab Match
       let matchesTab = true;
       if (activeFilter === 'pending') matchesTab = row.status !== 'served';
       else if (activeFilter === 'served') matchesTab = row.status === 'served';
@@ -451,7 +449,6 @@ export const POHistoryTable = React.memo(({ poHistory, isSyncing, userRole, styl
 
       if (!matchesTab) return false;
 
-      // 2. Search Query Match (PO Number or Customer Name)
       if (!searchQuery.trim()) return true;
       const query = searchQuery.toLowerCase().trim();
       const poRef = (row.batch_reference || row.po_number || '').toLowerCase();
@@ -741,15 +738,16 @@ export const POHistoryTable = React.memo(({ poHistory, isSyncing, userRole, styl
           styles={styles}
           onClose={() => setSelectedRow(null)}
           onViewDocs={(r) => {
-            setSelectedRow(null);
+            // NOTE: Removed setSelectedRow(null) so closing the sub-modal/action modal 
+            // will not wipe out or close this underlying PODetailsModal.
             onViewDocs(r);
           }}
           onUploadBatch={(ref) => {
-            setSelectedRow(null);
+            // NOTE: Removed setSelectedRow(null) here as well.
             onUploadBatch(ref);
           }}
           onEditRow={(r) => {
-            setSelectedRow(null);
+            // NOTE: Removed setSelectedRow(null) here as well.
             onEditRow(r);
           }}
         />
