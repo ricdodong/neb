@@ -8,7 +8,6 @@ import CallLogs from './components/CallLogs';
 import PointOfSale from './components/PointOfSale';
 import ServiceCenter from './components/ServiceCenter';
 import POReceives from './components/poReceives'; 
-import PurchaseOrder from './components/po';
 
 const BASE_URL = 'https://dpsapi.ricalgen.eu.org'; // Use your actual Worker URL here
 
@@ -380,7 +379,6 @@ const JadeSystem = ({ userRole, onLogout, username }) => {
                         {activePage === 'pos' && <PointOfSale triggerToast={triggerToast} userRole={userRole} />}
                         {activePage === 'services' && <ServiceCenter triggerToast={triggerToast} userRole={userRole} />}
                         {activePage === 'po receives' && <POReceives triggerToast={triggerToast} userRole={userRole} />} 
-                        {activePage === 'purchase order' && <PurchaseOrder triggerToast={triggerToast} userRole={userRole} />} 
                     </div>
                 </section>
             </main>
