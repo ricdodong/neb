@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { FILE_BASE, ENDPOINTS, PO_TERMS, PO_STATUS } from './poReceivesConfig';
-import { getFixedUrl } from './poFormComponents';
+import { getFixedUrl } from './POFormComponents';
 
 export const DocumentFrame = React.memo(({
   docType,
