@@ -1,3 +1,4 @@
+// POModals.js
 import React, { useState, useEffect } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { FILE_BASE, ENDPOINTS, PO_TERMS, PO_STATUS } from './poReceivesConfig';
@@ -10,9 +11,9 @@ export const DocumentGalleryModal = React.memo(({ row, onClose, onOpenLightbox }
   if (!row) return null;
 
   const documents = [
-    row.po_attachment ? { frameurl: getFixedUrl(row.po_attachment), label: 'Purchase Order (PO)' } : null,
-    row.dr_attachment ? { frameurl: getFixedUrl(row.dr_attachment), label: 'Delivery Receipt (DR)' } : null,
-    row.invoice_attachment ? { frameurl: getFixedUrl(row.invoice_attachment), label: 'Sales Invoice (SI)' } : null
+    row.po_attachment ? { frameurl: getFixedUrl(`${FILE_BASE}${row.po_attachment}`), label: 'Purchase Order (PO)' } : null,
+    row.dr_attachment ? { frameurl: getFixedUrl(`${FILE_BASE}${row.dr_attachment}`), label: 'Delivery Receipt (DR)' } : null,
+    row.invoice_attachment ? { frameurl: getFixedUrl(`${FILE_BASE}${row.invoice_attachment}`), label: 'Sales Invoice (SI)' } : null
   ].filter(Boolean);
 
   const poRef = row.batch_reference || row.po_number || 'N/A';
@@ -297,7 +298,7 @@ export const EditRecordModal = React.memo(({ editingRow, clients, styles, onClos
               style={styles.select}
             >
               {PO_STATUS.map(status => (
-                <option key={status.value} value={status.value}>{status.label}</option>
+                <option key={status.value} value={status.value}>{domainToStatus(status)}</option>
               ))}
             </select>
           </div>
