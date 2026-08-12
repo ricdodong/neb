@@ -99,10 +99,6 @@ const DocumentLightboxModal = ({ images, initialIndex = 0, onClose }) => {
       const img = new Image();
       img.src =  FILE_BASE + currentItem.url;
       img.onload = () => {
-        // Smart orientation detection: if image is landscape (width > height), 
-        // document scans might require a 90deg adjustment depending on layout, 
-        // or if it's tall vs wide. Standardizing document readability: 
-        // If width > height substantially, it's typically sideways.
         if (img.naturalWidth > img.naturalHeight * 1.3) {
           setRotation(90); // Automatically align horizontal documents upright
         } else {
