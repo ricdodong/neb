@@ -204,7 +204,8 @@ export const POHistoryTable = React.memo(({ poHistory, isSyncing, userRole, styl
             <th style={styles.th}>PO Status</th>
             <th style={styles.th}>Notes / Remarks</th>
             <th style={styles.th}>Attached Files</th>
-            <th style={{ ...styles.th, textAlign: 'right' }}>Action Controller</th>
+            {/* Sticky pinned header cell */}
+            <th style={styles.thAction}>Action Controller</th>
           </tr>
         </thead>
         <tbody>
@@ -237,15 +238,18 @@ export const POHistoryTable = React.memo(({ poHistory, isSyncing, userRole, styl
                       <span style={styles.mutedText}>—</span>
                     )}
                   </td>
-                  <td style={styles.tdRight}>
-                    {userRole === 'admin' && (
-                      <button onClick={() => onEditRow(row)} style={styles.editBtn}>
-                        ✏️ Edit
+                  {/* Sticky pinned data cell */}
+                  <td style={styles.tdRightSticky}>
+                    <div style={styles.actionButtonGroup}>
+                      {userRole === 'admin' && (
+                        <button onClick={() => onEditRow(row)} style={styles.editBtn}>
+                          ✏️ Edit
+                        </button>
+                      )}
+                      <button onClick={() => onUploadBatch(row.batch_reference || row.po_number)} style={styles.rowAttachmentBtn}>
+                        {row.po_attachment ? '🔄 Re-upload' : '📄 Scan'}
                       </button>
-                    )}
-                    <button onClick={() => onUploadBatch(row.batch_reference || row.po_number)} style={styles.rowAttachmentBtn}>
-                      {row.po_attachment ? '🔄 Re-upload' : '📄 Scan / Upload'}
-                    </button>
+                    </div>
                   </td>
                 </tr>
               );

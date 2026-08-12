@@ -70,13 +70,50 @@ export const styles = {
   tableTitle: { fontSize:'14px', fontWeight:'700', color:'#fff', textTransform:'uppercase', borderLeft:'3px solid #38bdf8', paddingLeft:'10px' },
   refreshBtn: { background:'#1f2937', border:'1px solid #374151', color:'#cbd5e1', padding:'8px 16px', borderRadius:'6px', cursor:'pointer', display:'inline-flex', alignItems:'center', gap:'8px', transition:'background 0.2s' },
   refreshBtnDisabled: { opacity: 0.6, cursor: 'not-allowed' },
-  tableWrapper: { width:'100%', overflowX:'auto', border:'1px solid #1f2937', borderRadius:'8px' },
+  tableWrapper: { width:'100%', overflowX:'auto', border:'1px solid #1f2937', borderRadius:'8px', position: 'relative' },
   table: { width:'100%', borderCollapse:'collapse', textAlign:'left', minWidth:'950px' },
   th: { padding:'16px', borderBottom:'2px solid #1f2937', color:'#94a3b8', fontSize:'11px', fontWeight:'700', textTransform:'uppercase', background:'#0f172a' },
+  
+  // Sticky Column Header for Action Controller
+  thAction: { 
+    padding: '16px', 
+    borderBottom: '2px solid #1f2937', 
+    color: '#94a3b8', 
+    fontSize: '11px', 
+    fontWeight: '700', 
+    textTransform: 'uppercase', 
+    background: '#0f172a',
+    position: 'sticky',
+    right: 0,
+    zIndex: 2,
+    textAlign: 'right',
+    boxShadow: '-6px 0 12px rgba(0,0,0,0.4)'
+  },
+  
   tableRow: { borderBottom:'1px solid #1f2937', background:'#111827' },
   td: { padding:'16px', fontSize:'14px', color:'#e2e8f0' },
   tdAmount: { padding:'16px', fontSize:'14px', color:'#fff', fontWeight:'600', fontFamily:'monospace' },
   tdRight: { padding:'16px', textAlign:'right' },
+  
+  // Sticky Column Body Cell for Action Controller
+  tdRightSticky: { 
+    padding: '16px', 
+    textAlign: 'right',
+    position: 'sticky',
+    right: 0,
+    background: '#111827',
+    zIndex: 1,
+    boxShadow: '-6px 0 12px rgba(0,0,0,0.4)'
+  },
+  
+  actionButtonGroup: {
+    display: 'flex',
+    gap: '6px',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    flexWrap: 'nowrap'
+  },
+
   emptyTd: { padding:'48px', textAlign:'center', color:'#64748b', fontStyle:'italic' },
   termsBadge: { background:'#1f2937', padding:'4px 8px', borderRadius:'4px', border:'1px solid #374151' },
   statusBadge: { padding:'4px 10px', borderRadius:'20px', fontSize:'11px', fontWeight:'700', textTransform:'uppercase' },
@@ -113,8 +150,8 @@ export const styles = {
   modalBadgeDisplay: { background: '#0f172a', padding: '10px', border: '1px solid #1f2937', borderRadius: '6px', width: '100%', boxSizing: 'border-box', textAlign: 'center', marginTop: '8px', wordBreak: 'break-all', fontFamily: 'monospace', color: '#38bdf8' },
   modalQrWrapper: { background: '#090d16', padding: '16px', border: '1px solid #1f2937', borderRadius: '12px', margin: '20px 0', display: 'flex', alignItems: 'center', justifyContent: 'center' },
   viewAttachmentBtn: { background: '#1e3a8a', color: '#60a5fa', border: '1px solid #2563eb', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: '600' },
-  rowAttachmentBtn: { background: 'transparent', border: '1px solid #0284c7', color: '#38bdf8', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: '600' },
-  editBtn: { background: 'rgba(234,179,8,.1)', border: '1px solid rgba(234,179,8,.3)', color: '#facc15', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: '600', marginRight: '8px' },
+  rowAttachmentBtn: { background: 'transparent', border: '1px solid #0284c7', color: '#38bdf8', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: '600', whiteSpace: 'nowrap' },
+  editBtn: { background: 'rgba(234,179,8,.1)', border: '1px solid rgba(234,179,8,.3)', color: '#facc15', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: '600', whiteSpace: 'nowrap' },
   mutedText: { color: '#4b5563', fontSize: '14px' },
   successHint: { color: '#00ff88', fontSize: '11px', fontWeight: '700', marginTop: '4px' }
 };
