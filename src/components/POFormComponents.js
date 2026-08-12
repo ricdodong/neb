@@ -730,26 +730,25 @@ export const POHistoryTable = React.memo(({ poHistory, isSyncing, userRole, styl
         )}
       </div>
 
-      {/* Production Details Modal */}
+      {/* Production Details Modal (kept open underneath, with a lower zIndex so the second modal opens on top of it) */}
       {selectedRow && (
-        <PODetailsModal 
-          row={selectedRow}
-          userRole={userRole}
-          styles={styles}
-          onClose={() => setSelectedRow(null)}
-          onViewDocs={(r) => {
-            setSelectedRow(r); // Close details modal first so the second modal isn't hidden behind it
-            onViewDocs(r);
-          }}
-          onUploadBatch={(ref) => {
-            setSelectedRow(r); // Close details modal first
-            onUploadBatch(ref);
-          }}
-          onEditRow={(r) => {
-            setSelectedRow(r); // Close details modal first
-            onEditRow(r);
-          }}
-        />
+        <div style={{ zIndex: 1000 }}>
+          <PODetailsModal 
+            row={selectedRow}
+            userRole={userRole}
+            styles={styles}
+            onClose={() => setSelectedRow(null)}
+            onViewDocs={(r) => {
+              onViewDocs(r);
+            }}
+            onUploadBatch={(ref) => {
+              onUploadBatch(ref);
+            }}
+            onEditRow={(r) => {
+              onEditRow(r);
+            }}
+          />
+        </div>
       )}
     </div>
   );
