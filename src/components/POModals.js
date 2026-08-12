@@ -296,13 +296,13 @@ export const DocumentGalleryModal = React.memo(({ row, onClose, onOpenLightbox }
 
   if (!row) return null;
 
-  // Direct mapping using FILE_BASE (No broken external overrides)
+  // Forcefully combines FILE_BASE with relative paths like "/uploads/..."
   const formatAttachmentUrl = (path) => {
     if (!path) return null;
     if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('blob:') || path.startsWith('data:')) {
       return path;
     }
-    const cleanBase = FILE_BASE.endsWith('/') ? FILE_BASE.slice(0, -1) : FILE_BASE;
+    const cleanBase = FILE_BASE ? FILE_BASE.replace(/\/$/, '') : '';
     const cleanPath = path.startsWith('/') ? path : `/${path}`;
     return `${cleanBase}${cleanPath}`;
   };
