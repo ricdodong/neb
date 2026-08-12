@@ -669,7 +669,7 @@ export const POScannerSection = React.memo(({ mobileScannerUrl, stagingStatus, b
 // ============================================================================
 // 3. ENHANCED PO DETAILS MODAL
 // ============================================================================
-const PODetailsModal = ({ row, userRole, styles, onClose, onViewDocs, onUploadBatch, onEditRow }) => {
+export const PODetailsModal = ({ row, userRole, styles, onClose, onViewDocs, onUploadBatch, onEditRow }) => {
   if (!row) return null;
 
   const poRef = row.batch_reference || row.po_number || 'N/A';

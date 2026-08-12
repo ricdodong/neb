@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { FILE_BASE, ENDPOINTS, PO_TERMS, PO_STATUS } from './poReceivesConfig';
+import { getFixedUrl } from './poFormComponents';
 
 export const DocumentFrame = React.memo(({
   docType,
@@ -14,48 +15,52 @@ export const DocumentFrame = React.memo(({
   onDragStart,
   onDragMove,
   onDragEnd
-}) => (
-  <div className="po-doc-frame" style={styles.documentFrame}>
-    <div style={styles.docFrameHeader}>
-      <h5 style={styles.docFrameTitle}>{docType} ATTACHMENT</h5>
-      {frameUrl && (
-        <div style={styles.zoomControls}>
-          <button style={styles.zoomBtn} onClick={onZoomOut}>—</button>
-          <span style={styles.zoomIndicator}>{Math.round(zoom * 100)}%</span>
-          <button style={styles.zoomBtn} onClick={onZoomIn}>+</button>
-          <button style={styles.zoomBtn} onClick={onZoomReset}>↺</button>
+}) => {
+  const fixedUrl = getFixedUrl(frameUrl);
+
+  return (
+    <div className="po-doc-frame" style={styles.documentFrame}>
+      <div style={styles.docFrameHeader}>
+        <h5 style={styles.docFrameTitle}>{docType} ATTACHMENT</h5>
+        {fixedUrl && (
+          <div style={styles.zoomControls}>
+            <button style={styles.zoomBtn} onClick={onZoomOut}>—</button>
+            <span style={styles.zoomIndicator}>{Math.round(zoom * 100)}%</span>
+            <button style={styles.zoomBtn} onClick={onZoomIn}>+</button>
+            <button style={styles.zoomBtn} onClick={onZoomReset}>↺</button>
+          </div>
+        )}
+      </div>
+      <div 
+        className={zoom > 1 ? "pan-canvas-grab" : ""}
+        style={styles.imageCanvas}
+        onMouseDown={(e) => onDragStart(e.clientX, e.clientY)}
+        onMouseMove={(e) => onDragMove(e.clientX, e.clientY)}
+        onMouseUp={onDragEnd}
+        onMouseLeave={onDragEnd}
+        onTouchStart={(e) => e.touches.length === 1 && onDragStart(e.touches[0].clientX, e.touches[0].clientY)}
+        onTouchMove={(e) => e.touches.length === 1 && onDragMove(e.touches[0].clientX, e.touches[0].clientY)}
+        onTouchEnd={onDragEnd}
+      >
+        {fixedUrl ? (
+          <img 
+            src={fixedUrl} 
+            alt={`${docType} Frame`}
+            draggable="false"
+            style={{ 
+              ...styles.embeddedDocImg, 
+              transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})` 
+            }}
+            onError={(e) => { e.target.style.display = 'none'; if(e.target.nextSibling) e.target.nextSibling.style.display = 'block'; }}
+          />
+        ) : null}
+        <div style={{...styles.imgFallbackText, display: fixedUrl ? 'none' : 'block'}}>
+          ⚠️ No Digital {docType} File Parsed
         </div>
-      )}
-    </div>
-    <div 
-      className={zoom > 1 ? "pan-canvas-grab" : ""}
-      style={styles.imageCanvas}
-      onMouseDown={(e) => onDragStart(e.clientX, e.clientY)}
-      onMouseMove={(e) => onDragMove(e.clientX, e.clientY)}
-      onMouseUp={onDragEnd}
-      onMouseLeave={onDragEnd}
-      onTouchStart={(e) => e.touches.length === 1 && onDragStart(e.touches[0].clientX, e.touches[0].clientY)}
-      onTouchMove={(e) => e.touches.length === 1 && onDragMove(e.touches[0].clientX, e.touches[0].clientY)}
-      onTouchEnd={onDragEnd}
-    >
-      {frameUrl ? (
-        <img 
-          src={frameUrl} 
-          alt={`${docType} Frame`}
-          draggable="false"
-          style={{ 
-            ...styles.embeddedDocImg, 
-            transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})` 
-          }}
-          onError={(e) => { e.target.style.display = 'none'; if(e.target.nextSibling) e.target.nextSibling.style.display = 'block'; }}
-        />
-      ) : null}
-      <div style={{...styles.imgFallbackText, display: frameUrl ? 'none' : 'block'}}>
-        ⚠️ No Digital {docType} File Parsed
       </div>
     </div>
-  </div>
-));
+  );
+});
 
 export const DocumentViewerModal = React.memo(({ 
   viewDocsRow, 
