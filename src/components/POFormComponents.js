@@ -90,7 +90,6 @@ const DocumentLightboxModal = ({ images, initialIndex = 0, onClose }) => {
 
   const currentItem = images[currentIndex] || { url: '', label: 'Document' };
 
-  // Reset zoom, position, and calculate smart auto-rotation on image change
   useEffect(() => {
     setScale(1);
     setPosition({ x: 0, y: 0 });
@@ -100,7 +99,7 @@ const DocumentLightboxModal = ({ images, initialIndex = 0, onClose }) => {
       img.src = FILE_BASE + currentItem.url;
       img.onload = () => {
         if (img.naturalWidth > img.naturalHeight * 1.3) {
-          setRotation(90); // Automatically align horizontal documents upright
+          setRotation(90);
         } else {
           setRotation(0);
         }
@@ -108,7 +107,6 @@ const DocumentLightboxModal = ({ images, initialIndex = 0, onClose }) => {
     }
   }, [currentIndex, currentItem.url]);
 
-  // Attach non-passive event listeners via ref to eliminate browser passive warnings
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -168,7 +166,7 @@ const DocumentLightboxModal = ({ images, initialIndex = 0, onClose }) => {
       }
     };
 
-    const handleTouchEnd = (e) => {
+    const handleTouchEnd = () => {
       touchStartDistRef.current = null;
       setIsDragging(false);
     };
@@ -186,7 +184,6 @@ const DocumentLightboxModal = ({ images, initialIndex = 0, onClose }) => {
     };
   }, [scale, position, isDragging]);
 
-  // Mouse Dragging / Panning when Zoomed
   const handleMouseDown = (e) => {
     if (scale > 1) {
       setIsDragging(true);
@@ -223,7 +220,6 @@ const DocumentLightboxModal = ({ images, initialIndex = 0, onClose }) => {
       }}
       onClick={onClose}
     >
-      {/* Top Header Controls */}
       <div 
         style={{
           position: 'absolute',
@@ -268,7 +264,6 @@ const DocumentLightboxModal = ({ images, initialIndex = 0, onClose }) => {
         </div>
       </div>
 
-      {/* Main Lightbox Viewport */}
       <div 
         ref={containerRef}
         style={{
@@ -302,7 +297,6 @@ const DocumentLightboxModal = ({ images, initialIndex = 0, onClose }) => {
           }}
         />
 
-        {/* Navigation Arrows */}
         {images.length > 1 && scale === 1 && (
           <>
             <button 
@@ -320,8 +314,7 @@ const DocumentLightboxModal = ({ images, initialIndex = 0, onClose }) => {
                 fontSize: '20px',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center',
-                transition: 'background 0.2s'
+                justifyContent: 'center'
               }}
             >
               ❮
@@ -341,8 +334,7 @@ const DocumentLightboxModal = ({ images, initialIndex = 0, onClose }) => {
                 fontSize: '20px',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center',
-                transition: 'background 0.2s'
+                justifyContent: 'center'
               }}
             >
               ❯
@@ -351,7 +343,6 @@ const DocumentLightboxModal = ({ images, initialIndex = 0, onClose }) => {
         )}
       </div>
 
-      {/* Bottom Thumbnail Strip */}
       {images.length > 1 && (
         <div 
           style={{
@@ -378,8 +369,7 @@ const DocumentLightboxModal = ({ images, initialIndex = 0, onClose }) => {
                 overflow: 'hidden',
                 border: currentIndex === idx ? '2px solid #38bdf8' : '2px solid transparent',
                 cursor: 'pointer',
-                opacity: currentIndex === idx ? 1 : 0.6,
-                transition: 'all 0.2s'
+                opacity: currentIndex === idx ? 1 : 0.6
               }}
             >
               <img src={FILE_BASE + img.url} alt={img.label} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -392,7 +382,7 @@ const DocumentLightboxModal = ({ images, initialIndex = 0, onClose }) => {
 };
 
 // ============================================================================
-// STUNNING GALLERY & DOCUMENT VIEWER MODAL
+// GALLERY & DOCUMENT VIEWER MODAL
 // ============================================================================
 const DocumentGalleryModal = ({ row, onClose }) => {
   const [lightboxIndex, setLightboxIndex] = useState(null);
@@ -438,7 +428,6 @@ const DocumentGalleryModal = ({ row, onClose }) => {
           }}
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Header */}
           <div style={{ padding: '16px 20px', borderBottom: '1px solid #1f2937', background: '#0f172a', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <span style={{ fontSize: '20px' }}>🖼️</span>
@@ -450,7 +439,6 @@ const DocumentGalleryModal = ({ row, onClose }) => {
             <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: '#94a3b8', fontSize: '20px', cursor: 'pointer' }}>✕</button>
           </div>
 
-          {/* Gallery Grid Body */}
           <div style={{ padding: '24px', overflowY: 'auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
             {documents.length === 0 ? (
               <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '40px', color: '#64748b' }}>
@@ -469,16 +457,7 @@ const DocumentGalleryModal = ({ row, onClose }) => {
                     cursor: 'pointer',
                     display: 'flex',
                     flexDirection: 'column',
-                    transition: 'all 0.2s ease',
-                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.3)'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = '#38bdf8';
-                    e.currentTarget.style.transform = 'translateY(-3px)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = '#1e293b';
-                    e.currentTarget.style.transform = 'translateY(0)';
+                    transition: 'all 0.2s ease'
                   }}
                 >
                   <div style={{ height: '160px', width: '100%', background: '#000', overflow: 'hidden', position: 'relative' }}>
@@ -496,7 +475,6 @@ const DocumentGalleryModal = ({ row, onClose }) => {
             )}
           </div>
 
-          {/* Footer */}
           <div style={{ padding: '16px 20px', borderTop: '1px solid #1f2937', background: '#0f172a', display: 'flex', justifyContent: 'flex-end' }}>
             <button onClick={onClose} style={{ background: '#1f2937', color: '#cbd5e1', border: '1px solid #374151', padding: '10px 18px', borderRadius: '6px', cursor: 'pointer', fontWeight: '600', fontSize: '12px' }}>
               Close Gallery
@@ -505,7 +483,6 @@ const DocumentGalleryModal = ({ row, onClose }) => {
         </div>
       </div>
 
-      {/* Lightbox Modal Layer */}
       {lightboxIndex !== null && (
         <DocumentLightboxModal 
           images={documents}
@@ -738,7 +715,6 @@ const PODetailsModal = ({ row, userRole, styles, onClose, onViewDocs, onUploadBa
     <div style={modalStyle} onClick={onClose}>
       <div style={cardStyle} onClick={(e) => e.stopPropagation()}>
         
-        {/* Header */}
         <div style={{ padding: '16px 20px', borderBottom: '1px solid #1f2937', background: '#0f172a', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <span style={{ fontSize: '20px' }}>📋</span>
@@ -750,7 +726,6 @@ const PODetailsModal = ({ row, userRole, styles, onClose, onViewDocs, onUploadBa
           <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: '#94a3b8', fontSize: '20px', cursor: 'pointer' }}>✕</button>
         </div>
 
-        {/* Body Grid */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px', padding: '20px', overflowY: 'auto' }}>
           <div>
             <span style={styles.label}>PO Reference Number</span>
@@ -812,7 +787,6 @@ const PODetailsModal = ({ row, userRole, styles, onClose, onViewDocs, onUploadBa
           </div>
         </div>
 
-        {/* Footer Actions */}
         <div style={{ padding: '16px 20px', borderTop: '1px solid #1f2937', background: '#0f172a', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', flex: '1 1 auto' }}>
             {hasDocs ? (
@@ -843,7 +817,7 @@ const PODetailsModal = ({ row, userRole, styles, onClose, onViewDocs, onUploadBa
 };
 
 // ============================================================================
-// 4. MAIN PO HISTORY TABLE WITH KPI, SEARCH BAR, & WRAPPED FILTERS
+// 4. MAIN PO HISTORY TABLE WITH KPI, SEARCH BAR, & F1 KEYBOARD SHORTCUT
 // ============================================================================
 export const POHistoryTable = React.memo(({ poHistory, isSyncing, userRole, styles, onRefresh, onViewDocs, onUploadBatch, onEditRow }) => {
   const [selectedRow, setSelectedRow] = useState(null);
@@ -851,6 +825,25 @@ export const POHistoryTable = React.memo(({ poHistory, isSyncing, userRole, styl
   const [hoveredIndex, setHoveredIndex] = useState(null);
   const [activeFilter, setActiveFilter] = useState('all'); 
   const [searchQuery, setSearchQuery] = useState(''); 
+  const searchInputRef = useRef(null);
+
+  // Global F1 Key Listener for Search Bar Auto-Focus & Select
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'F1') {
+        e.preventDefault(); // Prevent default browser help tab
+        if (searchInputRef.current) {
+          searchInputRef.current.focus();
+          searchInputRef.current.select();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
 
   const metrics = useMemo(() => {
     let completed = 0;
@@ -921,7 +914,7 @@ export const POHistoryTable = React.memo(({ poHistory, isSyncing, userRole, styl
         <div>
           <h3 style={styles.tableTitle}>Registered Purchase Orders Ledger</h3>
           <p style={{ margin: '4px 0 0 12px', fontSize: '12px', color: '#64748b' }}>
-            💡 Tap any PO record to view full contract details and perform attachments/edits.
+            💡 Tap any PO record to view full contract details. Press <kbd style={{ background: '#1e293b', padding: '2px 6px', borderRadius: '4px', border: '1px solid #334155', color: '#38bdf8' }}>F1</kbd> to quick-search.
           </p>
         </div>
         <button onClick={onRefresh} disabled={isSyncing} style={{ ...styles.refreshBtn, ...(isSyncing ? styles.refreshBtnDisabled : {}) }}>
@@ -955,8 +948,9 @@ export const POHistoryTable = React.memo(({ poHistory, isSyncing, userRole, styl
             🔍
           </span>
           <input
+            ref={searchInputRef}
             type="text"
-            placeholder="Search by PO Number (e.g. PO-2026-001) or Customer Name..."
+            placeholder="Search by PO Number (e.g. PO-2026-001) or Customer Name... (Press F1 to focus)"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             style={{
@@ -1166,7 +1160,6 @@ export const POHistoryTable = React.memo(({ poHistory, isSyncing, userRole, styl
         )}
       </div>
 
-      {/* Production Details Modal */}
       {selectedRow && (
         <div style={{ position: 'relative', zIndex: 1 }}>
           <PODetailsModal 
@@ -1174,20 +1167,13 @@ export const POHistoryTable = React.memo(({ poHistory, isSyncing, userRole, styl
             userRole={userRole}
             styles={styles}
             onClose={() => setSelectedRow(null)}
-            onViewDocs={(r) => {
-              setGalleryRow(r);
-            }}
-            onUploadBatch={(ref) => {
-              onUploadBatch(ref);
-            }}
-            onEditRow={(r) => {
-              onEditRow(r);
-            }}
+            onViewDocs={(r) => setGalleryRow(r)}
+            onUploadBatch={(ref) => onUploadBatch(ref)}
+            onEditRow={(r) => onEditRow(r)}
           />
         </div>
       )}
 
-      {/* Stunning Gallery Grid Modal */}
       {galleryRow && (
         <DocumentGalleryModal 
           row={galleryRow}

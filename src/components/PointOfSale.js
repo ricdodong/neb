@@ -7,6 +7,7 @@ import { QRCodeSVG } from 'qrcode.react';
  * Optimized with direct Scan Receipt redirection logic.
  */
 const BASE_URL = 'https://dpsapi.ricalgen.eu.org';
+const FRONT_URL = 'https://dps.ricalgen.eu.org';
 const PointOfSale = ({ triggerToast }) => {
     // --- State Management ---
     const [stock, setStock] = useState([]);
@@ -168,8 +169,8 @@ const PointOfSale = ({ triggerToast }) => {
         
         // Build destination target parameter path dynamically
         const targetUrl = useLocalIp 
-            ? `${serverBaseUrl}/mobile-uploads/${lastTransactionId}` 
-            : `${BASE_URL}/api/mobile-uploads/${lastTransactionId}`;
+            ? `${FRONT_URL}/mobile-uploads/${lastTransactionId}` 
+            : `${FRONT_URL}/mobile-uploads/${lastTransactionId}`;
             
         // Open the native browser portal window wrapper directly
         window.open(targetUrl, '_blank');
@@ -195,7 +196,7 @@ const PointOfSale = ({ triggerToast }) => {
                         <div className="d-none d-md-flex align-items-center bg-black border border-secondary rounded px-2 py-1">
                             <div className={`rounded-circle me-2 ${useLocalIp ? 'bg-warning' : 'bg-success'}`} style={{width: '6px', height: '6px'}}></div>
                             <span className="text-secondary fw-bold" style={{fontSize: '10px'}}>
-                                NODE: <span className="text-white">{serverBaseUrl.replace('https://', '').replace('http://', '') || 'CONNECTING...'}</span>
+                                NODE: <span className="text-white">{FRONT_URL.replace('https://', '').replace('http://', '') || 'CONNECTING...'}</span>
                             </span>
                         </div>
                     </div>
@@ -316,7 +317,7 @@ const PointOfSale = ({ triggerToast }) => {
 
                             <div className="bg-white p-3 d-flex justify-content-center rounded mb-3 mx-auto shadow-lg border border-success" style={{ maxWidth: '210px' }}>
                                 <QRCodeSVG 
-                                    value={useLocalIp ? `${serverBaseUrl}/mobile-uploads/${lastTransactionId}` : `${BASE_URL}/mobile-uploads/${lastTransactionId}`} 
+                                    value={useLocalIp ? `${FRONT_URL}/mobile-uploads/${lastTransactionId}` : `${BASE_URL}/mobile-uploads/${lastTransactionId}`} 
                                     size={160}
                                     level={"H"}
                                     includeMargin={true}
