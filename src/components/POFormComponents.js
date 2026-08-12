@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-import { PO_TERMS, PO_STATUS, formatPHP } from './poReceivesConfig';
+import { FILE_BASE, PO_TERMS, PO_STATUS, formatPHP } from './poReceivesConfig';
 
 // ============================================================================
 // HELPER: PHILIPPINE PO CREDIT TERMS & DUE DATE CALCULATOR
