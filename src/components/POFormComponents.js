@@ -74,7 +74,7 @@ export const getDueDateInfo = (poDate, terms, status) => {
 };
 
 // ============================================================================
-// LIGHTBOX GALLERY MODAL WITH SMART ROTATION, MOUSE/TOUCH ZOOM, & PAN
+// LIGHTBOX GALLERY MODAL WITH ENHANCED PANNING & MOBILE PINCH/DRAG ZOOM
 // ============================================================================
 const DocumentLightboxModal = ({ images, initialIndex = 0, onClose }) => {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
@@ -82,10 +82,10 @@ const DocumentLightboxModal = ({ images, initialIndex = 0, onClose }) => {
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [rotation, setRotation] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   
   const imageRef = useRef(null);
   const containerRef = useRef(null);
+  const dragStartRef = useRef({ x: 0, y: 0 });
   const touchStartDistRef = useRef(null);
 
   const currentItem = images[currentIndex] || { url: '', label: 'Document' };
@@ -97,7 +97,7 @@ const DocumentLightboxModal = ({ images, initialIndex = 0, onClose }) => {
 
     if (currentItem.url) {
       const img = new Image();
-      img.src =  FILE_BASE + currentItem.url;
+      img.src = FILE_BASE + currentItem.url;
       img.onload = () => {
         if (img.naturalWidth > img.naturalHeight * 1.3) {
           setRotation(90); // Automatically align horizontal documents upright
@@ -122,19 +122,19 @@ const DocumentLightboxModal = ({ images, initialIndex = 0, onClose }) => {
     });
   };
 
-  // Handle Dragging / Panning when Zoomed
+  // Mouse Dragging / Panning when Zoomed
   const handleMouseDown = (e) => {
     if (scale > 1) {
       setIsDragging(true);
-      setDragStart({ x: e.clientX - position.x, y: e.clientY - position.y });
+      dragStartRef.current = { x: e.clientX - position.x, y: e.clientY - position.y };
     }
   };
 
   const handleMouseMove = (e) => {
     if (isDragging && scale > 1) {
       setPosition({
-        x: e.clientX - dragStart.x,
-        y: e.clientY - dragStart.y
+        x: e.clientX - dragStartRef.current.x,
+        y: e.clientY - dragStartRef.current.y
       });
     }
   };
@@ -143,33 +143,46 @@ const DocumentLightboxModal = ({ images, initialIndex = 0, onClose }) => {
     setIsDragging(false);
   };
 
-  // Handle Touch Gestures for Pinch-to-Zoom & Pan on Mobile
+  // Touch Gestures for Pinch-to-Zoom & Swipe/Drag Pan on Mobile Devices
   const handleTouchStart = (e) => {
     if (e.touches.length === 2) {
+      // Pinch-to-zoom initialization
       const dist = Math.hypot(
         e.touches[0].clientX - e.touches[1].clientX,
         e.touches[0].clientY - e.touches[1].clientY
       );
       touchStartDistRef.current = dist;
+      setIsDragging(false);
     } else if (e.touches.length === 1 && scale > 1) {
+      // Touch drag/swipe to pan around zoomed image
       setIsDragging(true);
-      setDragStart({ x: e.touches[0].clientX - position.x, y: e.touches[0].clientY - position.y });
+      dragStartRef.current = { 
+        x: e.touches[0].clientX - position.x, 
+        y: e.touches[0].clientY - position.y 
+      };
     }
   };
 
   const handleTouchMove = (e) => {
     if (e.touches.length === 2 && touchStartDistRef.current) {
+      // Pinch-to-zoom calculation
       const dist = Math.hypot(
         e.touches[0].clientX - e.touches[1].clientX,
         e.touches[0].clientY - e.touches[1].clientY
       );
       const factor = dist / touchStartDistRef.current;
       touchStartDistRef.current = dist;
-      setScale((prev) => Math.min(Math.max(prev * factor, 1), 5));
+      
+      setScale((prev) => {
+        const newScale = Math.min(Math.max(prev * factor, 1), 5);
+        if (newScale === 1) setPosition({ x: 0, y: 0 });
+        return newScale;
+      });
     } else if (e.touches.length === 1 && isDragging && scale > 1) {
+      // Smooth drag panning across zoomed parts of the picture
       setPosition({
-        x: e.touches[0].clientX - dragStart.x,
-        y: e.touches[0].clientY - dragStart.y
+        x: e.touches[0].clientX - dragStartRef.current.x,
+        y: e.touches[0].clientY - dragStartRef.current.y
       });
     }
   };
@@ -240,7 +253,7 @@ const DocumentLightboxModal = ({ images, initialIndex = 0, onClose }) => {
         </div>
       </div>
 
-      {/* Main Lightbox Viewport */}
+      {/* Main Lightbox Viewport with touch-action none for fluid mobile gestures */}
       <div 
         ref={containerRef}
         style={{
@@ -251,6 +264,7 @@ const DocumentLightboxModal = ({ images, initialIndex = 0, onClose }) => {
           alignItems: 'center',
           justifyContent: 'center',
           overflow: 'hidden',
+          touchAction: 'none',
           cursor: scale > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default'
         }}
         onWheel={handleWheel}
@@ -271,14 +285,14 @@ const DocumentLightboxModal = ({ images, initialIndex = 0, onClose }) => {
             maxWidth: '85vw',
             objectFit: 'contain',
             transform: `translate(${position.x}px, ${position.y}px) scale(${scale}) rotate(${rotation}deg)`,
-            transition: isDragging ? 'none' : 'transform 0.2s ease-out',
+            transition: isDragging ? 'none' : 'transform 0.15s ease-out',
             borderRadius: '8px',
             boxShadow: '0 25px 50px -12px rgba(0,0,0,0.8)'
           }}
         />
 
         {/* Navigation Arrows */}
-        {images.length > 1 && (
+        {images.length > 1 && scale === 1 && (
           <>
             <button 
               onClick={(e) => { e.stopPropagation(); setCurrentIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1)); }}
