@@ -176,15 +176,254 @@ export const POScannerSection = React.memo(({ mobileScannerUrl, stagingStatus, b
 ));
 
 // ============================================================================
-// 3. PO HISTORY TABLE SECTION (FULLY SLIDING TO SHOW VIEW DOCS)
+// 3. PO DETAILS MODAL (PRODUCTION UI)
+// ============================================================================
+const PODetailsModal = ({ row, userRole, styles, onClose, onViewDocs, onUploadBatch, onEditRow }) => {
+  if (!row) return null;
+
+  const poRef = row.batch_reference || row.po_number || 'N/A';
+  const hasDocs = row.po_attachment || row.dr_attachment;
+
+  const modalStyle = {
+    position: 'fixed',
+    inset: 0,
+    backgroundColor: 'rgba(3, 7, 18, 0.85)',
+    backdropFilter: 'blur(8px)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1100,
+    padding: '20px'
+  };
+
+  const cardStyle = {
+    background: '#111827',
+    border: '1px solid #1f2937',
+    borderRadius: '16px',
+    width: '100%',
+    maxWidth: '640px',
+    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.7)',
+    overflow: 'hidden',
+    display: 'flex',
+    flexDirection: 'column'
+  };
+
+  const headerStyle = {
+    padding: '20px 24px',
+    borderBottom: '1px solid #1f2937',
+    background: '#0f172a',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center'
+  };
+
+  const gridStyle = {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(2, 1fr)',
+    gap: '20px',
+    padding: '24px'
+  };
+
+  const itemStyle = {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '6px'
+  };
+
+  const fullWidthStyle = {
+    gridColumn: '1 / -1',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '6px'
+  };
+
+  const valueBoxStyle = {
+    background: '#090d16',
+    border: '1px solid #1e293b',
+    borderRadius: '8px',
+    padding: '10px 14px',
+    color: '#f8fafc',
+    fontSize: '14px'
+  };
+
+  const footerStyle = {
+    padding: '16px 24px',
+    borderTop: '1px solid #1f2937',
+    background: '#0f172a',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: '12px',
+    flexWrap: 'wrap'
+  };
+
+  return (
+    <div style={modalStyle} onClick={onClose}>
+      <div style={cardStyle} onClick={(e) => e.stopPropagation()}>
+        {/* Modal Header */}
+        <div style={headerStyle}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <span style={{ fontSize: '18px' }}>📋</span>
+            <div>
+              <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '800', color: '#fff' }}>
+                Purchase Order Details
+              </h3>
+              <span style={{ fontSize: '12px', color: '#38bdf8', fontFamily: 'monospace' }}>
+                {poRef}
+              </span>
+            </div>
+          </div>
+          <button 
+            onClick={onClose} 
+            style={{ 
+              background: 'transparent', 
+              border: 'none', 
+              color: '#94a3b8', 
+              fontSize: '20px', 
+              cursor: 'pointer' 
+            }}
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* Modal Details Grid */}
+        <div style={gridStyle}>
+          <div style={itemStyle}>
+            <span style={styles.label}>PO Reference Number</span>
+            <div style={{ ...valueBoxStyle, fontFamily: 'monospace', color: '#38bdf8', fontWeight: 'bold' }}>
+              {poRef}
+            </div>
+          </div>
+
+          <div style={itemStyle}>
+            <span style={styles.label}>Customer / Client</span>
+            <div style={valueBoxStyle}>
+              {row.customer_name || row.customer_id || 'N/A'}
+            </div>
+          </div>
+
+          <div style={itemStyle}>
+            <span style={styles.label}>PO Document Date</span>
+            <div style={valueBoxStyle}>
+              {row.po_date || 'N/A'}
+            </div>
+          </div>
+
+          <div style={itemStyle}>
+            <span style={styles.label}>Contract Terms</span>
+            <div style={valueBoxStyle}>
+              <span style={styles.termsBadge}>{row.po_terms || 'COD'}</span>
+            </div>
+          </div>
+
+          <div style={itemStyle}>
+            <span style={styles.label}>Total Amount</span>
+            <div style={{ ...valueBoxStyle, fontFamily: 'monospace', fontWeight: 'bold', color: '#00ff88' }}>
+              {formatPHP(row.amount)}
+            </div>
+          </div>
+
+          <div style={itemStyle}>
+            <span style={styles.label}>Pipeline Status</span>
+            <div style={{ ...valueBoxStyle, display: 'flex', alignItems: 'center' }}>
+              <span style={{ ...styles.statusBadge, ...(row.status === 'served' ? styles.statusServed : styles.statusPending) }}>
+                {row.status}
+              </span>
+            </div>
+          </div>
+
+          <div style={fullWidthStyle}>
+            <span style={styles.label}>Attached Files Status</span>
+            <div style={{ ...valueBoxStyle, display: 'flex', gap: '16px', alignItems: 'center' }}>
+              <span style={{ color: row.po_attachment ? '#00ff88' : '#64748b', fontSize: '13px', fontWeight: '600' }}>
+                {row.po_attachment ? '✓ PO Attached' : '❌ PO Missing'}
+              </span>
+              <span style={{ color: row.dr_attachment ? '#38bdf8' : '#64748b', fontSize: '13px', fontWeight: '600' }}>
+                {row.dr_attachment ? '✓ DR Attached' : '❌ DR Missing'}
+              </span>
+            </div>
+          </div>
+
+          <div style={fullWidthStyle}>
+            <span style={styles.label}>Notes / Remarks</span>
+            <div style={{ ...valueBoxStyle, minHeight: '60px', color: row.remarks ? '#e2e8f0' : '#64748b' }}>
+              {row.remarks || 'No notes or remarks provided for this transaction.'}
+            </div>
+          </div>
+        </div>
+
+        {/* Modal Action Footer */}
+        <div style={footerStyle}>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            {hasDocs ? (
+              <button 
+                type="button" 
+                onClick={() => onViewDocs(row)} 
+                style={{ ...styles.viewAttachmentBtn, padding: '10px 16px', fontSize: '13px' }}
+              >
+                👁️ View Documents
+              </button>
+            ) : null}
+
+            <button 
+              onClick={() => onUploadBatch(poRef)} 
+              style={{ ...styles.rowAttachmentBtn, padding: '10px 16px', fontSize: '13px' }}
+            >
+              {row.po_attachment ? '🔄 Re-upload' : '📄 Scan Document'}
+            </button>
+
+            {userRole === 'admin' && (
+              <button 
+                onClick={() => onEditRow(row)} 
+                style={{ ...styles.editBtn, padding: '10px 16px', fontSize: '13px' }}
+              >
+                ✏️ Edit Record
+              </button>
+            )}
+          </div>
+
+          <button 
+            onClick={onClose} 
+            style={{ 
+              background: '#1f2937', 
+              color: '#cbd5e1', 
+              border: '1px solid #374151', 
+              padding: '10px 20px', 
+              borderRadius: '6px', 
+              cursor: 'pointer',
+              fontWeight: '600',
+              fontSize: '13px'
+            }}
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ============================================================================
+// 4. CLEAN 5-COLUMN PO HISTORY TABLE SECTION (CLICK TO OPEN MODAL)
 // ============================================================================
 export const POHistoryTable = React.memo(({ poHistory, isSyncing, userRole, styles, onRefresh, onViewDocs, onUploadBatch, onEditRow }) => {
-  const [hoveredRowKey, setHoveredRowKey] = useState(null);
+  const [selectedRow, setSelectedRow] = useState(null);
+  const [hoveredIndex, setHoveredIndex] = useState(null);
+
+  const handleRowClick = (row) => {
+    setSelectedRow(row);
+  };
 
   return (
     <div style={styles.tableSection}>
       <div style={styles.tableHeaderContainer}>
-        <h3 style={styles.tableTitle}>Registered Purchase Orders Ledger</h3>
+        <div>
+          <h3 style={styles.tableTitle}>Registered Purchase Orders Ledger</h3>
+          <p style={{ margin: '4px 0 0 12px', fontSize: '12px', color: '#64748b' }}>
+            💡 Click any row to view full transaction details and perform actions.
+          </p>
+        </div>
         <button 
           onClick={onRefresh} 
           disabled={isSyncing}
@@ -204,105 +443,64 @@ export const POHistoryTable = React.memo(({ poHistory, isSyncing, userRole, styl
         </button>
       </div>
       
-      <div style={{ ...styles.tableWrapper, overflowX: 'auto', position: 'relative' }}>
-        <table style={{ ...styles.table, tableLayout: 'fixed', width: '100%', minWidth: '1250px' }}>
-          <colgroup>
-            <col style={{ width: '130px' }} />
-            <col style={{ width: '150px' }} />
-            <col style={{ width: '110px' }} />
-            <col style={{ width: '100px' }} />
-            <col style={{ width: '120px' }} />
-            <col style={{ width: '110px' }} />
-            <col style={{ width: '160px' }} />
-            <col style={{ width: '140px' }} /> {/* Attached Files / View Docs Column */}
-            <col style={{ width: '180px' }} /> {/* Sticky Action Controller */}
-          </colgroup>
+      <div style={{ ...styles.tableWrapper, overflowX: 'auto' }}>
+        <table style={{ ...styles.table, width: '100%' }}>
           <thead>
             <tr>
               <th style={styles.th}>PO Number</th>
               <th style={styles.th}>Customer</th>
               <th style={styles.th}>PO Date</th>
-              <th style={styles.th}>Terms</th>
               <th style={styles.th}>Amount</th>
-              <th style={styles.th}>PO Status</th>
-              <th style={styles.th}>Notes / Remarks</th>
-              <th style={styles.th}>Attached Files</th>
-              <th style={{ ...styles.thAction, zIndex: 10 }}>Action Controller</th>
+              <th style={styles.th}>Status</th>
+              <th style={{ ...styles.th, textAlign: 'right' }}>Action</th>
             </tr>
           </thead>
           <tbody>
             {poHistory.length === 0 ? (
               <tr>
-                <td colSpan="9" style={styles.emptyTd}>No recorded purchase order transactions saved in this session cluster logs.</td>
+                <td colSpan="6" style={styles.emptyTd}>No recorded purchase order transactions saved in this session cluster logs.</td>
               </tr>
             ) : (
               poHistory.map((row, idx) => {
                 const uniqueKey = (row.batch_reference || row.po_number || row.id || `row-${idx}`).toString().trim().toLowerCase();
-                const isHovered = hoveredRowKey === uniqueKey;
+                const isHovered = hoveredIndex === idx;
 
-                // Slide -450px to guarantee Attached Files (View Docs) moves directly next to the Action Controller
-                const slideStyle = {
-                  transform: isHovered ? 'translateX(-450px)' : 'translateX(0)',
-                  transition: 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
-                  willChange: 'transform',
-                  position: 'relative',
-                  zIndex: 1
+                const rowStyle = {
+                  ...styles.tableRow,
+                  cursor: 'pointer',
+                  background: isHovered ? '#1e293b' : '#111827',
+                  transition: 'background 0.2s ease'
                 };
 
                 return (
                   <tr 
                     key={uniqueKey} 
-                    style={styles.tableRow}
-                    onMouseEnter={() => setHoveredRowKey(uniqueKey)}
-                    onMouseLeave={() => setHoveredRowKey(null)}
+                    style={rowStyle}
+                    onMouseEnter={() => setHoveredIndex(idx)}
+                    onMouseLeave={() => setHoveredIndex(null)}
+                    onClick={() => handleRowClick(row)}
                   >
-                    <td style={{ ...styles.td, ...slideStyle, fontFamily: 'monospace', fontWeight: 'bold', color: '#38bdf8' }}>
+                    <td style={{ ...styles.td, fontFamily: 'monospace', fontWeight: 'bold', color: '#38bdf8' }}>
                       {row.batch_reference || row.po_number || 'N/A'}
                     </td>
-                    <td style={{ ...styles.td, ...slideStyle }}>
+                    <td style={styles.td}>
                       {row.customer_name || row.customer_id || 'N/A'}
                     </td>
-                    <td style={{ ...styles.td, ...slideStyle }}>
-                      {row.po_date}
+                    <td style={styles.td}>
+                      {row.po_date || 'N/A'}
                     </td>
-                    <td style={{ ...styles.td, ...slideStyle }}>
-                      <span style={styles.termsBadge}>{row.po_terms}</span>
-                    </td>
-                    <td style={{ ...styles.tdAmount, ...slideStyle }}>
+                    <td style={styles.tdAmount}>
                       {formatPHP(row.amount)}
                     </td>
-                    <td style={{ ...styles.td, ...slideStyle }}>
+                    <td style={styles.td}>
                       <span style={{ ...styles.statusBadge, ...(row.status === 'served' ? styles.statusServed : styles.statusPending) }}>
                         {row.status}
                       </span>
                     </td>
-                    <td style={{ ...styles.td, ...slideStyle, maxWidth: '160px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      {row.remarks || <span style={styles.mutedText}>—</span>}
-                    </td>
-                    <td style={{ ...styles.td, ...slideStyle }}>
-                      {row.po_attachment || row.dr_attachment ? (
-                        <button type="button" onClick={() => onViewDocs(row)} style={styles.viewAttachmentBtn}>👁️ View Docs</button>
-                      ) : (
-                        <span style={styles.mutedText}>—</span>
-                      )}
-                    </td>
-                    
-                    {/* Sticky Action Controller Column stays pinned at right: 0 */}
-                    <td style={{ 
-                      ...styles.tdRightSticky, 
-                      zIndex: 5, 
-                      background: '#111827' 
-                    }}>
-                      <div style={styles.actionButtonGroup}>
-                        {userRole === 'admin' && (
-                          <button onClick={() => onEditRow(row)} style={styles.editBtn}>
-                            ✏️ Edit
-                          </button>
-                        )}
-                        <button onClick={() => onUploadBatch(row.batch_reference || row.po_number)} style={styles.rowAttachmentBtn}>
-                          {row.po_attachment ? '🔄 Re-upload' : '📄 Scan'}
-                        </button>
-                      </div>
+                    <td style={{ ...styles.td, textAlign: 'right' }}>
+                      <span style={{ color: '#38bdf8', fontSize: '12px', fontWeight: '600' }}>
+                        View Details →
+                      </span>
                     </td>
                   </tr>
                 );
@@ -311,6 +509,28 @@ export const POHistoryTable = React.memo(({ poHistory, isSyncing, userRole, styl
           </tbody>
         </table>
       </div>
+
+      {/* Production Modal Displayed on Row Click */}
+      {selectedRow && (
+        <PODetailsModal 
+          row={selectedRow}
+          userRole={userRole}
+          styles={styles}
+          onClose={() => setSelectedRow(null)}
+          onViewDocs={(r) => {
+            setSelectedRow(null);
+            onViewDocs(r);
+          }}
+          onUploadBatch={(ref) => {
+            setSelectedRow(null);
+            onUploadBatch(ref);
+          }}
+          onEditRow={(r) => {
+            setSelectedRow(null);
+            onEditRow(r);
+          }}
+        />
+      )}
     </div>
   );
 });
