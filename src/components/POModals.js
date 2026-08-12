@@ -301,10 +301,23 @@ export const DocumentGalleryModal = React.memo(({ row, onClose, onOpenLightbox }
 
   if (!row) return null;
 
+  // Helper to format attachment values correctly using FILE_BASE
+  const formatAttachmentUrl = (path) => {
+    if (!path) return null;
+    // If path already starts with http/https, blob, or data, use getFixedUrl directly
+    if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('blob:') || path.startsWith('data:')) {
+      return getFixedUrl(path);
+    }
+    // Otherwise prepend FILE_BASE, ensuring proper slash separation
+    const cleanBase = FILE_BASE.endsWith('/') ? FILE_BASE.slice(0, -1) : FILE_BASE;
+    const cleanPath = path.startsWith('/') ? path : `/${path}`;
+    return getFixedUrl(`${cleanBase}${cleanPath}`);
+  };
+
   const documents = [
-    row.po_attachment ? { frameurl: getFixedUrl(`${FILE_BASE}${row.po_attachment}`), label: 'Purchase Order (PO)' } : null,
-    row.dr_attachment ? { frameurl: getFixedUrl(`${FILE_BASE}${row.dr_attachment}`), label: 'Delivery Receipt (DR)' } : null,
-    row.invoice_attachment ? { frameurl: getFixedUrl(`${FILE_BASE}${row.invoice_attachment}`), label: 'Sales Invoice (SI)' } : null
+    row.po_attachment ? { frameurl: formatAttachmentUrl(row.po_attachment), label: 'Purchase Order (PO)' } : null,
+    row.dr_attachment ? { frameurl: formatAttachmentUrl(row.dr_attachment), label: 'Delivery Receipt (DR)' } : null,
+    row.invoice_attachment ? { frameurl: formatAttachmentUrl(row.invoice_attachment), label: 'Sales Invoice (SI)' } : null
   ].filter(Boolean);
 
   const poRef = row.batch_reference || row.po_number || 'N/A';
