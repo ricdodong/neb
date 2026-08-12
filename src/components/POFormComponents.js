@@ -193,7 +193,7 @@ const PODetailsModal = ({ row, userRole, styles, onClose, onViewDocs, onUploadBa
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 1100,
-    padding: '20px'
+    padding: '16px'
   };
 
   const cardStyle = {
@@ -202,6 +202,7 @@ const PODetailsModal = ({ row, userRole, styles, onClose, onViewDocs, onUploadBa
     borderRadius: '16px',
     width: '100%',
     maxWidth: '640px',
+    maxHeight: '90vh',
     boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.7)',
     overflow: 'hidden',
     display: 'flex',
@@ -209,7 +210,7 @@ const PODetailsModal = ({ row, userRole, styles, onClose, onViewDocs, onUploadBa
   };
 
   const headerStyle = {
-    padding: '20px 24px',
+    padding: '16px 20px',
     borderBottom: '1px solid #1f2937',
     background: '#0f172a',
     display: 'flex',
@@ -219,9 +220,10 @@ const PODetailsModal = ({ row, userRole, styles, onClose, onViewDocs, onUploadBa
 
   const gridStyle = {
     display: 'grid',
-    gridTemplateColumns: 'repeat(2, 1fr)',
-    gap: '20px',
-    padding: '24px'
+    gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+    gap: '16px',
+    padding: '20px',
+    overflowY: 'auto'
   };
 
   const itemStyle = {
@@ -247,13 +249,13 @@ const PODetailsModal = ({ row, userRole, styles, onClose, onViewDocs, onUploadBa
   };
 
   const footerStyle = {
-    padding: '16px 24px',
+    padding: '16px 20px',
     borderTop: '1px solid #1f2937',
     background: '#0f172a',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    gap: '12px',
+    gap: '10px',
     flexWrap: 'wrap'
   };
 
@@ -262,10 +264,10 @@ const PODetailsModal = ({ row, userRole, styles, onClose, onViewDocs, onUploadBa
       <div style={cardStyle} onClick={(e) => e.stopPropagation()}>
         {/* Modal Header */}
         <div style={headerStyle}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <span style={{ fontSize: '18px' }}>📋</span>
             <div>
-              <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '800', color: '#fff' }}>
+              <h3 style={{ margin: 0, fontSize: '15px', fontWeight: '800', color: '#fff' }}>
                 Purchase Order Details
               </h3>
               <span style={{ fontSize: '12px', color: '#38bdf8', fontFamily: 'monospace' }}>
@@ -335,7 +337,7 @@ const PODetailsModal = ({ row, userRole, styles, onClose, onViewDocs, onUploadBa
 
           <div style={fullWidthStyle}>
             <span style={styles.label}>Attached Files Status</span>
-            <div style={{ ...valueBoxStyle, display: 'flex', gap: '16px', alignItems: 'center' }}>
+            <div style={{ ...valueBoxStyle, display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap' }}>
               <span style={{ color: row.po_attachment ? '#00ff88' : '#64748b', fontSize: '13px', fontWeight: '600' }}>
                 {row.po_attachment ? '✓ PO Attached' : '❌ PO Missing'}
               </span>
@@ -347,7 +349,7 @@ const PODetailsModal = ({ row, userRole, styles, onClose, onViewDocs, onUploadBa
 
           <div style={fullWidthStyle}>
             <span style={styles.label}>Notes / Remarks</span>
-            <div style={{ ...valueBoxStyle, minHeight: '60px', color: row.remarks ? '#e2e8f0' : '#64748b' }}>
+            <div style={{ ...valueBoxStyle, minHeight: '50px', color: row.remarks ? '#e2e8f0' : '#64748b' }}>
               {row.remarks || 'No notes or remarks provided for this transaction.'}
             </div>
           </div>
@@ -355,30 +357,30 @@ const PODetailsModal = ({ row, userRole, styles, onClose, onViewDocs, onUploadBa
 
         {/* Modal Action Footer */}
         <div style={footerStyle}>
-          <div style={{ display: 'flex', gap: '8px' }}>
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', flex: '1 1 auto' }}>
             {hasDocs ? (
               <button 
                 type="button" 
                 onClick={() => onViewDocs(row)} 
-                style={{ ...styles.viewAttachmentBtn, padding: '10px 16px', fontSize: '13px' }}
+                style={{ ...styles.viewAttachmentBtn, padding: '10px 14px', fontSize: '12px' }}
               >
-                👁️ View Documents
+                👁️ View Docs
               </button>
             ) : null}
 
             <button 
               onClick={() => onUploadBatch(poRef)} 
-              style={{ ...styles.rowAttachmentBtn, padding: '10px 16px', fontSize: '13px' }}
+              style={{ ...styles.rowAttachmentBtn, padding: '10px 14px', fontSize: '12px' }}
             >
-              {row.po_attachment ? '🔄 Re-upload' : '📄 Scan Document'}
+              {row.po_attachment ? '🔄 Re-upload' : '📄 Scan'}
             </button>
 
             {userRole === 'admin' && (
               <button 
                 onClick={() => onEditRow(row)} 
-                style={{ ...styles.editBtn, padding: '10px 16px', fontSize: '13px' }}
+                style={{ ...styles.editBtn, padding: '10px 14px', fontSize: '12px' }}
               >
-                ✏️ Edit Record
+                ✏️ Edit
               </button>
             )}
           </div>
@@ -389,11 +391,11 @@ const PODetailsModal = ({ row, userRole, styles, onClose, onViewDocs, onUploadBa
               background: '#1f2937', 
               color: '#cbd5e1', 
               border: '1px solid #374151', 
-              padding: '10px 20px', 
+              padding: '10px 18px', 
               borderRadius: '6px', 
               cursor: 'pointer',
               fontWeight: '600',
-              fontSize: '13px'
+              fontSize: '12px'
             }}
           >
             Close
@@ -405,7 +407,7 @@ const PODetailsModal = ({ row, userRole, styles, onClose, onViewDocs, onUploadBa
 };
 
 // ============================================================================
-// 4. CLEAN 5-COLUMN PO HISTORY TABLE SECTION (CLICK TO OPEN MODAL)
+// 4. RESPONSIVE PO HISTORY TABLE SECTION (AUTO MOBILE CARDS)
 // ============================================================================
 export const POHistoryTable = React.memo(({ poHistory, isSyncing, userRole, styles, onRefresh, onViewDocs, onUploadBatch, onEditRow }) => {
   const [selectedRow, setSelectedRow] = useState(null);
@@ -417,11 +419,23 @@ export const POHistoryTable = React.memo(({ poHistory, isSyncing, userRole, styl
 
   return (
     <div style={styles.tableSection}>
+      {/* Inject CSS Media Query Rules */}
+      <style>{`
+        @media (max-width: 640px) {
+          .po-desktop-table-wrapper { display: none !important; }
+          .po-mobile-card-list { display: flex !important; }
+        }
+        @media (min-width: 641px) {
+          .po-desktop-table-wrapper { display: block !important; }
+          .po-mobile-card-list { display: none !important; }
+        }
+      `}</style>
+
       <div style={styles.tableHeaderContainer}>
         <div>
           <h3 style={styles.tableTitle}>Registered Purchase Orders Ledger</h3>
           <p style={{ margin: '4px 0 0 12px', fontSize: '12px', color: '#64748b' }}>
-            💡 Click any row to view full transaction details and perform actions.
+            💡 Tap any record to view details & perform actions.
           </p>
         </div>
         <button 
@@ -442,8 +456,11 @@ export const POHistoryTable = React.memo(({ poHistory, isSyncing, userRole, styl
           {isSyncing ? 'Syncing...' : 'Sync Logs'}
         </button>
       </div>
-      
-      <div style={{ ...styles.tableWrapper, overflowX: 'auto' }}>
+
+      {/* ------------------------------------------------------------------ */}
+      {/* A. DESKTOP TABLE VIEW (> 640px)                                    */}
+      {/* ------------------------------------------------------------------ */}
+      <div className="po-desktop-table-wrapper" style={{ ...styles.tableWrapper, overflowX: 'auto' }}>
         <table style={{ ...styles.table, width: '100%' }}>
           <thead>
             <tr>
@@ -510,7 +527,70 @@ export const POHistoryTable = React.memo(({ poHistory, isSyncing, userRole, styl
         </table>
       </div>
 
-      {/* Production Modal Displayed on Row Click */}
+      {/* ------------------------------------------------------------------ */}
+      {/* B. MOBILE RESPONSIVE CARD LIST (<= 640px)                           */}
+      {/* ------------------------------------------------------------------ */}
+      <div className="po-mobile-card-list" style={{ flexDirection: 'column', gap: '12px', width: '100%' }}>
+        {poHistory.length === 0 ? (
+          <div style={{ ...styles.emptyTd, background: '#111827', borderRadius: '8px', border: '1px solid #1f2937' }}>
+            No recorded purchase order transactions saved.
+          </div>
+        ) : (
+          poHistory.map((row, idx) => {
+            const uniqueKey = (row.batch_reference || row.po_number || row.id || `mob-${idx}`).toString().trim().toLowerCase();
+
+            return (
+              <div
+                key={uniqueKey}
+                onClick={() => handleRowClick(row)}
+                style={{
+                  background: '#111827',
+                  border: '1px solid #1f2937',
+                  borderRadius: '10px',
+                  padding: '14px 16px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '10px',
+                  cursor: 'pointer',
+                  boxSizing: 'border-box'
+                }}
+              >
+                {/* Top Row: PO Number & Status Badge */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontFamily: 'monospace', fontWeight: 'bold', color: '#38bdf8', fontSize: '14px' }}>
+                    {row.batch_reference || row.po_number || 'N/A'}
+                  </span>
+                  <span style={{ ...styles.statusBadge, ...(row.status === 'served' ? styles.statusServed : styles.statusPending), fontSize: '10px' }}>
+                    {row.status}
+                  </span>
+                </div>
+
+                {/* Customer Name */}
+                <div style={{ fontSize: '14px', fontWeight: '600', color: '#f8fafc' }}>
+                  {row.customer_name || row.customer_id || 'N/A'}
+                </div>
+
+                {/* Bottom Row: Date & Amount */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #1e293b', paddingTop: '8px', marginTop: '2px' }}>
+                  <span style={{ fontSize: '12px', color: '#94a3b8' }}>
+                    📅 {row.po_date || 'N/A'}
+                  </span>
+                  <span style={{ fontFamily: 'monospace', fontWeight: 'bold', color: '#00ff88', fontSize: '14px' }}>
+                    {formatPHP(row.amount)}
+                  </span>
+                </div>
+
+                {/* Tap Prompt Footer */}
+                <div style={{ textAlign: 'right', fontSize: '11px', color: '#38bdf8', fontWeight: '600' }}>
+                  Tap for details →
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* Production Details Modal */}
       {selectedRow && (
         <PODetailsModal 
           row={selectedRow}
