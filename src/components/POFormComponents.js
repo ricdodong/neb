@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { PO_TERMS, PO_STATUS, formatPHP } from './poReceivesConfig';
 
+// ============================================================================
+// 1. PO FORM SECTION
+// ============================================================================
 export const POFormSection = React.memo(({ formData, clients, stagingStatus, loading, styles, onInputChange, onSubmit }) => {
   const bothStaged = stagingStatus.po_attachment && stagingStatus.dr_attachment;
 
@@ -129,6 +132,9 @@ export const POFormSection = React.memo(({ formData, clients, stagingStatus, loa
   );
 });
 
+// ============================================================================
+// 2. PO SCANNER SECTION
+// ============================================================================
 export const POScannerSection = React.memo(({ mobileScannerUrl, stagingStatus, batchReference, styles }) => (
   <div className="po-qr-container" style={{ ...styles.card, ...styles.scannerCard }}>
     <h3 style={styles.cardTitle}>Active Transaction Session</h3>
@@ -169,6 +175,9 @@ export const POScannerSection = React.memo(({ mobileScannerUrl, stagingStatus, b
   </div>
 ));
 
+// ============================================================================
+// 3. PO HISTORY TABLE SECTION (WITH HOVER SLIDE FIX)
+// ============================================================================
 export const POHistoryTable = React.memo(({ poHistory, isSyncing, userRole, styles, onRefresh, onViewDocs, onUploadBatch, onEditRow }) => {
   const [hoveredRowKey, setHoveredRowKey] = useState(null);
 
@@ -195,8 +204,19 @@ export const POHistoryTable = React.memo(({ poHistory, isSyncing, userRole, styl
         </button>
       </div>
       
-      <div style={styles.tableWrapper}>
-        <table style={styles.table}>
+      <div style={{ ...styles.tableWrapper, overflowX: 'auto', position: 'relative' }}>
+        <table style={{ ...styles.table, tableLayout: 'fixed', width: '100%' }}>
+          <colgroup>
+            <col style={{ width: '140px' }} />
+            <col style={{ width: '180px' }} />
+            <col style={{ width: '120px' }} />
+            <col style={{ width: '120px' }} />
+            <col style={{ width: '140px' }} />
+            <col style={{ width: '140px' }} />
+            <col style={{ width: '200px' }} />
+            <col style={{ width: '130px' }} />
+            <col style={{ width: '180px' }} />
+          </colgroup>
           <thead>
             <tr>
               <th style={styles.th}>PO Number</th>
@@ -220,10 +240,11 @@ export const POHistoryTable = React.memo(({ poHistory, isSyncing, userRole, styl
                 const uniqueKey = (row.batch_reference || row.po_number || row.id || `row-${idx}`).toString().trim().toLowerCase();
                 const isHovered = hoveredRowKey === uniqueKey;
 
-                // Shift individual row cells smoothly left on hover to uncover hidden columns
+                // Shift row left smoothly on hover so the sticky action controller reveals hidden items
                 const slideStyle = {
-                  transform: isHovered ? 'translateX(-120px)' : 'translateX(0)',
-                  transition: 'transform 0.3s ease-in-out'
+                  transform: isHovered ? 'translateX(-220px)' : 'translateX(0)',
+                  transition: 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1)',
+                  willChange: 'transform'
                 };
 
                 return (
