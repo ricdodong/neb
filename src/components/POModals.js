@@ -117,7 +117,7 @@ export const DocumentLightboxModal = React.memo(({ images, initialIndex = 0, onC
         inset: 0,
         backgroundColor: 'rgba(3, 7, 18, 0.95)',
         backdropFilter: 'blur(12px)',
-        zIndex: 1300,
+        zIndex: 1400,
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
@@ -137,7 +137,7 @@ export const DocumentLightboxModal = React.memo(({ images, initialIndex = 0, onC
           alignItems: 'center',
           padding: '16px 24px',
           background: 'linear-gradient(to bottom, rgba(3,7,18,0.9), transparent)',
-          zIndex: 1310
+          zIndex: 1410
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -265,7 +265,7 @@ export const DocumentLightboxModal = React.memo(({ images, initialIndex = 0, onC
             background: 'rgba(15, 23, 42, 0.85)',
             borderRadius: '12px',
             border: '1px solid #1e293b',
-            zIndex: 1310
+            zIndex: 1410
           }}
           onClick={(e) => e.stopPropagation()}
         >
@@ -304,11 +304,9 @@ export const DocumentGalleryModal = React.memo(({ row, onClose, onOpenLightbox }
   // Helper to format attachment values correctly using FILE_BASE
   const formatAttachmentUrl = (path) => {
     if (!path) return null;
-    // If path already starts with http/https, blob, or data, use getFixedUrl directly
     if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('blob:') || path.startsWith('data:')) {
       return getFixedUrl(path);
     }
-    // Otherwise prepend FILE_BASE, ensuring proper slash separation
     const cleanBase = FILE_BASE.endsWith('/') ? FILE_BASE.slice(0, -1) : FILE_BASE;
     const cleanPath = path.startsWith('/') ? path : `/${path}`;
     return getFixedUrl(`${cleanBase}${cleanPath}`);
@@ -321,6 +319,14 @@ export const DocumentGalleryModal = React.memo(({ row, onClose, onOpenLightbox }
   ].filter(Boolean);
 
   const poRef = row.batch_reference || row.po_number || 'N/A';
+
+  const handleCardClick = (idx) => {
+    if (onOpenLightbox) {
+      onOpenLightbox(documents, idx);
+    } else {
+      setLightboxIndex(idx);
+    }
+  };
 
   return (
     <>
@@ -373,13 +379,7 @@ export const DocumentGalleryModal = React.memo(({ row, onClose, onOpenLightbox }
               documents.map((doc, idx) => (
                 <div 
                   key={idx}
-                  onClick={() => {
-                    if (onOpenLightbox) {
-                      onOpenLightbox(documents, idx);
-                    } else {
-                      setLightboxIndex(idx);
-                    }
-                  }}
+                  onClick={() => handleCardClick(idx)}
                   style={{
                     background: '#090d16',
                     border: '1px solid #1e293b',
@@ -417,13 +417,13 @@ export const DocumentGalleryModal = React.memo(({ row, onClose, onOpenLightbox }
 
           <div style={{ padding: '16px 20px', borderTop: '1px solid #1f2937', background: '#0f172a', display: 'flex', justifyContent: 'flex-end' }}>
             <button onClick={onClose} style={{ background: '#1f2937', color: '#cbd5e1', border: '1px solid #374151', padding: '10px 18px', borderRadius: '6px', cursor: 'pointer', fontWeight: '600', fontSize: '12px' }}>
-              Close Gallery
+              Close Gallery Gallery
             </button>
           </div>
         </div>
       </div>
 
-      {lightboxIndex !== null && !onOpenLightbox && (
+      {lightboxIndex !== null && (
         <DocumentLightboxModal 
           images={documents}
           initialIndex={lightboxIndex}
