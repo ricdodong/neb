@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { PO_TERMS, PO_STATUS, formatPHP } from './poReceivesConfig';
 
@@ -170,27 +170,7 @@ export const POScannerSection = React.memo(({ mobileScannerUrl, stagingStatus, b
 ));
 
 export const POHistoryTable = React.memo(({ poHistory, isSyncing, userRole, styles, onRefresh, onViewDocs, onUploadBatch, onEditRow }) => {
-  const tableContainerRef = useRef(null);
-
-  // Auto-scroll row into full view on mouse enter
-  const handleRowMouseEnter = () => {
-    if (tableContainerRef.current) {
-      tableContainerRef.current.scrollTo({
-        left: tableContainerRef.current.scrollWidth,
-        behavior: 'smooth'
-      });
-    }
-  };
-
-  // Reset scroll on mouse leave
-  const handleRowMouseLeave = () => {
-    if (tableContainerRef.current) {
-      tableContainerRef.current.scrollTo({
-        left: 0,
-        behavior: 'smooth'
-      });
-    }
-  };
+  const [hoveredRowKey, setHoveredRowKey] = useState(null);
 
   return (
     <div style={styles.tableSection}>
@@ -215,7 +195,7 @@ export const POHistoryTable = React.memo(({ poHistory, isSyncing, userRole, styl
         </button>
       </div>
       
-      <div style={styles.tableWrapper} ref={tableContainerRef}>
+      <div style={styles.tableWrapper}>
         <table style={styles.table}>
           <thead>
             <tr>
@@ -238,27 +218,45 @@ export const POHistoryTable = React.memo(({ poHistory, isSyncing, userRole, styl
             ) : (
               poHistory.map((row, idx) => {
                 const uniqueKey = (row.batch_reference || row.po_number || row.id || `row-${idx}`).toString().trim().toLowerCase();
+                const isHovered = hoveredRowKey === uniqueKey;
+
+                // Shift individual row cells smoothly left on hover to uncover hidden columns
+                const slideStyle = {
+                  transform: isHovered ? 'translateX(-120px)' : 'translateX(0)',
+                  transition: 'transform 0.3s ease-in-out'
+                };
+
                 return (
                   <tr 
                     key={uniqueKey} 
                     style={styles.tableRow}
-                    onMouseEnter={handleRowMouseEnter}
-                    onMouseLeave={handleRowMouseLeave}
+                    onMouseEnter={() => setHoveredRowKey(uniqueKey)}
+                    onMouseLeave={() => setHoveredRowKey(null)}
                   >
-                    <td style={{ ...styles.td, fontFamily: 'monospace', fontWeight: 'bold', color: '#38bdf8' }}>{row.batch_reference || row.po_number || 'N/A'}</td>
-                    <td style={styles.td}>{row.customer_name || row.customer_id || 'N/A'}</td>
-                    <td style={styles.td}>{row.po_date}</td>
-                    <td style={styles.td}><span style={styles.termsBadge}>{row.po_terms}</span></td>
-                    <td style={styles.tdAmount}>{formatPHP(row.amount)}</td>
-                    <td style={styles.td}>
+                    <td style={{ ...styles.td, ...slideStyle, fontFamily: 'monospace', fontWeight: 'bold', color: '#38bdf8' }}>
+                      {row.batch_reference || row.po_number || 'N/A'}
+                    </td>
+                    <td style={{ ...styles.td, ...slideStyle }}>
+                      {row.customer_name || row.customer_id || 'N/A'}
+                    </td>
+                    <td style={{ ...styles.td, ...slideStyle }}>
+                      {row.po_date}
+                    </td>
+                    <td style={{ ...styles.td, ...slideStyle }}>
+                      <span style={styles.termsBadge}>{row.po_terms}</span>
+                    </td>
+                    <td style={{ ...styles.tdAmount, ...slideStyle }}>
+                      {formatPHP(row.amount)}
+                    </td>
+                    <td style={{ ...styles.td, ...slideStyle }}>
                       <span style={{ ...styles.statusBadge, ...(row.status === 'served' ? styles.statusServed : styles.statusPending) }}>
                         {row.status}
                       </span>
                     </td>
-                    <td style={{ ...styles.td, maxWidth: '200px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    <td style={{ ...styles.td, ...slideStyle, maxWidth: '200px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       {row.remarks || <span style={styles.mutedText}>—</span>}
                     </td>
-                    <td style={styles.td}>
+                    <td style={{ ...styles.td, ...slideStyle }}>
                       {row.po_attachment || row.dr_attachment ? (
                         <button type="button" onClick={() => onViewDocs(row)} style={styles.viewAttachmentBtn}>👁️ View Docs</button>
                       ) : (
