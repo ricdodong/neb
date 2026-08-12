@@ -74,9 +74,9 @@ export const getDueDateInfo = (poDate, terms, status) => {
 };
 
 // ============================================================================
-// LIGHTBOX GALLERY MODAL WITH SMART ROTATION, MOUSE/TOUCH ZOOM, & PAN
+// LIGHTBOX GALLERY MODAL WITH SMART ORIENTATION DETECTION, ZOOM, & PAN
 // ============================================================================
-const DocumentLightboxModal = ({ images, initialIndex = 0, onClose }) => {
+export const DocumentLightboxModal = React.memo(({ images, initialIndex = 0, onClose }) => {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [scale, setScale] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -88,29 +88,26 @@ const DocumentLightboxModal = ({ images, initialIndex = 0, onClose }) => {
   const containerRef = useRef(null);
   const touchStartDistRef = useRef(null);
 
-  const currentItem = images[currentIndex] || { url: '', label: 'Document' };
+  const currentItem = images[currentIndex] || { frameurl: '', label: 'Document' };
 
   // Reset zoom, position, and calculate smart auto-rotation on image change
   useEffect(() => {
     setScale(1);
     setPosition({ x: 0, y: 0 });
 
-    if (currentItem.url) {
+    if (currentItem.frameurl) {
       const img = new Image();
-      img.src = currentItem.url;
+      img.src = currentItem.frameurl;
       img.onload = () => {
-        // Smart orientation detection: if image is landscape (width > height), 
-        // document scans might require a 90deg adjustment depending on layout, 
-        // or if it's tall vs wide. Standardizing document readability: 
-        // If width > height substantially, it's typically sideways.
+        // Smart orientation detection: Automatically align sideways document scans upright
         if (img.naturalWidth > img.naturalHeight * 1.3) {
-          setRotation(90); // Automatically align horizontal documents upright
+          setRotation(90);
         } else {
           setRotation(0);
         }
       };
     }
-  }, [currentIndex, currentItem.url]);
+  }, [currentIndex, currentItem.frameurl]);
 
   // Handle Wheel Zoom (centered on cursor position)
   const handleWheel = (e) => {
@@ -120,7 +117,7 @@ const DocumentLightboxModal = ({ images, initialIndex = 0, onClose }) => {
     setScale((prevScale) => {
       const newScale = Math.min(Math.max(prevScale * zoomFactor, 1), 5);
       if (newScale === 1) {
-        setPosition({ x: 0, y: 0 }); // Reset pan when fully zoomed out
+        setPosition({ x: 0, y: 0 });
       }
       return newScale;
     });
@@ -268,7 +265,7 @@ const DocumentLightboxModal = ({ images, initialIndex = 0, onClose }) => {
       >
         <img 
           ref={imageRef}
-          src={currentItem.url} 
+          src={currentItem.frameurl} 
           alt={currentItem.label}
           style={{
             maxHeight: '82vh',
@@ -361,27 +358,27 @@ const DocumentLightboxModal = ({ images, initialIndex = 0, onClose }) => {
                 transition: 'all 0.2s'
               }}
             >
-              <img src={img.url} alt={img.label} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <img src={img.frameurl} alt={img.label} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             </div>
           ))}
         </div>
       )}
     </div>
   );
-};
+});
 
 // ============================================================================
 // STUNNING GALLERY & DOCUMENT VIEWER MODAL
 // ============================================================================
-const DocumentGalleryModal = ({ row, onClose }) => {
+export const DocumentGalleryModal = React.memo(({ row, onClose }) => {
   const [lightboxIndex, setLightboxIndex] = useState(null);
 
   if (!row) return null;
 
   const documents = [
-    row.po_attachment ? { url: row.po_attachment, label: 'Purchase Order (PO)' } : null,
-    row.dr_attachment ? { url: row.dr_attachment, label: 'Delivery Receipt (DR)' } : null,
-    row.invoice_attachment ? { url: row.invoice_attachment, label: 'Sales Invoice (SI)' } : null
+    row.po_attachment ? { frameurl: row.po_attachment, label: 'Purchase Order (PO)' } : null,
+    row.dr_attachment ? { frameurl: row.dr_attachment, label: 'Delivery Receipt (DR)' } : null,
+    row.invoice_attachment ? { frameurl: row.invoice_attachment, label: 'Sales Invoice (SI)' } : null
   ].filter(Boolean);
 
   const poRef = row.batch_reference || row.po_number || 'N/A';
@@ -461,7 +458,7 @@ const DocumentGalleryModal = ({ row, onClose }) => {
                   }}
                 >
                   <div style={{ height: '160px', width: '100%', background: '#000', overflow: 'hidden', position: 'relative' }}>
-                    <img src={doc.url} alt={doc.label} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.85 }} />
+                    <img src={doc.frameurl} alt={doc.label} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.85 }} />
                     <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(3,7,18,0.8), transparent)', display: 'flex', alignItems: 'flex-end', padding: '10px' }}>
                       <span style={{ fontSize: '11px', color: '#38bdf8', fontWeight: '700' }}>🔍 Click to Expand & Zoom</span>
                     </div>
@@ -494,7 +491,7 @@ const DocumentGalleryModal = ({ row, onClose }) => {
       )}
     </>
   );
-};
+});
 
 // ============================================================================
 // 1. PO FORM SECTION
