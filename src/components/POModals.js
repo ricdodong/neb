@@ -2,7 +2,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { FILE_BASE, ENDPOINTS, PO_TERMS, PO_STATUS } from './poReceivesConfig';
-import { getFixedUrl } from './POFormComponents';
 
 // ============================================================================
 // LIGHTBOX GALLERY MODAL WITH SMART ORIENTATION DETECTION, ZOOM, & PAN
@@ -19,11 +18,7 @@ export const DocumentLightboxModal = React.memo(({ images, initialIndex = 0, onC
   const containerRef = useRef(null);
   const touchStartDistRef = useRef(null);
 
-  const rawItem = images[currentIndex] || { frameurl: '', label: 'Document' };
-  const currentItem = {
-    ...rawItem,
-    frameurl: getFixedUrl(rawItem.frameurl)
-  };
+  const currentItem = images[currentIndex] || { frameurl: '', label: 'Document' };
 
   useEffect(() => {
     setScale(1);
@@ -284,7 +279,7 @@ export const DocumentLightboxModal = React.memo(({ images, initialIndex = 0, onC
                 transition: 'all 0.2s'
               }}
             >
-              <img src={getFixedUrl(img.frameurl)} alt={img.label} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <img src={img.frameurl} alt={img.label} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             </div>
           ))}
         </div>
@@ -301,15 +296,15 @@ export const DocumentGalleryModal = React.memo(({ row, onClose, onOpenLightbox }
 
   if (!row) return null;
 
-  // Robust URL builder using FILE_BASE correctly
+  // Direct mapping using FILE_BASE (No broken external overrides)
   const formatAttachmentUrl = (path) => {
     if (!path) return null;
     if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('blob:') || path.startsWith('data:')) {
-      return getFixedUrl(path);
+      return path;
     }
     const cleanBase = FILE_BASE.endsWith('/') ? FILE_BASE.slice(0, -1) : FILE_BASE;
     const cleanPath = path.startsWith('/') ? path : `/${path}`;
-    return getFixedUrl(`${cleanBase}${cleanPath}`);
+    return `${cleanBase}${cleanPath}`;
   };
 
   const documents = [
@@ -322,7 +317,7 @@ export const DocumentGalleryModal = React.memo(({ row, onClose, onOpenLightbox }
 
   const handleCardClick = (idx, e) => {
     e.stopPropagation();
-    if (onOpenLightbox) {
+    if (typeof onOpenLightbox === 'function') {
       onOpenLightbox(documents, idx);
     } else {
       setLightboxIndex(idx);
