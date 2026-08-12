@@ -400,7 +400,7 @@ const PODetailsModal = ({ row, userRole, styles, onClose, onViewDocs, onUploadBa
 };
 
 // ============================================================================
-// 4. MAIN PO HISTORY TABLE WITH KPI, SEARCH BAR, & FILTERS
+// 4. MAIN PO HISTORY TABLE WITH KPI, SEARCH BAR, & WRAPPED FILTERS
 // ============================================================================
 export const POHistoryTable = React.memo(({ poHistory, isSyncing, userRole, styles, onRefresh, onViewDocs, onUploadBatch, onEditRow }) => {
   const [selectedRow, setSelectedRow] = useState(null);
@@ -468,10 +468,12 @@ export const POHistoryTable = React.memo(({ poHistory, isSyncing, userRole, styl
           .po-desktop-table-wrapper { display: none !important; }
           .po-mobile-card-list { display: flex !important; }
           .po-metrics-grid { grid-template-columns: repeat(2, 1fr) !important; }
+          .po-filter-tabs-container { flex-wrap: wrap !important; }
         }
         @media (min-width: 641px) {
           .po-desktop-table-wrapper { display: block !important; }
           .po-mobile-card-list { display: none !important; }
+          .po-filter-tabs-container { flex-wrap: nowrap !important; }
         }
       `}</style>
 
@@ -511,7 +513,7 @@ export const POHistoryTable = React.memo(({ poHistory, isSyncing, userRole, styl
 
       {/* Search Input Bar & Filter Tabs Container */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '16px' }}>
-        {/* Search Bar */}
+        {/* Search Bar with White Input Background */}
         <div style={{ position: 'relative', width: '100%' }}>
           <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', fontSize: '16px', pointerEvents: 'none' }}>
             🔍
@@ -523,11 +525,11 @@ export const POHistoryTable = React.memo(({ poHistory, isSyncing, userRole, styl
             onChange={(e) => setSearchQuery(e.target.value)}
             style={{
               width: '100%',
-              background: '#0f172a',
-              border: '1px solid #1e293b',
+              background: '#ffffff',
+              border: '1px solid #cbd5e1',
               borderRadius: '8px',
               padding: '10px 14px 10px 38px',
-              color: '#f8fafc',
+              color: '#0f172a',
               fontSize: '14px',
               outline: 'none',
               boxSizing: 'border-box'
@@ -543,9 +545,10 @@ export const POHistoryTable = React.memo(({ poHistory, isSyncing, userRole, styl
                 transform: 'translateY(-50%)',
                 background: 'transparent',
                 border: 'none',
-                color: '#94a3b8',
+                color: '#64748b',
                 cursor: 'pointer',
-                fontSize: '14px'
+                fontSize: '14px',
+                fontWeight: '600'
               }}
             >
               ✕ Clear
@@ -553,8 +556,8 @@ export const POHistoryTable = React.memo(({ poHistory, isSyncing, userRole, styl
           )}
         </div>
 
-        {/* Quick Status Filter Tabs */}
-        <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px' }}>
+        {/* Quick Status Filter Tabs with Mobile Flex Wrap */}
+        <div className="po-filter-tabs-container" style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px' }}>
           {[
             { id: 'all', label: `All (${metrics.total})` },
             { id: 'pending', label: `Pending (${metrics.pending})` },
