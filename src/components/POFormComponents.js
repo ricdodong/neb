@@ -1,6 +1,15 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-import { PO_TERMS, PO_STATUS, formatPHP } from './poReceivesConfig';
+import { PO_TERMS, PO_STATUS, formatPHP, FILE_BASE } from './poReceivesConfig';
+
+// ============================================================================
+// HELPER: NORMALIZE ATTACHMENT URLS (FIX DOMAIN MAPPING)
+// ============================================================================
+export const getFixedUrl = (url) => {
+  if (!url) return '';
+  // Automatically rewrite legacy or incorrect hostnames to the correct file server domain
+  return url.replace(/dps\.ricalgen\.eu\.org/g, 'jadefile.ricalgen.eu.org');
+};
 
 // ============================================================================
 // HELPER: PHILIPPINE PO CREDIT TERMS & DUE DATE CALCULATOR
@@ -88,9 +97,12 @@ export const DocumentLightboxModal = React.memo(({ images, initialIndex = 0, onC
   const containerRef = useRef(null);
   const touchStartDistRef = useRef(null);
 
-  const currentItem = images[currentIndex] || { frameurl: '', label: 'Document' };
+  const rawItem = images[currentIndex] || { frameurl: '', label: 'Document' };
+  const currentItem = {
+    ...rawItem,
+    frameurl: getFixedUrl(rawItem.frameurl)
+  };
 
-  // Reset zoom, position, and calculate smart auto-rotation on image change
   useEffect(() => {
     setScale(1);
     setPosition({ x: 0, y: 0 });
@@ -99,7 +111,6 @@ export const DocumentLightboxModal = React.memo(({ images, initialIndex = 0, onC
       const img = new Image();
       img.src = currentItem.frameurl;
       img.onload = () => {
-        // Smart orientation detection: Automatically align sideways document scans upright
         if (img.naturalWidth > img.naturalHeight * 1.3) {
           setRotation(90);
         } else {
@@ -109,7 +120,6 @@ export const DocumentLightboxModal = React.memo(({ images, initialIndex = 0, onC
     }
   }, [currentIndex, currentItem.frameurl]);
 
-  // Handle Wheel Zoom (centered on cursor position)
   const handleWheel = (e) => {
     e.preventDefault();
     const zoomFactor = e.deltaY < 0 ? 1.15 : 0.87;
@@ -123,7 +133,6 @@ export const DocumentLightboxModal = React.memo(({ images, initialIndex = 0, onC
     });
   };
 
-  // Handle Dragging / Panning when Zoomed
   const handleMouseDown = (e) => {
     if (scale > 1) {
       setIsDragging(true);
@@ -144,7 +153,6 @@ export const DocumentLightboxModal = React.memo(({ images, initialIndex = 0, onC
     setIsDragging(false);
   };
 
-  // Handle Touch Gestures for Pinch-to-Zoom & Pan on Mobile
   const handleTouchStart = (e) => {
     if (e.touches.length === 2) {
       const dist = Math.hypot(
@@ -196,7 +204,6 @@ export const DocumentLightboxModal = React.memo(({ images, initialIndex = 0, onC
       }}
       onClick={onClose}
     >
-      {/* Top Header Controls */}
       <div 
         style={{
           position: 'absolute',
@@ -241,7 +248,6 @@ export const DocumentLightboxModal = React.memo(({ images, initialIndex = 0, onC
         </div>
       </div>
 
-      {/* Main Lightbox Viewport */}
       <div 
         ref={containerRef}
         style={{
@@ -278,7 +284,6 @@ export const DocumentLightboxModal = React.memo(({ images, initialIndex = 0, onC
           }}
         />
 
-        {/* Navigation Arrows */}
         {images.length > 1 && (
           <>
             <button 
@@ -327,7 +332,6 @@ export const DocumentLightboxModal = React.memo(({ images, initialIndex = 0, onC
         )}
       </div>
 
-      {/* Bottom Thumbnail Strip */}
       {images.length > 1 && (
         <div 
           style={{
@@ -358,7 +362,7 @@ export const DocumentLightboxModal = React.memo(({ images, initialIndex = 0, onC
                 transition: 'all 0.2s'
               }}
             >
-              <img src={img.frameurl} alt={img.label} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <img src={getFixedUrl(img.frameurl)} alt={img.label} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             </div>
           ))}
         </div>
@@ -376,9 +380,9 @@ export const DocumentGalleryModal = React.memo(({ row, onClose }) => {
   if (!row) return null;
 
   const documents = [
-    row.po_attachment ? { frameurl: row.po_attachment, label: 'Purchase Order (PO)' } : null,
-    row.dr_attachment ? { frameurl: row.dr_attachment, label: 'Delivery Receipt (DR)' } : null,
-    row.invoice_attachment ? { frameurl: row.invoice_attachment, label: 'Sales Invoice (SI)' } : null
+    row.po_attachment ? { frameurl: getFixedUrl(row.po_attachment), label: 'Purchase Order (PO)' } : null,
+    row.dr_attachment ? { frameurl: getFixedUrl(row.dr_attachment), label: 'Delivery Receipt (DR)' } : null,
+    row.invoice_attachment ? { frameurl: getFixedUrl(row.invoice_attachment), label: 'Sales Invoice (SI)' } : null
   ].filter(Boolean);
 
   const poRef = row.batch_reference || row.po_number || 'N/A';
@@ -414,7 +418,6 @@ export const DocumentGalleryModal = React.memo(({ row, onClose }) => {
           }}
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Header */}
           <div style={{ padding: '16px 20px', borderBottom: '1px solid #1f2937', background: '#0f172a', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <span style={{ fontSize: '20px' }}>🖼️</span>
@@ -426,7 +429,6 @@ export const DocumentGalleryModal = React.memo(({ row, onClose }) => {
             <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: '#94a3b8', fontSize: '20px', cursor: 'pointer' }}>✕</button>
           </div>
 
-          {/* Gallery Grid Body */}
           <div style={{ padding: '24px', overflowY: 'auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
             {documents.length === 0 ? (
               <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '40px', color: '#64748b' }}>
@@ -472,7 +474,6 @@ export const DocumentGalleryModal = React.memo(({ row, onClose }) => {
             )}
           </div>
 
-          {/* Footer */}
           <div style={{ padding: '16px 20px', borderTop: '1px solid #1f2937', background: '#0f172a', display: 'flex', justifyContent: 'flex-end' }}>
             <button onClick={onClose} style={{ background: '#1f2937', color: '#cbd5e1', border: '1px solid #374151', padding: '10px 18px', borderRadius: '6px', cursor: 'pointer', fontWeight: '600', fontSize: '12px' }}>
               Close Gallery
@@ -481,7 +482,6 @@ export const DocumentGalleryModal = React.memo(({ row, onClose }) => {
         </div>
       </div>
 
-      {/* Lightbox Modal Layer */}
       {lightboxIndex !== null && (
         <DocumentLightboxModal 
           images={documents}
@@ -714,7 +714,6 @@ const PODetailsModal = ({ row, userRole, styles, onClose, onViewDocs, onUploadBa
     <div style={modalStyle} onClick={onClose}>
       <div style={cardStyle} onClick={(e) => e.stopPropagation()}>
         
-        {/* Header */}
         <div style={{ padding: '16px 20px', borderBottom: '1px solid #1f2937', background: '#0f172a', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <span style={{ fontSize: '20px' }}>📋</span>
@@ -726,7 +725,6 @@ const PODetailsModal = ({ row, userRole, styles, onClose, onViewDocs, onUploadBa
           <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: '#94a3b8', fontSize: '20px', cursor: 'pointer' }}>✕</button>
         </div>
 
-        {/* Body Grid */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px', padding: '20px', overflowY: 'auto' }}>
           <div>
             <span style={styles.label}>PO Reference Number</span>
@@ -788,7 +786,6 @@ const PODetailsModal = ({ row, userRole, styles, onClose, onViewDocs, onUploadBa
           </div>
         </div>
 
-        {/* Footer Actions */}
         <div style={{ padding: '16px 20px', borderTop: '1px solid #1f2937', background: '#0f172a', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', flex: '1 1 auto' }}>
             {hasDocs ? (
@@ -1142,7 +1139,6 @@ export const POHistoryTable = React.memo(({ poHistory, isSyncing, userRole, styl
         )}
       </div>
 
-      {/* Production Details Modal */}
       {selectedRow && (
         <div style={{ position: 'relative', zIndex: 1 }}>
           <PODetailsModal 
@@ -1163,7 +1159,6 @@ export const POHistoryTable = React.memo(({ poHistory, isSyncing, userRole, styl
         </div>
       )}
 
-      {/* Stunning Gallery Grid Modal */}
       {galleryRow && (
         <DocumentGalleryModal 
           row={galleryRow}

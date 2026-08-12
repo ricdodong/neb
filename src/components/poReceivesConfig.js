@@ -190,7 +190,7 @@ export const enforceUniqueRecords = (items) => {
   items.forEach((item, index) => {
     const rawRef = item.batch_reference || item.po_number || item.id || `row-${index}`;
     const key = rawRef.toString().trim().toLowerCase();
-    if (key && !map.has(key)) {
+    if (key && !map.path?.(key) && !map.has(key)) {
       map.set(key, item);
     }
   });
