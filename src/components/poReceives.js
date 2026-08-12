@@ -4,9 +4,8 @@ import { QRCodeSVG } from 'qrcode.react';
 // ============================================================================
 // CONSTANTS & ENDPOINTS (RESTORED TO ORIGINAL)
 // ============================================================================
-const API_BASE = process.env.REACT_APP_API_BASE || '';
-const FILE_BASE = process.env.REACT_APP_FILE_BASE || 'http://localhost:5000/uploads/';
-
+const API_BASE = 'https://dpsapi.ricalgen.eu.org';
+const FILE_BASE = 'https://jadefile.ricalgen.eu.org';
 const ENDPOINTS = {
   clients: `${API_BASE}/api/po-receives/clients`,
   history: `${API_BASE}/api/po-receives/history`,
