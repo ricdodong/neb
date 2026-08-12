@@ -176,7 +176,7 @@ export const POScannerSection = React.memo(({ mobileScannerUrl, stagingStatus, b
 ));
 
 // ============================================================================
-// 3. PO HISTORY TABLE SECTION (WITH HOVER SLIDE FIX)
+// 3. PO HISTORY TABLE SECTION (FULLY SLIDING TO SHOW VIEW DOCS)
 // ============================================================================
 export const POHistoryTable = React.memo(({ poHistory, isSyncing, userRole, styles, onRefresh, onViewDocs, onUploadBatch, onEditRow }) => {
   const [hoveredRowKey, setHoveredRowKey] = useState(null);
@@ -205,17 +205,17 @@ export const POHistoryTable = React.memo(({ poHistory, isSyncing, userRole, styl
       </div>
       
       <div style={{ ...styles.tableWrapper, overflowX: 'auto', position: 'relative' }}>
-        <table style={{ ...styles.table, tableLayout: 'fixed', width: '100%' }}>
+        <table style={{ ...styles.table, tableLayout: 'fixed', width: '100%', minWidth: '1250px' }}>
           <colgroup>
-            <col style={{ width: '140px' }} />
-            <col style={{ width: '180px' }} />
-            <col style={{ width: '120px' }} />
-            <col style={{ width: '120px' }} />
-            <col style={{ width: '140px' }} />
-            <col style={{ width: '140px' }} />
-            <col style={{ width: '200px' }} />
             <col style={{ width: '130px' }} />
-            <col style={{ width: '180px' }} />
+            <col style={{ width: '150px' }} />
+            <col style={{ width: '110px' }} />
+            <col style={{ width: '100px' }} />
+            <col style={{ width: '120px' }} />
+            <col style={{ width: '110px' }} />
+            <col style={{ width: '160px' }} />
+            <col style={{ width: '140px' }} /> {/* Attached Files / View Docs Column */}
+            <col style={{ width: '180px' }} /> {/* Sticky Action Controller */}
           </colgroup>
           <thead>
             <tr>
@@ -227,7 +227,7 @@ export const POHistoryTable = React.memo(({ poHistory, isSyncing, userRole, styl
               <th style={styles.th}>PO Status</th>
               <th style={styles.th}>Notes / Remarks</th>
               <th style={styles.th}>Attached Files</th>
-              <th style={styles.thAction}>Action Controller</th>
+              <th style={{ ...styles.thAction, zIndex: 10 }}>Action Controller</th>
             </tr>
           </thead>
           <tbody>
@@ -240,11 +240,13 @@ export const POHistoryTable = React.memo(({ poHistory, isSyncing, userRole, styl
                 const uniqueKey = (row.batch_reference || row.po_number || row.id || `row-${idx}`).toString().trim().toLowerCase();
                 const isHovered = hoveredRowKey === uniqueKey;
 
-                // Shift row left smoothly on hover so the sticky action controller reveals hidden items
+                // Slide -450px to guarantee Attached Files (View Docs) moves directly next to the Action Controller
                 const slideStyle = {
-                  transform: isHovered ? 'translateX(-220px)' : 'translateX(0)',
-                  transition: 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1)',
-                  willChange: 'transform'
+                  transform: isHovered ? 'translateX(-450px)' : 'translateX(0)',
+                  transition: 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+                  willChange: 'transform',
+                  position: 'relative',
+                  zIndex: 1
                 };
 
                 return (
@@ -274,7 +276,7 @@ export const POHistoryTable = React.memo(({ poHistory, isSyncing, userRole, styl
                         {row.status}
                       </span>
                     </td>
-                    <td style={{ ...styles.td, ...slideStyle, maxWidth: '200px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    <td style={{ ...styles.td, ...slideStyle, maxWidth: '160px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       {row.remarks || <span style={styles.mutedText}>—</span>}
                     </td>
                     <td style={{ ...styles.td, ...slideStyle }}>
@@ -284,7 +286,13 @@ export const POHistoryTable = React.memo(({ poHistory, isSyncing, userRole, styl
                         <span style={styles.mutedText}>—</span>
                       )}
                     </td>
-                    <td style={styles.tdRightSticky}>
+                    
+                    {/* Sticky Action Controller Column stays pinned at right: 0 */}
+                    <td style={{ 
+                      ...styles.tdRightSticky, 
+                      zIndex: 5, 
+                      background: '#111827' 
+                    }}>
                       <div style={styles.actionButtonGroup}>
                         {userRole === 'admin' && (
                           <button onClick={() => onEditRow(row)} style={styles.editBtn}>
