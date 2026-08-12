@@ -26,7 +26,7 @@ export const DocumentLightboxModal = React.memo(({ images, initialIndex = 0, onC
 
     if (currentItem.frameurl) {
       const img = new Image();
-      img.src = currentItem.frameurl;
+      img.src = FILE_BASE + currentItem.frameurl;
       img.onload = () => {
         if (img.naturalWidth > img.naturalHeight * 1.3) {
           setRotation(90);
