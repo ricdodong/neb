@@ -26,7 +26,7 @@ export const DocumentLightboxModal = React.memo(({ images, initialIndex = 0, onC
 
     if (currentItem.frameurl) {
       const img = new Image();
-      img.src = FILE_BASE + currentItem.frameurl;
+      img.src = currentItem.frameurl;
       img.onload = () => {
         if (img.naturalWidth > img.naturalHeight * 1.3) {
           setRotation(90);
@@ -188,7 +188,7 @@ export const DocumentLightboxModal = React.memo(({ images, initialIndex = 0, onC
       >
         <img 
           ref={imageRef}
-          src={FILE_BASE + currentItem.frameurl} 
+          src={currentItem.frameurl} 
           alt={currentItem.label}
           style={{
             maxHeight: '82vh',
@@ -296,7 +296,7 @@ export const DocumentGalleryModal = React.memo(({ row, onClose, onOpenLightbox }
 
   if (!row) return null;
 
-  // Forcefully combines FILE_BASE with relative paths like "/uploads/..."
+  // Explicit URL formatter using FILE_BASE configuration
   const formatAttachmentUrl = (path) => {
     if (!path) return null;
     if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('blob:') || path.startsWith('data:')) {
@@ -307,10 +307,16 @@ export const DocumentGalleryModal = React.memo(({ row, onClose, onOpenLightbox }
     return `${cleanBase}${cleanPath}`;
   };
 
-  const documents = [
+  const rawDocuments = [
     row.po_attachment ? { frameurl: formatAttachmentUrl(row.po_attachment), label: 'Purchase Order (PO)' } : null,
     row.dr_attachment ? { frameurl: formatAttachmentUrl(row.dr_attachment), label: 'Delivery Receipt (DR)' } : null,
     row.invoice_attachment ? { frameurl: formatAttachmentUrl(row.invoice_attachment), label: 'Sales Invoice (SI)' } : null
+  ].filter(Boolean);
+
+  // Fallback map if properties are singular/alternative names
+  const documents = rawDocuments.length > 0 ? rawDocuments : [
+    row.attachment_url ? { frameurl: formatAttachmentUrl(row.attachment_url), label: 'Document Attachment' } : null,
+    row.file_url ? { frameurl: formatAttachmentUrl(row.file_url), label: 'Document File' } : null
   ].filter(Boolean);
 
   const poRef = row.batch_reference || row.po_number || 'N/A';
