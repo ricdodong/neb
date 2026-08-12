@@ -730,9 +730,9 @@ export const POHistoryTable = React.memo(({ poHistory, isSyncing, userRole, styl
         )}
       </div>
 
-      {/* Production Details Modal (kept open underneath, with a lower zIndex so the second modal opens on top of it) */}
+      {/* Production Details Modal (Using zIndex: 1 so the parent container stays at background level) */}
       {selectedRow && (
-        <div style={{ zIndex: 1000 }}>
+        <div style={{ position: 'relative', zIndex: 1 }}>
           <PODetailsModal 
             row={selectedRow}
             userRole={userRole}
