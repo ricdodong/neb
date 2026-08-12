@@ -89,7 +89,7 @@ export const DocumentGalleryModal = React.memo(({ row, onClose, onOpenLightbox }
   if (!row) return null;
 
   const documents = [
-    row.po_attachment ? { frameurl: getFixedUrl(row.po_attachment), label: 'Purchase Order (PO)' } : null,
+    row.po_attachment ? { frameurl: etFixedUrl(row.po_attachment), label: 'Purchase Order (PO)' } : null,
     row.dr_attachment ? { frameurl: getFixedUrl(row.dr_attachment), label: 'Delivery Receipt (DR)' } : null,
     row.invoice_attachment ? { frameurl: getFixedUrl(row.invoice_attachment), label: 'Sales Invoice (SI)' } : null
   ].filter(Boolean);
@@ -168,7 +168,7 @@ export const DocumentGalleryModal = React.memo(({ row, onClose, onOpenLightbox }
                 }}
               >
                 <div style={{ height: '160px', width: '100%', background: '#000', overflow: 'hidden', position: 'relative' }}>
-                  <img src={doc.frameurl} alt={doc.label} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.85 }} />
+                  <img src={FILE_BASE + doc.frameurl} alt={doc.label} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.85 }} />
                   <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(3,7,18,0.8), transparent)', display: 'flex', alignItems: 'flex-end', padding: '10px' }}>
                     <span style={{ fontSize: '11px', color: '#38bdf8', fontWeight: '700' }}>🔍 Click to Expand & Zoom</span>
                   </div>
