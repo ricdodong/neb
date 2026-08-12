@@ -97,7 +97,7 @@ const DocumentLightboxModal = ({ images, initialIndex = 0, onClose }) => {
 
     if (currentItem.url) {
       const img = new Image();
-      img.src =  currentItem.url;
+      img.src =  FILE_BASE + currentItem.url;
       img.onload = () => {
         // Smart orientation detection: if image is landscape (width > height), 
         // document scans might require a 90deg adjustment depending on layout, 
