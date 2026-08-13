@@ -392,7 +392,8 @@ const DocumentGalleryModal = ({ row, onClose }) => {
   const documents = [
     row.po_attachment ? { url: row.po_attachment, label: 'Purchase Order (PO)' } : null,
     row.dr_attachment ? { url: row.dr_attachment, label: 'Delivery Receipt (DR)' } : null,
-    row.invoice_attachment ? { url: row.invoice_attachment, label: 'Sales Invoice (SI)' } : null
+    row.ci_attachment ? { url: row.ci_attachment, label: 'Charge Invoice (CI)' } : null,
+    row.si_attachment ? { url: row.si_attachment, label: 'Sales Invoice (SI)' } : null
   ].filter(Boolean);
 
   const poRef = row.batch_reference || row.po_number || 'N/A';
@@ -674,7 +675,7 @@ const PODetailsModal = ({ row, userRole, styles, onClose, onViewDocs, onUploadBa
   if (!row) return null;
 
   const poRef = row.batch_reference || row.po_number || 'N/A';
-  const hasDocs = row.po_attachment || row.dr_attachment || row.invoice_attachment;
+  const hasDocs = row.po_attachment || row.dr_attachment || row.ci_attachment || row.si_attachment;
   const dueInfo = getDueDateInfo(row.po_date, row.po_terms, row.status);
 
   const modalStyle = {
