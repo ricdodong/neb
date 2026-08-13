@@ -99,6 +99,8 @@ const MobileUpload2 = () => {
                         >
                             <option value="po">Purchase Order Form (PO)</option>
                             <option value="dr">Delivery Receipt (DR)</option>
+                            <option value="ci">Charge Invoice (CI)</option>
+                            <option value="si">Sales Invoice (SI)</option>
                         </select>
                     </div>
 
