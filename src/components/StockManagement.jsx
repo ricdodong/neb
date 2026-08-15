@@ -17,9 +17,14 @@ const StockManagement = () => {
     const [lightboxItem, setLightboxItem] = useState(null);
     const [selectedLedgerEntry, setSelectedLedgerEntry] = useState(null);
 
+    // Camera Scanner State
+    const [showScanner, setShowScanner] = useState(false);
+    const videoRef = useRef(null);
+    const scannerIntervalRef = useRef(null);
+
     const searchInputRef = useRef(null);
 
-    // Modal Form State (Added serial_numbers field)
+    // Modal Form State
     const [showModal, setShowModal] = useState(false);
     const [formData, setFormData] = useState({
         supplier_id: '',
@@ -38,10 +43,9 @@ const StockManagement = () => {
         fetchInventory();
         fetchSuppliers();
 
-        // Global F1 Key Listener
         const handleKeyDown = (e) => {
             if (e.key === 'F1') {
-                e.preventDefault(); // Prevent browser help menu
+                e.preventDefault();
                 if (searchInputRef.current) {
                     searchInputRef.current.focus();
                     searchInputRef.current.select();
@@ -52,6 +56,94 @@ const StockManagement = () => {
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, []);
+
+    // HANDLE CAMERA BARCODE / QR SCANNING
+    useEffect(() => {
+        if (showScanner) {
+            startCamera();
+        } else {
+            stopCamera();
+        }
+        return () => stopCamera();
+    }, [showScanner]);
+
+    const startCamera = async () => {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { facingMode: 'environment' } // Uses back camera on mobile phones
+            });
+            if (videoRef.current) {
+                videoRef.current.srcObject = stream;
+                videoRef.current.play();
+                startScanningLoop();
+            }
+        } catch (err) {
+            console.error("Camera access error:", err);
+            alert("Unable to access camera. Please ensure camera permissions are allowed.");
+            setShowScanner(false);
+        }
+    };
+
+    const stopCamera = () => {
+        if (scannerIntervalRef.current) {
+            clearInterval(scannerIntervalRef.current);
+            scannerIntervalRef.current = null;
+        }
+        if (videoRef.current && videoRef.current.srcObject) {
+            const tracks = videoRef.current.srcObject.getTracks();
+            tracks.forEach(track => track.stop());
+            videoRef.current.srcObject = null;
+        }
+    };
+
+    const startScanningLoop = () => {
+        // Check if browser supports native BarcodeDetector API (supported on Chrome Android & modern mobile browsers)
+        if (!('BarcodeDetector' in window)) {
+            alert("BarcodeDetector API is not fully supported on this browser. Please use Chrome on Android/iOS or input manually.");
+            return;
+        }
+
+        const barcodeDetector = new BarcodeDetector({ 
+            formats: ['code_128', 'code_39', 'ean_13', 'qr_code', 'upc_a', 'data_matrix'] 
+        });
+
+        scannerIntervalRef.current = setInterval(async () => {
+            if (videoRef.current && videoRef.current.readyState === videoRef.current.HAVE_ENOUGH_DATA) {
+                try {
+                    const barcodes = await barcodeDetector.detect(videoRef.current);
+                    if (barcodes.length > 0) {
+                        const scannedVal = barcodes[0].rawValue;
+                        handleSuccessfulScan(scannedVal);
+                    }
+                } catch (err) {
+                    // Scanning frame error fallback, keep looping
+                }
+            }
+        }, 300);
+    };
+
+    const handleSuccessfulScan = (code) => {
+        // Vibrate phone on successful scan if available
+        if (navigator.vibrate) {
+            navigator.vibrate(150);
+        }
+
+        setFormData(prev => {
+            const currentList = prev.serial_numbers.trim();
+            const updatedSerials = currentList ? `${currentList}\n${code}` : code;
+            
+            // Auto increment quantity matching the number of scanned serials
+            const newQty = updatedSerials.split(/[\n,]+/).filter(s => s.trim().length > 0).length;
+
+            return {
+                ...prev,
+                serial_numbers: updatedSerials,
+                quantity: newQty.toString()
+            };
+        });
+
+        // Brief flash or sound feedback can go here
+    };
 
     const fetchInventory = async () => {
         setLoading(true);
@@ -267,7 +359,6 @@ const StockManagement = () => {
                             </div>
                         ) : filteredInventory.length > 0 ? (
                             <>
-                                {/* DESKTOP TABLE VIEW */}
                                 <div className="table-responsive mb-0 d-none d-lg-block">
                                     <table className="table table-dark table-hover table-striped align-middle mb-0 text-nowrap" style={{fontSize: '13px'}}>
                                         <thead className="table-secondary text-uppercase text-black fw-bold" style={{fontSize: '12px'}}>
@@ -335,7 +426,6 @@ const StockManagement = () => {
                                                             </td>
                                                         </tr>
 
-                                                        {/* EXPANDABLE INLINE LEDGER */}
                                                         {isExpanded && (
                                                             <tr>
                                                                 <td colSpan="7" className="bg-black p-4 border-bottom border-secondary">
@@ -408,7 +498,6 @@ const StockManagement = () => {
                                     </table>
                                 </div>
 
-                                {/* MOBILE & TABLET CARD VIEW */}
                                 <div className="d-lg-none p-3 d-flex flex-column gap-3">
                                     {filteredInventory.map(item => {
                                         const isExpanded = expandedItemId === item.id;
@@ -464,7 +553,6 @@ const StockManagement = () => {
                                                     {isExpanded ? 'HIDE LEDGER' : 'VIEW LEDGER MOVEMENT'}
                                                 </button>
 
-                                                {/* MOBILE EXPANDABLE LEDGER ACCORDION */}
                                                 {isExpanded && (
                                                     <div className="mt-3 pt-3 border-top border-secondary bg-dark p-2.5 rounded-2 animate-fade-in">
                                                         <span className="fw-bold text-success d-block mb-2" style={{fontSize: '11px'}}>
@@ -515,84 +603,26 @@ const StockManagement = () => {
                 </div>
             </main>
 
-            {/* LIGHTBOX / IMAGE ZOOM MODAL */}
+            {/* LIGHTBOX MODAL */}
             {lightboxItem && (
                 <div className="modal d-block bg-black bg-opacity-90 px-2 px-md-4 py-3" tabIndex="-1" style={{ zIndex: 1090 }}>
                     <div className="modal-dialog modal-dialog-centered modal-xl">
                         <div className="modal-content bg-dark border border-secondary text-white font-monospace shadow-2xl rounded-3 overflow-hidden">
                             <div className="modal-header border-secondary py-2.5 px-3 bg-black d-flex justify-content-between align-items-center">
-                                <div className="d-flex align-items-center gap-2">
-                                    <div className="rounded-circle bg-success" style={{width: '8px', height: '8px'}}></div>
-                                    <span className="text-success fw-bold" style={{fontSize: '12px'}}>
-                                        MEDIA LIGHTBOX // #{lightboxItem.id} - {lightboxItem.item_name}
-                                    </span>
-                                </div>
+                                <span className="text-success fw-bold" style={{fontSize: '12px'}}>MEDIA LIGHTBOX // #{lightboxItem.id} - {lightboxItem.item_name}</span>
                                 <button type="button" className="btn-close btn-close-white" onClick={() => setLightboxItem(null)}></button>
                             </div>
-
                             <div className="modal-body p-0">
                                 <div className="row g-0">
                                     <div className="col-12 col-lg-8 bg-black d-flex align-items-center justify-content-center p-3 p-md-5" style={{ minHeight: '380px', maxHeight: '75vh' }}>
-                                        <img 
-                                            src={lightboxItem.image_url} 
-                                            alt={lightboxItem.item_name} 
-                                            className="img-fluid rounded" 
-                                            style={{ maxHeight: '70vh', objectFit: 'contain' }}
-                                        />
+                                        <img src={lightboxItem.image_url} alt={lightboxItem.item_name} className="img-fluid rounded" style={{ maxHeight: '70vh', objectFit: 'contain' }} />
                                     </div>
                                     <div className="col-12 col-lg-4 bg-dark border-start border-secondary d-flex flex-column justify-content-between p-3 p-md-4" style={{ fontSize: '12px' }}>
                                         <div>
-                                            <div className="d-flex align-items-center gap-2.5 pb-3 border-bottom border-secondary mb-3">
-                                                <div className="rounded-circle bg-black border border-secondary text-success d-flex align-items-center justify-content-center fw-bold" style={{width: '36px', height: '36px', fontSize: '14px'}}>
-                                                    <i className="fas fa-box-open"></i>
-                                                </div>
-                                                <div>
-                                                    <h6 className="mb-0 fw-bold text-white" style={{fontSize: '13px'}}>{lightboxItem.item_name}</h6>
-                                                    <small className="text-secondary" style={{fontSize: '10px'}}>Item ID: #{lightboxItem.id}</small>
-                                                </div>
-                                            </div>
-
-                                            <div className="mb-3">
-                                                <span className="text-secondary d-block mb-1 fw-bold" style={{fontSize: '10px', textTransform: 'uppercase'}}>Description / Specs</span>
-                                                <p className="text-light bg-black p-2.5 rounded border border-secondary mb-0" style={{fontSize: '11px', lineHeight: '1.4'}}>
-                                                    {lightboxItem.item_description || "No supplemental hardware specifications provided."}
-                                                </p>
-                                            </div>
-
-                                            <div className="mb-3">
-                                                <span className="text-secondary d-block mb-1 fw-bold" style={{fontSize: '10px', textTransform: 'uppercase'}}>Stock Telemetry</span>
-                                                <div className="row g-2 text-center bg-black p-2.5 rounded border border-secondary">
-                                                    <div className="col-4 border-end border-secondary">
-                                                        <span className="text-secondary d-block" style={{fontSize: '9px'}}>TOTAL</span>
-                                                        <span className="fw-bold text-white fs-6">{lightboxItem.total_qty || 0}</span>
-                                                    </div>
-                                                    <div className="col-4 border-end border-secondary">
-                                                        <span className="text-secondary d-block" style={{fontSize: '9px'}}>SOLD</span>
-                                                        <span className="fw-bold text-danger fs-6">{lightboxItem.soldout_qty || 0}</span>
-                                                    </div>
-                                                    <div className="col-4">
-                                                        <span className="text-secondary d-block" style={{fontSize: '9px'}}>AVAILABLE</span>
-                                                        <span className="fw-bold text-success fs-6">{lightboxItem.available_qty || 0}</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div className="d-flex justify-content-between align-items-center bg-black p-2.5 rounded border border-secondary">
-                                                <span className="text-secondary" style={{fontSize: '11px'}}>STATUS LEVEL:</span>
-                                                <div>{renderStatusBadge(lightboxItem.available_qty)}</div>
-                                            </div>
+                                            <h6 className="fw-bold text-white mb-2">{lightboxItem.item_name}</h6>
+                                            <p className="text-light bg-black p-2.5 rounded border border-secondary mb-3">{lightboxItem.item_description || "No specifications provided."}</p>
                                         </div>
-
-                                        <div className="pt-3 mt-3 border-top border-secondary">
-                                            <button 
-                                                type="button" 
-                                                className="btn btn-success fw-bold text-black w-100 py-2 shadow-sm" 
-                                                onClick={() => setLightboxItem(null)} 
-                                                style={{ fontSize: '12px' }}
-                                            >
-                                                CLOSE LIGHTBOX
-                                            </button>
-                                        </div>
+                                        <button type="button" className="btn btn-success fw-bold text-black w-100 py-2" onClick={() => setLightboxItem(null)}>CLOSE</button>
                                     </div>
                                 </div>
                             </div>
@@ -601,139 +631,69 @@ const StockManagement = () => {
                 </div>
             )}
 
-            {/* FACEBOOK-STYLE SPLIT LEDGER DETAILS LIGHTBOX MODAL */}
+            {/* LEDGER DETAILS MODAL */}
             {selectedLedgerEntry && (
                 <div className="modal d-block bg-black bg-opacity-90 px-2 px-md-4 py-3" tabIndex="-1" style={{ zIndex: 1100 }}>
                     <div className="modal-dialog modal-dialog-centered modal-xl">
                         <div className="modal-content bg-dark border border-success text-white font-monospace shadow-2xl rounded-3 overflow-hidden">
-                            
                             <div className="modal-header border-secondary py-2.5 px-3 bg-black d-flex justify-content-between align-items-center">
-                                <div className="d-flex align-items-center gap-2">
-                                    <div className="rounded-circle bg-success" style={{width: '8px', height: '8px'}}></div>
-                                    <span className="text-success fw-bold" style={{fontSize: '12px'}}>
-                                        TRANSACTION AUDIT DETAILS // #{selectedLedgerEntry.parentItem?.id} - {selectedLedgerEntry.parentItem?.item_name}
-                                    </span>
-                                </div>
+                                <span className="text-success fw-bold" style={{fontSize: '12px'}}>TRANSACTION DETAILS // #{selectedLedgerEntry.parentItem?.id}</span>
                                 <button type="button" className="btn-close btn-close-white" onClick={() => setSelectedLedgerEntry(null)}></button>
                             </div>
-
                             <div className="modal-body p-0">
                                 <div className="row g-0">
-                                    
-                                    <div className="col-12 col-lg-7 bg-black d-flex align-items-center justify-content-center p-3 p-md-5" style={{ minHeight: '340px', maxHeight: '75vh' }}>
-                                        {selectedLedgerEntry.parentItem?.image_url ? (
-                                            <img 
-                                                src={selectedLedgerEntry.parentItem.image_url} 
-                                                alt={selectedLedgerEntry.parentItem.item_name} 
-                                                className="img-fluid rounded" 
-                                                style={{ maxHeight: '65vh', objectFit: 'contain' }}
-                                            />
-                                        ) : (
-                                            <div className="text-center text-secondary py-5">
-                                                <i className="fas fa-image fs-1 mb-2"></i>
-                                                <p className="small mb-0">No image attached to this item record.</p>
-                                            </div>
-                                        )}
+                                    <div className="col-12 col-lg-7 bg-black d-flex align-items-center justify-content-center p-3">
+                                        <img src={selectedLedgerEntry.parentItem?.image_url} alt="" className="img-fluid rounded" style={{ maxHeight: '60vh', objectFit: 'contain' }} />
                                     </div>
-
-                                    <div className="col-12 col-lg-5 bg-dark border-start border-secondary d-flex flex-column justify-content-between p-3 p-md-4" style={{ fontSize: '12px' }}>
-                                        <div>
-                                            <div className="d-flex align-items-center gap-2.5 pb-3 border-bottom border-secondary mb-3">
-                                                <div className="rounded-circle bg-black border border-secondary text-success d-flex align-items-center justify-content-center fw-bold" style={{width: '36px', height: '36px', fontSize: '14px'}}>
-                                                    <i className="fas fa-receipt"></i>
-                                                </div>
-                                                <div>
-                                                    <h6 className="mb-0 fw-bold text-white" style={{fontSize: '13px'}}>Movement Telemetry Record</h6>
-                                                    <small className="text-secondary" style={{fontSize: '10px'}}>{new Date(selectedLedgerEntry.date).toLocaleString()}</small>
-                                                </div>
+                                    <div className="col-12 col-lg-5 bg-dark border-start border-secondary p-4 d-flex flex-column justify-content-between" style={{ fontSize: '12px' }}>
+                                        <div className="d-flex flex-column gap-2 bg-black p-3 rounded border border-secondary">
+                                            <div className="d-flex justify-content-between border-bottom border-secondary pb-1.5">
+                                                <span className="text-secondary">QTY:</span>
+                                                <span className="text-success fw-bold">{selectedLedgerEntry.qty}</span>
                                             </div>
-
-                                            <div className="d-flex flex-column gap-2 bg-black p-3 rounded border border-secondary mb-3" style={{maxHeight: '40vh', overflowY: 'auto'}}>
-                                                
-                                                <div className="d-flex justify-content-between border-bottom border-secondary pb-1.5">
-                                                    <span className="text-secondary" style={{fontSize: '11px'}}>TRANSACTION TYPE:</span>
-                                                    <span>
-                                                        <span className={`badge px-2.5 py-1 ${['in', 'input'].includes((selectedLedgerEntry.type || '').toLowerCase()) ? 'bg-success text-black' : 'bg-danger text-white'}`} style={{fontSize: '10px'}}>
-                                                            {(selectedLedgerEntry.type || 'N/A').toUpperCase()}
-                                                        </span>
-                                                    </span>
-                                                </div>
-
-                                                <div className="d-flex justify-content-between border-bottom border-secondary pb-1.5">
-                                                    <span className="text-secondary" style={{fontSize: '11px'}}>MOVEMENT QTY:</span>
-                                                    <span className={`fw-bold ${selectedLedgerEntry.qty > 0 ? 'text-success' : 'text-danger'}`}>
-                                                        {selectedLedgerEntry.qty > 0 ? `+${selectedLedgerEntry.qty}` : selectedLedgerEntry.qty}
-                                                    </span>
-                                                </div>
-
-                                                <div className="d-flex justify-content-between border-bottom border-secondary pb-1.5">
-                                                    <span className="text-secondary" style={{fontSize: '11px'}}>SOURCE / WAREHOUSE:</span>
-                                                    <span className="text-white fw-bold">{selectedLedgerEntry.source || 'N/A'}</span>
-                                                </div>
-
-                                                <div className="d-flex justify-content-between border-bottom border-secondary pb-1.5">
-                                                    <span className="text-secondary" style={{fontSize: '11px'}}>DESTINATION ADDRESS:</span>
-                                                    <span className="text-secondary fst-italic text-end" style={{maxWidth: '180px'}}>{selectedLedgerEntry.address || 'N/A'}</span>
-                                                </div>
-
-                                                <div className="d-flex justify-content-between border-bottom border-secondary pb-1.5">
-                                                    <span className="text-secondary" style={{fontSize: '11px'}}>FORWARD BY / COURIER:</span>
-                                                    <span className="text-white">{selectedLedgerEntry.forwardBy || selectedLedgerEntry.courier || 'N/A'}</span>
-                                                </div>
-
-                                                <div className="d-flex justify-content-between border-bottom border-secondary pb-1.5">
-                                                    <span className="text-secondary" style={{fontSize: '11px'}}>FREIGHT COST:</span>
-                                                    <span className="text-success fw-bold">{formatCurrency(selectedLedgerEntry.freightCost || selectedLedgerEntry.shipping_cost)}</span>
-                                                </div>
-
-                                                {selectedLedgerEntry.wsPrice !== undefined && (
-                                                    <div className="d-flex justify-content-between border-bottom border-secondary pb-1.5">
-                                                        <span className="text-secondary" style={{fontSize: '11px'}}>WHOLESALE PRICE (WS):</span>
-                                                        <span className="text-white fw-bold">{formatCurrency(selectedLedgerEntry.wsPrice)}</span>
-                                                    </div>
-                                                )}
-
-                                                {selectedLedgerEntry.SRP !== undefined && (
-                                                    <div className="d-flex justify-content-between border-bottom border-secondary pb-1.5">
-                                                        <span className="text-secondary" style={{fontSize: '11px'}}>SRP AMOUNT:</span>
-                                                        <span className="text-success fw-bold">{formatCurrency(selectedLedgerEntry.SRP)}</span>
-                                                    </div>
-                                                )}
-
-                                                <div className="d-flex justify-content-between border-bottom border-secondary pb-1.5">
-                                                    <span className="text-secondary" style={{fontSize: '11px'}}>TIMESTAMP:</span>
-                                                    <span className="text-white">{selectedLedgerEntry.date ? new Date(selectedLedgerEntry.date).toUTCString() : 'N/A'}</span>
-                                                </div>
-
-                                                {Object.entries(selectedLedgerEntry).map(([key, val]) => {
-                                                    if (['date', 'type', 'qty', 'source', 'address', 'forwardBy', 'courier', 'freightCost', 'shipping_cost', 'wsPrice', 'SRP', 'parentItem'].includes(key)) return null;
-                                                    const isNumericPrice = typeof val === 'number' || (typeof val === 'string' && !isNaN(val) && (key.toLowerCase().includes('price') || key.toLowerCase().includes('cost') || key.toLowerCase().includes('amount')));
-                                                    return (
-                                                        <div key={key} className="d-flex justify-content-between border-bottom border-secondary pb-1.5">
-                                                            <span className="text-secondary" style={{fontSize: '11px'}}>{key.replace(/_/g, ' ').toUpperCase()}:</span>
-                                                            <span className="text-white text-end">{isNumericPrice ? formatCurrency(val) : (typeof val === 'object' ? JSON.stringify(val) : String(val))}</span>
-                                                        </div>
-                                                    );
-                                                })}
+                                            <div className="d-flex justify-content-between border-bottom border-secondary pb-1.5">
+                                                <span className="text-secondary">SOURCE:</span>
+                                                <span className="text-white">{selectedLedgerEntry.source}</span>
+                                            </div>
+                                            <div className="d-flex justify-content-between border-bottom border-secondary pb-1.5">
+                                                <span className="text-secondary">FREIGHT:</span>
+                                                <span className="text-success">{formatCurrency(selectedLedgerEntry.freightCost || selectedLedgerEntry.shipping_cost)}</span>
                                             </div>
                                         </div>
-
-                                        <div className="pt-2 border-top border-secondary">
-                                            <button 
-                                                type="button" 
-                                                className="btn btn-success fw-bold text-black w-100 py-2 shadow-sm" 
-                                                onClick={() => setSelectedLedgerEntry(null)} 
-                                                style={{ fontSize: '12px' }}
-                                            >
-                                                CLOSE DETAILS
-                                            </button>
-                                        </div>
-
+                                        <button type="button" className="btn btn-success fw-bold text-black w-100 py-2 mt-3" onClick={() => setSelectedLedgerEntry(null)}>CLOSE</button>
                                     </div>
-
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
+            {/* LIVE CAMERA BARCODE SCANNER MODAL */}
+            {showScanner && (
+                <div className="modal d-block bg-black bg-opacity-95 px-3" tabIndex="-1" style={{ zIndex: 1120 }}>
+                    <div className="modal-dialog modal-dialog-centered modal-md">
+                        <div className="modal-content bg-dark border border-success text-white font-monospace shadow-2xl rounded-3">
+                            <div className="modal-header border-secondary py-3 px-4 bg-black">
+                                <h6 className="modal-title text-success fw-bold" style={{fontSize: '13px'}}>
+                                    <i className="fas fa-camera me-2"></i>SCAN BARCODE / QR CODE
+                                </h6>
+                                <button type="button" className="btn-close btn-close-white" onClick={() => setShowScanner(false)}></button>
+                            </div>
+                            <div className="modal-body p-3 text-center">
+                                <div className="position-relative bg-black rounded border border-success overflow-hidden" style={{ minHeight: '280px' }}>
+                                    <video ref={videoRef} className="w-100 h-100" style={{ objectFit: 'cover', maxHeight: '350px' }} muted playsInline></video>
+                                    <div className="position-absolute top-50 start-50 translate-middle border border-success border-2 rounded opacity-50 pointer-event-none" style={{ width: '80%', height: '120px' }}></div>
+                                </div>
+                                <p className="text-secondary small mt-3 mb-0" style={{fontSize: '11px'}}>
+                                    Align barcode or QR code inside the frame. Scanned numbers will automatically append into your serials list.
+                                </p>
+                            </div>
+                            <div className="modal-footer border-secondary bg-black py-3 px-4">
+                                <button type="button" className="btn btn-danger w-100 fw-bold py-2" onClick={() => setShowScanner(false)} style={{fontSize: '12px'}}>
+                                    DONE / CLOSE SCANNER
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -765,59 +725,24 @@ const StockManagement = () => {
                                         
                                         <div className="col-12 col-md-6">
                                             <label className="text-secondary fw-bold mb-1.5">ITEM NAME</label>
-                                            <select 
-                                                className="form-select bg-black text-white border-secondary mb-2 py-2" 
-                                                onChange={handleItemSelectChange}
-                                                defaultValue=""
-                                                style={{fontSize: '12px'}}
-                                            >
+                                            <select className="form-select bg-black text-white border-secondary mb-2 py-2" onChange={handleItemSelectChange} defaultValue="" style={{fontSize: '12px'}}>
                                                 <option value="">-- Select Existing or Type New --</option>
                                                 {inventory.map(inv => (
                                                     <option key={inv.id} value={inv.id}>{inv.item_name}</option>
                                                 ))}
                                             </select>
-                                            <input 
-                                                type="text" 
-                                                name="item_name" 
-                                                className="form-control bg-black text-white border-secondary py-2" 
-                                                placeholder="Or type new item name" 
-                                                value={formData.item_name} 
-                                                onChange={handleInputChange} 
-                                                style={{fontSize: '12px'}}
-                                                required 
-                                            />
+                                            <input type="text" name="item_name" className="form-control bg-black text-white border-secondary py-2" placeholder="Or type new item name" value={formData.item_name} onChange={handleInputChange} style={{fontSize: '12px'}} required />
                                         </div>
 
                                         <div className="col-12">
                                             <label className="text-success fw-bold mb-1.5">PICTURE (IMAGE URL)</label>
                                             <div className="input-group mb-2">
                                                 <span className="input-group-text bg-black border-secondary text-secondary"><i className="fas fa-link"></i></span>
-                                                <input 
-                                                    type="text" 
-                                                    name="image_url" 
-                                                    className="form-control bg-black text-white border-secondary py-2" 
-                                                    placeholder="Paste image address URL" 
-                                                    value={formData.image_url} 
-                                                    onChange={handleInputChange} 
-                                                    style={{fontSize: '12px'}}
-                                                />
-                                                <button 
-                                                    type="button" 
-                                                    className="btn btn-outline-success px-3"
-                                                    onClick={openGoogleImageSearch}
-                                                    disabled={!formData.item_name}
-                                                    style={{fontSize: '12px'}}
-                                                >
+                                                <input type="text" name="image_url" className="form-control bg-black text-white border-secondary py-2" placeholder="Paste image address URL" value={formData.image_url} onChange={handleInputChange} style={{fontSize: '12px'}} />
+                                                <button type="button" className="btn btn-outline-success px-3" onClick={openGoogleImageSearch} disabled={!formData.item_name} style={{fontSize: '12px'}}>
                                                     <i className="fas fa-external-link-alt me-1.5"></i>Google Images
                                                 </button>
                                             </div>
-                                            {formData.image_url && (
-                                                <div className="d-flex align-items-center gap-2.5 p-2 bg-black rounded border border-secondary mt-1.5">
-                                                    <span className="text-secondary">Preview:</span>
-                                                    <img src={formData.image_url} alt="" className="rounded" style={{width: '32px', height: '32px', objectFit: 'contain'}} onError={(e) => { e.target.style.display = 'none'; }} />
-                                                    <span className="text-success"><i className="fas fa-check-circle"></i> Active Link</span>
-                                                </div>
-                                            )}
                                         </div>
 
                                         <div className="col-12">
@@ -850,20 +775,30 @@ const StockManagement = () => {
                                             <input type="number" step="0.01" name="freight_cost" className="form-control bg-black text-white border-secondary py-2" placeholder="0.00" value={formData.freight_cost} onChange={handleInputChange} style={{fontSize: '12px'}} />
                                         </div>
 
-                                        {/* NEW: SERIAL NUMBERS / BARCODES INPUT */}
+                                        {/* SERIAL NUMBERS WITH SCANNER BUTTON */}
                                         <div className="col-12">
-                                            <label className="text-success fw-bold mb-1.5">SERIAL NUMBERS (Comma or newline separated)</label>
+                                            <div className="d-flex justify-content-between align-items-center mb-1.5">
+                                                <label className="text-success fw-bold mb-0">SERIAL NUMBERS</label>
+                                                <button 
+                                                    type="button" 
+                                                    className="btn btn-sm btn-outline-success py-1 px-2.5 fw-bold"
+                                                    onClick={() => setShowScanner(true)}
+                                                    style={{fontSize: '11px'}}
+                                                >
+                                                    <i className="fas fa-camera me-1.5"></i>SCAN BARCODE / QR WITH PHONE
+                                                </button>
+                                            </div>
                                             <textarea 
                                                 name="serial_numbers" 
                                                 className="form-control bg-black text-white border-secondary py-2" 
                                                 rows="3" 
-                                                placeholder="SN-001, SN-002, SN-003..." 
+                                                placeholder="Scanned serials will appear here one by one..." 
                                                 value={formData.serial_numbers} 
                                                 onChange={handleInputChange} 
                                                 style={{fontSize: '12px'}}
                                             ></textarea>
                                             <small className="text-secondary mt-1 d-block" style={{fontSize: '10px'}}>
-                                                If left blank, dummy serial numbers will be generated based on the quantity.
+                                                Quantity automatically syncs with the number of scanned items.
                                             </small>
                                         </div>
                                     </div>
