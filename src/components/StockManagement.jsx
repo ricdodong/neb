@@ -273,8 +273,8 @@ const StockManagement = () => {
                                                         {entry.source}
                                                     </td>
                                                     <td className="pe-4 text-muted fst-italic">{entry.address}</td>
-                                                    <td className="fa fa-truck">{entry.forwardBy}</td>
-                                                    <td className="fw-bold">P{entry.freightCost}</td>
+                                                    <td className="ps-4 text-muted fa fa-truck">{entry.forwardBy}</td>
+                                                    <td className="ps-4 text-muted fw-bold">P{entry.freightCost}</td>
                                                 </tr>
                                             )) : (
                                                 <tr><td colSpan="5" className="text-center py-4 text-muted">No movement history found for this item.</td></tr>
