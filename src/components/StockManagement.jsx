@@ -130,17 +130,20 @@ const StockManagement = () => {
     };
 
     return (
-        <div className="container-fluid py-4 animate-fade-in">
+        <div className="container-fluid py-4 px-lg-4 animate-fade-in">
             <div className="row g-4">
                 {/* Master Inventory List */}
                 <div className="col-lg-12">
-                    <div className="card shadow-sm border-0 mb-4">
-                        <div className="card-header bg-white d-flex justify-content-between align-items-center py-3">
-                            <h5 className="mb-0 fw-bold text-dark">
-                                <i className="fa fa-boxes text-primary me-2"></i>Current Stock Levels
-                            </h5>
+                    <div className="card shadow-sm border-0 rounded-3 mb-4">
+                        <div className="card-header bg-white border-bottom-0 d-flex justify-content-between align-items-center py-3 px-4">
+                            <div>
+                                <h5 className="mb-1 fw-bold text-dark">
+                                    <i className="fa fa-boxes text-primary me-2"></i>Current Stock Levels
+                                </h5>
+                                <p className="text-muted small mb-0">Manage master inventory, track quantities, and review on-hand stock status.</p>
+                            </div>
                             <button 
-                                className="btn btn-primary btn-sm shadow-sm"
+                                className="btn btn-primary btn-sm shadow-sm px-3 py-2"
                                 onClick={() => setShowModal(true)}
                             >
                                 <i className="fa fa-plus-circle me-1"></i> Add / Entry Stocks
@@ -148,69 +151,74 @@ const StockManagement = () => {
                         </div>
                         <div className="card-body p-0">
                             <div className="table-responsive">
-                                <table className="table table-hover align-middle mb-0">
-                                    <thead className="table-light text-secondary">
+                                <table className="table table-hover align-middle mb-0 text-nowrap">
+                                    <thead className="table-light text-uppercase fs-7 text-secondary fw-bold">
                                         <tr>
-                                            <th className="ps-4">Item #</th>
-                                            <th>Item Name</th>
-                                            <th className="text-center">Total Stock (Input)</th>
-                                            <th className="text-center">Sold Out (Output)</th>
-                                            <th className="text-center">Available (On-Hand)</th>
-                                            <th>Status</th>
-                                            <th className="text-end pe-4">Action</th>
+                                            <th className="py-3 ps-4">Item #</th>
+                                            <th className="py-3">Item Name</th>
+                                            <th className="py-3 text-center">Total Stock (Input)</th>
+                                            <th className="py-3 text-center">Sold Out (Output)</th>
+                                            <th className="py-3 text-center">Available (On-Hand)</th>
+                                            <th className="py-3">Status</th>
+                                            <th className="py-3 text-end pe-4">Action</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {loading ? (
                                             <tr>
-                                                <td colSpan="7" className="text-center py-4 text-muted">
+                                                <td colSpan="7" className="text-center py-5 text-muted">
                                                     <div className="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
-                                                    Loading inventory...
+                                                    Loading inventory levels...
                                                 </td>
                                             </tr>
                                         ) : inventory.length > 0 ? (
                                             inventory.map(item => (
                                                 <tr key={item.id}>
-                                                    <td className="ps-4 text-muted">#{item.id}</td>
-                                                    <td className="fw-bold d-flex align-items-center">
-                                                        {item.image_url ? (
-                                                            <img 
-                                                                src={item.image_url} 
-                                                                alt={item.item_name} 
-                                                                className="rounded-circle me-2 border bg-white" 
-                                                                style={{width: '35px', height: '35px', objectFit: 'contain'}} 
-                                                                onError={(e) => { e.target.style.display = 'none'; }}
-                                                            />
-                                                        ) : (
-                                                            <div className="rounded-circle bg-light text-secondary d-flex align-items-center justify-content-center me-2 border" style={{width: '35px', height: '35px', fontSize: '12px'}}>
-                                                                <i className="fa fa-image"></i>
+                                                    <td className="ps-4 text-muted fw-semibold">#{item.id}</td>
+                                                    <td className="fw-semibold">
+                                                        <div className="d-flex align-items-center">
+                                                            {item.image_url ? (
+                                                                <img 
+                                                                    src={item.image_url} 
+                                                                    alt={item.item_name} 
+                                                                    className="rounded-circle me-3 border bg-light shadow-sm" 
+                                                                    style={{width: '38px', height: '38px', objectFit: 'contain'}} 
+                                                                    onError={(e) => { e.target.style.display = 'none'; }}
+                                                                />
+                                                            ) : (
+                                                                <div className="rounded-circle bg-light text-secondary d-flex align-items-center justify-content-center me-3 border shadow-sm" style={{width: '38px', height: '38px', fontSize: '14px'}}>
+                                                                    <i className="fa fa-image"></i>
+                                                                </div>
+                                                            )}
+                                                            <div>
+                                                                <span className="text-dark fw-bold d-block">{item.item_name}</span>
+                                                                {item.item_description && <small className="text-muted text-truncate d-block" style={{maxWidth: '220px'}}>{item.item_description}</small>}
                                                             </div>
-                                                        )}
-                                                        {item.item_name}
+                                                        </div>
                                                     </td>
                                                     <td className="text-center">
-                                                        <span className="text-secondary fw-bold">{item.total_qty}</span>
+                                                        <span className="badge bg-light text-dark border px-3 py-2 fw-bold">{item.total_qty || 0}</span>
                                                     </td>
                                                     <td className="text-center">
-                                                        <span className="text-danger fw-bold">{item.soldout_qty}</span>
+                                                        <span className="badge bg-light text-danger border px-3 py-2 fw-bold">{item.soldout_qty || 0}</span>
                                                     </td>
                                                     <td className="text-center">
                                                         <span className={`fw-bold fs-6 ${item.available_qty === 0 ? 'text-danger' : 'text-primary'}`}>
-                                                            {item.available_qty}
+                                                            {item.available_qty || 0}
                                                         </span>
                                                     </td>
                                                     <td>
                                                         {item.available_qty <= 0 ? (
-                                                            <span className="badge bg-danger">OUT OF STOCK</span>
+                                                            <span className="badge rounded-pill bg-danger-subtle text-danger px-3 py-1">OUT OF STOCK</span>
                                                         ) : item.available_qty <= 2 ? (
-                                                            <span className="badge bg-warning text-dark">LOW STOCK</span>
+                                                            <span className="badge rounded-pill bg-warning-subtle text-warning-emphasis px-3 py-1">LOW STOCK</span>
                                                         ) : (
-                                                            <span className="badge bg-success">HEALTHY</span>
+                                                            <span className="badge rounded-pill bg-success-subtle text-success px-3 py-1">HEALTHY</span>
                                                         )}
                                                     </td>
                                                     <td className="text-end pe-4">
                                                         <button 
-                                                            className="btn btn-sm btn-light border shadow-sm"
+                                                            className="btn btn-sm btn-outline-primary shadow-sm px-3"
                                                             onClick={() => fetchLedger(item)}
                                                         >
                                                             <i className="fa fa-history me-1"></i> View Ledger
@@ -220,7 +228,7 @@ const StockManagement = () => {
                                             ))
                                         ) : (
                                             <tr>
-                                                <td colSpan="7" className="text-center py-4 text-muted">No inventory records found.</td>
+                                                <td colSpan="7" className="text-center py-5 text-muted">No inventory records found.</td>
                                             </tr>
                                         )}
                                     </tbody>
@@ -233,51 +241,62 @@ const StockManagement = () => {
                 {/* Detailed Stock Ledger */}
                 {selectedItem && (
                     <div className="col-lg-12">
-                        <div className="card shadow-sm border-0 border-top border-primary border-4">
-                            <div className="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-                                <h5 className="mb-0 fw-bold">
-                                    Movement History: <span className="text-primary">{selectedItem.item_name}</span>
-                                </h5>
-                                <button className="btn btn-sm btn-outline-secondary" onClick={() => setSelectedItem(null)}>
-                                    <i className="fa fa-times me-1"></i> Close
+                        <div className="card shadow-sm border-0 rounded-3 border-top border-primary border-4 animate-fade-in">
+                            <div className="card-header bg-white py-3 px-4 d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h5 className="mb-0 fw-bold">
+                                        Movement History: <span className="text-primary">{selectedItem.item_name}</span>
+                                    </h5>
+                                    <small className="text-muted">Detailed log of input and output transactions for this item.</small>
+                                </div>
+                                <button className="btn btn-sm btn-outline-secondary px-3" onClick={() => setSelectedItem(null)}>
+                                    <i className="fa fa-times me-1"></i> Close Ledger
                                 </button>
                             </div>
                             <div className="card-body p-0">
                                 <div className="table-responsive">
-                                    <table className="table table-striped mb-0 align-middle">
-                                        <thead className="table-dark">
+                                    <table className="table table-striped table-hover mb-0 align-middle text-nowrap">
+                                        <thead className="table-dark text-uppercase fs-7">
                                             <tr>
-                                                <th className="ps-4">Date</th>
-                                                <th>Type</th>
-                                                <th>Qty Change</th>
-                                                <th>Source/Customer</th>
-                                                <th className="pe-4">Address</th>
-                                                <th>Forward By</th>
-                                                <th>Freight Cost</th>
+                                                <th className="py-3 ps-4">Date & Time</th>
+                                                <th className="py-3">Type</th>
+                                                <th className="py-3">Qty Change</th>
+                                                <th className="py-3">Source/Customer</th>
+                                                <th className="py-3">Address</th>
+                                                <th className="py-3">Forward By</th>
+                                                <th className="py-3 pe-4">Freight Cost</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             {ledger.length > 0 ? ledger.map((entry, index) => (
                                                 <tr key={index} className="small">
-                                                    <td className="ps-4">{new Date(entry.date).toLocaleString()}</td>
+                                                    <td className="ps-4 text-muted">{new Date(entry.date).toLocaleString()}</td>
                                                     <td>
-                                                        <span className={`badge ${['in', 'input'].includes(entry.type.toLowerCase()) ? 'bg-success' : 'bg-danger'}`}>
+                                                        <span className={`badge rounded-pill px-3 py-1 ${['in', 'input'].includes(entry.type.toLowerCase()) ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger'}`}>
                                                             {entry.type.toUpperCase()}
                                                         </span>
                                                     </td>
                                                     <td className="fw-bold">
-                                                        {entry.qty > 0 ? `+${entry.qty}` : entry.qty}
+                                                        <span className={entry.qty > 0 ? 'text-success' : 'text-danger'}>
+                                                            {entry.qty > 0 ? `+${entry.qty}` : entry.qty}
+                                                        </span>
                                                     </td>
                                                     <td>
                                                         <i className={`fa ${entry.qty > 0 ? 'fa-user' : 'fa-shopping-cart'} me-2 opacity-50`}></i>
-                                                        {entry.source}
+                                                        <span className="fw-semibold">{entry.source || 'N/A'}</span>
                                                     </td>
-                                                    <td className="pe-4 text-muted fst-italic">{entry.address}</td>
-                                                    <td className="ps-4 text-muted fa fa-truck">{entry.forwardBy}</td>
-                                                    <td className="ps-4 text-muted fw-bold">P{entry.freightCost}</td>
+                                                    <td className="text-muted fst-italic">{entry.address || 'N/A'}</td>
+                                                    <td>
+                                                        <i className="fa fa-truck me-1 text-muted"></i> {entry.forwardBy || entry.courier || 'N/A'}
+                                                    </td>
+                                                    <td className="pe-4 fw-semibold text-dark">
+                                                        ₱{parseFloat(entry.freightCost || entry.shipping_cost || 0).toFixed(2)}
+                                                    </td>
                                                 </tr>
                                             )) : (
-                                                <tr><td colSpan="5" className="text-center py-4 text-muted">No movement history found for this item.</td></tr>
+                                                <tr>
+                                                    <td colSpan="7" className="text-center py-4 text-muted">No movement history found for this item.</td>
+                                                </tr>
                                             )}
                                         </tbody>
                                     </table>
@@ -290,10 +309,10 @@ const StockManagement = () => {
 
             {/* Add Stock Modal */}
             {showModal && (
-                <div className="modal show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+                <div className="modal show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}>
                     <div className="modal-dialog modal-dialog-centered modal-lg">
-                        <div className="modal-content border-0 shadow-lg">
-                            <div className="modal-header bg-primary text-white">
+                        <div className="modal-content border-0 shadow-lg rounded-3">
+                            <div className="modal-header bg-primary text-white py-3 px-4">
                                 <h5 className="modal-title fw-bold">
                                     <i className="fa fa-plus-circle me-2"></i> Add / Entry Stocks
                                 </h5>
@@ -305,7 +324,7 @@ const StockManagement = () => {
                                         
                                         {/* Supplier Select */}
                                         <div className="col-md-6">
-                                            <label className="form-label fw-semibold">Supplier Name</label>
+                                            <label className="form-label fw-semibold text-secondary small">Supplier Name</label>
                                             <select name="supplier_id" className="form-select" value={formData.supplier_id} onChange={handleInputChange} required>
                                                 <option value="">Select Supplier</option>
                                                 {suppliers.map(sup => (
@@ -316,7 +335,7 @@ const StockManagement = () => {
                                         
                                         {/* Item Name (Auto-select from inventory OR custom type) */}
                                         <div className="col-md-6">
-                                            <label className="form-label fw-semibold">Item Name</label>
+                                            <label className="form-label fw-semibold text-secondary small">Item Name</label>
                                             <select 
                                                 className="form-select mb-2" 
                                                 onChange={handleItemSelectChange}
@@ -340,9 +359,9 @@ const StockManagement = () => {
 
                                         {/* Picture Field with Google Images Tab Redirect & Live Preview */}
                                         <div className="col-12 mt-3">
-                                            <label className="form-label fw-semibold text-primary">Picture (Image URL)</label>
+                                            <label className="form-label fw-semibold text-primary small">Picture (Image URL)</label>
                                             <div className="input-group mb-2">
-                                                <span className="input-group-text"><i className="fa fa-link"></i></span>
+                                                <span className="input-group-text bg-light"><i className="fa fa-link"></i></span>
                                                 <input 
                                                     type="text" 
                                                     name="image_url" 
@@ -365,14 +384,14 @@ const StockManagement = () => {
                                                 <i className="fa fa-info-circle me-1"></i> Click "Search on Google Images" to find your item, right-click the image to <strong>Copy image address</strong>, and paste it above.
                                             </div>
 
-                                            {/* LIVE IMAGE PREVIEW BOX with Bulletproof Local SVG Fallback */}
+                                            {/* LIVE IMAGE PREVIEW BOX */}
                                             {formData.image_url && (
-                                                <div className="d-flex align-items-center gap-2 p-2 bg-light rounded border mb-2">
+                                                <div className="d-flex align-items-center gap-3 p-2 bg-light rounded border mb-2">
                                                     <span className="small fw-semibold text-secondary">Live Preview:</span>
                                                     <img 
                                                         src={formData.image_url} 
                                                         alt="Preview" 
-                                                        className="border bg-white rounded" 
+                                                        className="border bg-white rounded shadow-sm" 
                                                         style={{ height: '40px', width: '40px', objectFit: 'contain' }}
                                                         onError={(e) => { 
                                                             e.target.onerror = null; 
@@ -385,38 +404,38 @@ const StockManagement = () => {
                                         </div>
 
                                         <div className="col-12 mt-3">
-                                            <label className="form-label fw-semibold">Description</label>
+                                            <label className="form-label fw-semibold text-secondary small">Description</label>
                                             <textarea name="description" className="form-control" rows="2" placeholder="Enter product description" value={formData.description} onChange={handleInputChange}></textarea>
                                         </div>
                                         
                                         <div className="col-md-4">
-                                            <label className="form-label fw-semibold">Quantity</label>
+                                            <label className="form-label fw-semibold text-secondary small">Quantity</label>
                                             <input type="number" name="quantity" className="form-control" placeholder="0" min="1" value={formData.quantity} onChange={handleInputChange} required />
                                         </div>
                                         
                                         <div className="col-md-4">
-                                            <label className="form-label fw-semibold">W/S Price</label>
+                                            <label className="form-label fw-semibold text-secondary small">W/S Price</label>
                                             <input type="number" step="0.01" name="ws_price" className="form-control" placeholder="0.00" value={formData.ws_price} onChange={handleInputChange} required />
                                         </div>
                                         
                                         <div className="col-md-4">
-                                            <label className="form-label fw-semibold">SRP Amount</label>
+                                            <label className="form-label fw-semibold text-secondary small">SRP Amount</label>
                                             <input type="number" step="0.01" name="srp_amount" className="form-control" placeholder="0.00" value={formData.srp_amount} onChange={handleInputChange} required />
                                         </div>
                                         
                                         <div className="col-md-6">
-                                            <label className="form-label fw-semibold">Forward By</label>
+                                            <label className="form-label fw-semibold text-secondary small">Forward By</label>
                                             <input type="text" name="forward_by" className="form-control" placeholder="Courier or Handler" value={formData.forward_by} onChange={handleInputChange} />
                                         </div>
                                         
                                         <div className="col-md-6">
-                                            <label className="form-label fw-semibold">Freight Cost</label>
+                                            <label className="form-label fw-semibold text-secondary small">Freight Cost</label>
                                             <input type="number" step="0.01" name="freight_cost" className="form-control" placeholder="0.00" value={formData.freight_cost} onChange={handleInputChange} />
                                         </div>
                                     </div>
                                 </div>
-                                <div className="modal-footer bg-light">
-                                    <button type="button" className="btn btn-outline-secondary" onClick={() => setShowModal(false)}>Cancel</button>
+                                <div className="modal-footer bg-light py-3 px-4">
+                                    <button type="button" className="btn btn-outline-secondary px-4" onClick={() => setShowModal(false)}>Cancel</button>
                                     <button type="submit" className="btn btn-primary px-4" disabled={submitting}>
                                         {submitting ? (
                                             <><span className="spinner-border spinner-border-sm me-2" role="status"></span>Saving...</>
