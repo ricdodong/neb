@@ -616,7 +616,7 @@ const StockManagement = () => {
                             <div className="modal-body p-0">
                                 <div className="row g-0">
                                     
-                                    {/* LEFT: ITEM IMAGE PREVIEW (IF AVAILABLE) */}
+                                    {/* LEFT: ITEM IMAGE PREVIEW */}
                                     <div className="col-12 col-lg-7 bg-black d-flex align-items-center justify-content-center p-3 p-md-5" style={{ minHeight: '340px', maxHeight: '75vh' }}>
                                         {selectedLedgerEntry.parentItem?.image_url ? (
                                             <img 
@@ -633,7 +633,7 @@ const StockManagement = () => {
                                         )}
                                     </div>
 
-                                    {/* RIGHT: ALL AVAILABLE COLUMNS / DETAILS LIST */}
+                                    {/* RIGHT: ALL AVAILABLE COLUMNS DISPLAYED IN DETAILS */}
                                     <div className="col-12 col-lg-5 bg-dark border-start border-secondary d-flex flex-column justify-content-between p-3 p-md-4" style={{ fontSize: '12px' }}>
                                         <div>
                                             <div className="d-flex align-items-center gap-2.5 pb-3 border-bottom border-secondary mb-3">
@@ -646,7 +646,7 @@ const StockManagement = () => {
                                                 </div>
                                             </div>
 
-                                            {/* ALL AVAILABLE COLUMNS DISPLAYED IN A CLEAN LIST */}
+                                            {/* ALL AVAILABLE COLUMNS DISPLAYED */}
                                             <div className="d-flex flex-column gap-2 bg-black p-3 rounded border border-secondary mb-3" style={{maxHeight: '40vh', overflowY: 'auto'}}>
                                                 
                                                 <div className="d-flex justify-content-between border-bottom border-secondary pb-1.5">
@@ -666,12 +666,12 @@ const StockManagement = () => {
                                                 </div>
 
                                                 <div className="d-flex justify-content-between border-bottom border-secondary pb-1.5">
-                                                    <span className="text-secondary" style={{fontSize: '11px'}}>SOURCE / CUSTOMER:</span>
+                                                    <span className="text-secondary" style={{fontSize: '11px'}}>SOURCE / WAREHOUSE:</span>
                                                     <span className="text-white fw-bold">{selectedLedgerEntry.source || 'N/A'}</span>
                                                 </div>
 
                                                 <div className="d-flex justify-content-between border-bottom border-secondary pb-1.5">
-                                                    <span className="text-secondary" style={{fontSize: '11px'}}>ADDRESS:</span>
+                                                    <span className="text-secondary" style={{fontSize: '11px'}}>DESTINATION ADDRESS:</span>
                                                     <span className="text-secondary fst-italic text-end" style={{maxWidth: '180px'}}>{selectedLedgerEntry.address || 'N/A'}</span>
                                                 </div>
 
@@ -685,6 +685,20 @@ const StockManagement = () => {
                                                     <span className="text-success fw-bold">₱{parseFloat(selectedLedgerEntry.freightCost || selectedLedgerEntry.shipping_cost || 0).toFixed(2)}</span>
                                                 </div>
 
+                                                {selectedLedgerEntry.wsPrice !== undefined && (
+                                                    <div className="d-flex justify-content-between border-bottom border-secondary pb-1.5">
+                                                        <span className="text-secondary" style={{fontSize: '11px'}}>WHOLESALE PRICE:</span>
+                                                        <span className="text-white fw-bold">₱{parseFloat(selectedLedgerEntry.wsPrice).toFixed(2)}</span>
+                                                    </div>
+                                                )}
+
+                                                {selectedLedgerEntry.SRP !== undefined && (
+                                                    <div className="d-flex justify-content-between border-bottom border-secondary pb-1.5">
+                                                        <span className="text-secondary" style={{fontSize: '11px'}}>SRP AMOUNT:</span>
+                                                        <span className="text-success fw-bold">₱{parseFloat(selectedLedgerEntry.SRP).toFixed(2)}</span>
+                                                    </div>
+                                                )}
+
                                                 <div className="d-flex justify-content-between border-bottom border-secondary pb-1.5">
                                                     <span className="text-secondary" style={{fontSize: '11px'}}>TIMESTAMP:</span>
                                                     <span className="text-white">{selectedLedgerEntry.date ? new Date(selectedLedgerEntry.date).toUTCString() : 'N/A'}</span>
@@ -692,7 +706,7 @@ const StockManagement = () => {
 
                                                 {/* EXTRA DYNAMIC PROPERTIES IF PRESENT */}
                                                 {Object.entries(selectedLedgerEntry).map(([key, val]) => {
-                                                    if (['date', 'type', 'qty', 'source', 'address', 'forwardBy', 'courier', 'freightCost', 'shipping_cost', 'parentItem'].includes(key)) return null;
+                                                    if (['date', 'type', 'qty', 'source', 'address', 'forwardBy', 'courier', 'freightCost', 'shipping_cost', 'wsPrice', 'SRP', 'parentItem'].includes(key)) return null;
                                                     return (
                                                         <div key={key} className="d-flex justify-content-between border-bottom border-secondary pb-1.5">
                                                             <span className="text-secondary" style={{fontSize: '11px'}}>{key.replace(/_/g, ' ').toUpperCase()}:</span>
@@ -852,4 +866,4 @@ const StockManagement = () => {
     );
 };
 
-export default StockManagement; // wait, export default StockManagement
+export default StockManagement;
