@@ -273,7 +273,7 @@ const StockManagement = () => {
                                                         {entry.source}
                                                     </td>
                                                     <td className="pe-4 text-muted fst-italic">{entry.address}</td>
-                                                    <td className="fa fa-truck fw-bold">{entry.forwardBy}</td>
+                                                    <td className="fa fa-truck">{entry.forwardBy}</td>
                                                     <td className="fw-bold">P{entry.freightCost}</td>
                                                 </tr>
                                             )) : (
