@@ -246,8 +246,8 @@ const StockManagement = () => {
                                                 <tr>
                                                     <th className="py-3 ps-4">Item #</th>
                                                     <th className="py-3">Item Name</th>
-                                                    <th className="py-3 text-center">Total Stock</th>
-                                                    <th className="py-3 text-center">Sold Out</th>
+                                                    <th className="py-3 text-center">Total Stocks</th>
+                                                    <th className="py-3 text-center">Sold</th>
                                                     <th className="py-3 text-center">Available</th>
                                                     <th className="py-3">Status</th>
                                                     <th className="py-3 text-end pe-4">Action</th>
