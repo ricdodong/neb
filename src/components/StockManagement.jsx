@@ -13,8 +13,9 @@ const StockManagement = () => {
     const [submitting, setSubmitting] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
 
-    // Lightbox Modal State
+    // Lightbox & Ledger Details Modal States
     const [lightboxItem, setLightboxItem] = useState(null);
+    const [selectedLedgerEntry, setSelectedLedgerEntry] = useState(null);
 
     const searchInputRef = useRef(null);
 
@@ -188,6 +189,13 @@ const StockManagement = () => {
                     transform: scale(1.15);
                     border-color: #198754 !important;
                 }
+                .ledger-clickable-row {
+                    cursor: pointer;
+                    transition: background-color 0.15s ease;
+                }
+                .ledger-clickable-row:hover {
+                    background-color: rgba(25, 135, 84, 0.15) !important;
+                }
             `}</style>
 
             {/* HEADER */}
@@ -285,7 +293,7 @@ const StockManagement = () => {
                                                                             className="rounded me-3 border border-secondary bg-black zoom-hover-img" 
                                                                             style={{width: '38px', height: '38px', objectFit: 'contain'}} 
                                                                             onClick={() => setLightboxItem(item)}
-                                                                            title="Click to view Facebook Lightbox"
+                                                                            title="Click to view Lightbox"
                                                                             onError={(e) => { e.target.style.display = 'none'; }}
                                                                         />
                                                                     ) : (
@@ -328,7 +336,7 @@ const StockManagement = () => {
                                                                     <div className="card bg-dark border border-secondary rounded-3 shadow-inner">
                                                                         <div className="card-header bg-black py-2.5 px-4 d-flex justify-content-between align-items-center border-bottom border-secondary">
                                                                             <span className="fw-bold text-success uppercase" style={{fontSize: '12px'}}>
-                                                                                <i className="fas fa-list-alt me-2"></i> Movement History // {item.item_name}
+                                                                                <i className="fas fa-list-alt me-2"></i> Movement History // {item.item_name} (Click row to inspect details)
                                                                             </span>
                                                                             <button className="btn btn-sm btn-link text-secondary p-0" onClick={() => setExpandedItemId(null)}>
                                                                                 <i className="fas fa-times"></i>
@@ -353,7 +361,12 @@ const StockManagement = () => {
                                                                                         </thead>
                                                                                         <tbody>
                                                                                             {itemLedger.map((entry, idx) => (
-                                                                                                <tr key={idx}>
+                                                                                                <tr 
+                                                                                                    key={idx} 
+                                                                                                    className="ledger-clickable-row"
+                                                                                                    onClick={() => setSelectedLedgerEntry({ ...entry, parentItem: item })}
+                                                                                                    title="Click to view full transaction details"
+                                                                                                >
                                                                                                     <td className="ps-4 text-secondary">{new Date(entry.date).toLocaleString()}</td>
                                                                                                     <td>
                                                                                                         <span className={`badge px-2.5 py-1 ${['in', 'input'].includes(entry.type.toLowerCase()) ? 'bg-success text-black' : 'bg-danger text-white'}`} style={{fontSize: '10px'}}>
@@ -449,14 +462,19 @@ const StockManagement = () => {
                                                 {isExpanded && (
                                                     <div className="mt-3 pt-3 border-top border-secondary bg-dark p-2.5 rounded-2 animate-fade-in">
                                                         <span className="fw-bold text-success d-block mb-2" style={{fontSize: '11px'}}>
-                                                            <i className="fas fa-list-alt me-1.5"></i> LEDGER HISTORY:
+                                                            <i className="fas fa-list-alt me-1.5"></i> LEDGER HISTORY (Tap entry for details):
                                                         </span>
                                                         {ledgerLoading ? (
                                                             <div className="text-center py-3 text-secondary">Loading history...</div>
                                                         ) : itemLedger.length > 0 ? (
                                                             <div className="d-flex flex-column gap-2">
                                                                 {itemLedger.map((entry, idx) => (
-                                                                    <div key={idx} className="bg-black border border-secondary rounded-2 p-2 text-light" style={{fontSize: '11px'}}>
+                                                                    <div 
+                                                                        key={idx} 
+                                                                        className="bg-black border border-secondary rounded-2 p-2.5 text-light ledger-clickable-row" 
+                                                                        style={{fontSize: '11px'}}
+                                                                        onClick={() => setSelectedLedgerEntry({ ...entry, parentItem: item })}
+                                                                    >
                                                                         <div className="d-flex justify-content-between text-secondary mb-1" style={{fontSize: '10px'}}>
                                                                             <span>{new Date(entry.date).toLocaleString()}</span>
                                                                             <span className={`badge ${['in', 'input'].includes(entry.type.toLowerCase()) ? 'bg-success text-black' : 'bg-danger text-white'}`} style={{fontSize: '9px'}}>
@@ -491,13 +509,11 @@ const StockManagement = () => {
                 </div>
             </main>
 
-            {/* FACEBOOK-STYLE SPLIT LIGHTBOX MODAL */}
+            {/* LIGHTBOX / IMAGE ZOOM MODAL */}
             {lightboxItem && (
                 <div className="modal d-block bg-black bg-opacity-90 px-2 px-md-4 py-3" tabIndex="-1" style={{ zIndex: 1090 }}>
                     <div className="modal-dialog modal-dialog-centered modal-xl">
                         <div className="modal-content bg-dark border border-secondary text-white font-monospace shadow-2xl rounded-3 overflow-hidden">
-                            
-                            {/* LIGHTBOX HEADER BAR */}
                             <div className="modal-header border-secondary py-2.5 px-3 bg-black d-flex justify-content-between align-items-center">
                                 <div className="d-flex align-items-center gap-2">
                                     <div className="rounded-circle bg-success" style={{width: '8px', height: '8px'}}></div>
@@ -508,11 +524,8 @@ const StockManagement = () => {
                                 <button type="button" className="btn-close btn-close-white" onClick={() => setLightboxItem(null)}></button>
                             </div>
 
-                            {/* LIGHTBOX BODY (FB STYLE SPLIT SCREEN) */}
                             <div className="modal-body p-0">
                                 <div className="row g-0">
-                                    
-                                    {/* LEFT: LARGE PHOTO CONTAINER (BLACK BACKGROUND) */}
                                     <div className="col-12 col-lg-8 bg-black d-flex align-items-center justify-content-center p-3 p-md-5" style={{ minHeight: '380px', maxHeight: '75vh' }}>
                                         <img 
                                             src={lightboxItem.image_url} 
@@ -521,11 +534,8 @@ const StockManagement = () => {
                                             style={{ maxHeight: '70vh', objectFit: 'contain' }}
                                         />
                                     </div>
-
-                                    {/* RIGHT: DETAILS & METRICS PANEL */}
                                     <div className="col-12 col-lg-4 bg-dark border-start border-secondary d-flex flex-column justify-content-between p-3 p-md-4" style={{ fontSize: '12px' }}>
                                         <div>
-                                            {/* AUTHOR / POST INFO HEADER */}
                                             <div className="d-flex align-items-center gap-2.5 pb-3 border-bottom border-secondary mb-3">
                                                 <div className="rounded-circle bg-black border border-secondary text-success d-flex align-items-center justify-content-center fw-bold" style={{width: '36px', height: '36px', fontSize: '14px'}}>
                                                     <i className="fas fa-box-open"></i>
@@ -536,7 +546,6 @@ const StockManagement = () => {
                                                 </div>
                                             </div>
 
-                                            {/* DESCRIPTION / CAPTION */}
                                             <div className="mb-3">
                                                 <span className="text-secondary d-block mb-1 fw-bold" style={{fontSize: '10px', textTransform: 'uppercase'}}>Description / Specs</span>
                                                 <p className="text-light bg-black p-2.5 rounded border border-secondary mb-0" style={{fontSize: '11px', lineHeight: '1.4'}}>
@@ -544,7 +553,6 @@ const StockManagement = () => {
                                                 </p>
                                             </div>
 
-                                            {/* METRIC BADGES */}
                                             <div className="mb-3">
                                                 <span className="text-secondary d-block mb-1 fw-bold" style={{fontSize: '10px', textTransform: 'uppercase'}}>Stock Telemetry</span>
                                                 <div className="row g-2 text-center bg-black p-2.5 rounded border border-secondary">
@@ -563,14 +571,12 @@ const StockManagement = () => {
                                                 </div>
                                             </div>
 
-                                            {/* STATUS */}
                                             <div className="d-flex justify-content-between align-items-center bg-black p-2.5 rounded border border-secondary">
                                                 <span className="text-secondary" style={{fontSize: '11px'}}>STATUS LEVEL:</span>
                                                 <div>{renderStatusBadge(lightboxItem.available_qty)}</div>
                                             </div>
                                         </div>
 
-                                        {/* LIGHTBOX FOOTER ACTION */}
                                         <div className="pt-3 mt-3 border-top border-secondary">
                                             <button 
                                                 type="button" 
@@ -579,6 +585,133 @@ const StockManagement = () => {
                                                 style={{ fontSize: '12px' }}
                                             >
                                                 CLOSE LIGHTBOX
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* FACEBOOK-STYLE SPLIT LEDGER DETAILS LIGHTBOX MODAL */}
+            {selectedLedgerEntry && (
+                <div className="modal d-block bg-black bg-opacity-90 px-2 px-md-4 py-3" tabIndex="-1" style={{ zIndex: 1100 }}>
+                    <div className="modal-dialog modal-dialog-centered modal-xl">
+                        <div className="modal-content bg-dark border border-success text-white font-monospace shadow-2xl rounded-3 overflow-hidden">
+                            
+                            {/* HEADER */}
+                            <div className="modal-header border-secondary py-2.5 px-3 bg-black d-flex justify-content-between align-items-center">
+                                <div className="d-flex align-items-center gap-2">
+                                    <div className="rounded-circle bg-success" style={{width: '8px', height: '8px'}}></div>
+                                    <span className="text-success fw-bold" style={{fontSize: '12px'}}>
+                                        TRANSACTION AUDIT DETAILS // #{selectedLedgerEntry.parentItem?.id} - {selectedLedgerEntry.parentItem?.item_name}
+                                    </span>
+                                </div>
+                                <button type="button" className="btn-close btn-close-white" onClick={() => setSelectedLedgerEntry(null)}></button>
+                            </div>
+
+                            {/* BODY (FACEBOOK SPLIT VIEW) */}
+                            <div className="modal-body p-0">
+                                <div className="row g-0">
+                                    
+                                    {/* LEFT: ITEM IMAGE PREVIEW (IF AVAILABLE) */}
+                                    <div className="col-12 col-lg-7 bg-black d-flex align-items-center justify-content-center p-3 p-md-5" style={{ minHeight: '340px', maxHeight: '75vh' }}>
+                                        {selectedLedgerEntry.parentItem?.image_url ? (
+                                            <img 
+                                                src={selectedLedgerEntry.parentItem.image_url} 
+                                                alt={selectedLedgerEntry.parentItem.item_name} 
+                                                className="img-fluid rounded" 
+                                                style={{ maxHeight: '65vh', objectFit: 'contain' }}
+                                            />
+                                        ) : (
+                                            <div className="text-center text-secondary py-5">
+                                                <i className="fas fa-image fs-1 mb-2"></i>
+                                                <p className="small mb-0">No image attached to this item record.</p>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* RIGHT: ALL AVAILABLE COLUMNS / DETAILS LIST */}
+                                    <div className="col-12 col-lg-5 bg-dark border-start border-secondary d-flex flex-column justify-content-between p-3 p-md-4" style={{ fontSize: '12px' }}>
+                                        <div>
+                                            <div className="d-flex align-items-center gap-2.5 pb-3 border-bottom border-secondary mb-3">
+                                                <div className="rounded-circle bg-black border border-secondary text-success d-flex align-items-center justify-content-center fw-bold" style={{width: '36px', height: '36px', fontSize: '14px'}}>
+                                                    <i className="fas fa-receipt"></i>
+                                                </div>
+                                                <div>
+                                                    <h6 className="mb-0 fw-bold text-white" style={{fontSize: '13px'}}>Movement Telemetry Record</h6>
+                                                    <small className="text-secondary" style={{fontSize: '10px'}}>{new Date(selectedLedgerEntry.date).toLocaleString()}</small>
+                                                </div>
+                                            </div>
+
+                                            {/* ALL AVAILABLE COLUMNS DISPLAYED IN A CLEAN LIST */}
+                                            <div className="d-flex flex-column gap-2 bg-black p-3 rounded border border-secondary mb-3" style={{maxHeight: '40vh', overflowY: 'auto'}}>
+                                                
+                                                <div className="d-flex justify-content-between border-bottom border-secondary pb-1.5">
+                                                    <span className="text-secondary" style={{fontSize: '11px'}}>TRANSACTION TYPE:</span>
+                                                    <span>
+                                                        <span className={`badge px-2.5 py-1 ${['in', 'input'].includes((selectedLedgerEntry.type || '').toLowerCase()) ? 'bg-success text-black' : 'bg-danger text-white'}`} style={{fontSize: '10px'}}>
+                                                            {(selectedLedgerEntry.type || 'N/A').toUpperCase()}
+                                                        </span>
+                                                    </span>
+                                                </div>
+
+                                                <div className="d-flex justify-content-between border-bottom border-secondary pb-1.5">
+                                                    <span className="text-secondary" style={{fontSize: '11px'}}>MOVEMENT QTY:</span>
+                                                    <span className={`fw-bold ${selectedLedgerEntry.qty > 0 ? 'text-success' : 'text-danger'}`}>
+                                                        {selectedLedgerEntry.qty > 0 ? `+${selectedLedgerEntry.qty}` : selectedLedgerEntry.qty}
+                                                    </span>
+                                                </div>
+
+                                                <div className="d-flex justify-content-between border-bottom border-secondary pb-1.5">
+                                                    <span className="text-secondary" style={{fontSize: '11px'}}>SOURCE / CUSTOMER:</span>
+                                                    <span className="text-white fw-bold">{selectedLedgerEntry.source || 'N/A'}</span>
+                                                </div>
+
+                                                <div className="d-flex justify-content-between border-bottom border-secondary pb-1.5">
+                                                    <span className="text-secondary" style={{fontSize: '11px'}}>ADDRESS:</span>
+                                                    <span className="text-secondary fst-italic text-end" style={{maxWidth: '180px'}}>{selectedLedgerEntry.address || 'N/A'}</span>
+                                                </div>
+
+                                                <div className="d-flex justify-content-between border-bottom border-secondary pb-1.5">
+                                                    <span className="text-secondary" style={{fontSize: '11px'}}>FORWARD BY / COURIER:</span>
+                                                    <span className="text-white">{selectedLedgerEntry.forwardBy || selectedLedgerEntry.courier || 'N/A'}</span>
+                                                </div>
+
+                                                <div className="d-flex justify-content-between border-bottom border-secondary pb-1.5">
+                                                    <span className="text-secondary" style={{fontSize: '11px'}}>FREIGHT COST:</span>
+                                                    <span className="text-success fw-bold">₱{parseFloat(selectedLedgerEntry.freightCost || selectedLedgerEntry.shipping_cost || 0).toFixed(2)}</span>
+                                                </div>
+
+                                                <div className="d-flex justify-content-between border-bottom border-secondary pb-1.5">
+                                                    <span className="text-secondary" style={{fontSize: '11px'}}>TIMESTAMP:</span>
+                                                    <span className="text-white">{selectedLedgerEntry.date ? new Date(selectedLedgerEntry.date).toUTCString() : 'N/A'}</span>
+                                                </div>
+
+                                                {/* EXTRA DYNAMIC PROPERTIES IF PRESENT */}
+                                                {Object.entries(selectedLedgerEntry).map(([key, val]) => {
+                                                    if (['date', 'type', 'qty', 'source', 'address', 'forwardBy', 'courier', 'freightCost', 'shipping_cost', 'parentItem'].includes(key)) return null;
+                                                    return (
+                                                        <div key={key} className="d-flex justify-content-between border-bottom border-secondary pb-1.5">
+                                                            <span className="text-secondary" style={{fontSize: '11px'}}>{key.replace(/_/g, ' ').toUpperCase()}:</span>
+                                                            <span className="text-white text-end">{typeof val === 'object' ? JSON.stringify(val) : String(val)}</span>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+
+                                        {/* FOOTER ACTION */}
+                                        <div className="pt-2 border-top border-secondary">
+                                            <button 
+                                                type="button" 
+                                                className="btn btn-success fw-bold text-black w-100 py-2 shadow-sm" 
+                                                onClick={() => setSelectedLedgerEntry(null)} 
+                                                style={{ fontSize: '12px' }}
+                                            >
+                                                CLOSE DETAILS
                                             </button>
                                         </div>
 
@@ -719,4 +852,4 @@ const StockManagement = () => {
     );
 };
 
-export default StockManagement;
+export default StockManagement; // wait, export default StockManagement
