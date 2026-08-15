@@ -96,7 +96,7 @@ const StockManagement = () => {
         }
     };
 
-    // Upgraded Wikimedia Commons Search (Handles natural filenames and multi-word queries like logos)
+    // Upgraded Wikimedia Commons Search (Properly handles dictionary response objects)
     const searchWebImages = async (query) => {
         if (!query) return;
         setIsSearchingImages(true);
@@ -104,17 +104,14 @@ const StockManagement = () => {
         setSearchPerformed(false);
         
         try {
-            // Step 1: Query Wikimedia Commons API for matching file pages
             const searchRes = await axios.get(
                 `https://commons.wikimedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&srnamespace=6&srlimit=8&format=json&origin=*`
             );
             
             const searchHits = searchRes.data.query?.search;
             if (searchHits && searchHits.length > 0) {
-                // Extract file titles (e.g., "File:TV5 Logo (2021).png")
                 const titles = searchHits.map(item => item.title).join('|');
                 
-                // Step 2: Fetch direct image source URLs for those files
                 const infoRes = await axios.get(
                     `https://commons.wikimedia.org/w/api.php?action=query&titles=${encodeURIComponent(titles)}&prop=imageinfo&iiprop=url&format=json&origin=*`
                 );
@@ -394,7 +391,7 @@ const StockManagement = () => {
                                                 </button>
                                             </div>
 
-                                            {/* LIVE IMAGE PREVIEW BOX */}
+                                            {/* LIVE IMAGE PREVIEW BOX with Bulletproof Local SVG Fallback */}
                                             {formData.image_url && (
                                                 <div className="d-flex align-items-center gap-2 p-2 bg-light rounded border mb-2">
                                                     <span className="small fw-semibold text-secondary">Live Preview:</span>
@@ -422,7 +419,7 @@ const StockManagement = () => {
 
                                             {searchPerformed && imageResults.length === 0 && !isSearchingImages && (
                                                 <div className="alert alert-warning py-2 small mb-2">
-                                                    <i className="fa fa-exclamation-triangle me-1"></i> No matching images found on Wikimedia Commons for "{formData.item_name}". You can paste an external URL (like an office warehouse direct link) directly above.
+                                                    <i className="fa fa-exclamation-triangle me-1"></i> No matching images found on Wikimedia Commons for "{formData.item_name}". You can paste an external URL directly above.
                                                 </div>
                                             )}
 
