@@ -391,12 +391,12 @@ const StockManagement = () => {
                                         </div>
                                         
                                         <div className="col-md-4">
-                                            <label className="form-label fw-semibold">WS Price</label>
+                                            <label className="form-label fw-semibold">W/S Price</label>
                                             <input type="number" step="0.01" name="ws_price" className="form-control" placeholder="0.00" value={formData.ws_price} onChange={handleInputChange} required />
                                         </div>
                                         
                                         <div className="col-md-4">
-                                            <label className="form-label fw-semibold">SRP Price</label>
+                                            <label className="form-label fw-semibold">SRP Amount</label>
                                             <input type="number" step="0.01" name="srp_amount" className="form-control" placeholder="0.00" value={formData.srp_amount} onChange={handleInputChange} required />
                                         </div>
                                         
