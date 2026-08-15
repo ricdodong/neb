@@ -352,8 +352,8 @@ const JadeSystem = ({ userRole, onLogout, username }) => {
             </Offcanvas>
 
             <main className="main-content container-fluid">
-                <section className="page-container mt-lg-4 p-3 p-md-4 p-lg-5 animate-fade-in">
-                    <div className="d-flex justify-content-between align-items-center mb-4">
+                <section className="page-container mt-0 p-2 p-md-3 animate-fade-in">
+                    <div className="d-flex justify-content-between align-items-center mb-2">
                         <h2 className="fw-900 text-white text-uppercase tracking-widest m-0 h4">
                             {activePage === 'po receives' ? 'PO Receives' : activePage.replace('call logs', 'Call Logs')}
                         </h2>
