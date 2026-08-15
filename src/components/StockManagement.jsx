@@ -24,19 +24,19 @@ const StockManagement = () => {
 
     const searchInputRef = useRef(null);
 
-    // Modal Form State
+    // Modal Form State (Using serial_array for dynamic individual inputs)
     const [showModal, setShowModal] = useState(false);
     const [formData, setFormData] = useState({
         supplier_id: '',
         item_name: '',
         description: '',
-        quantity: '',
+        quantity: '1',
         ws_price: '',
         srp_amount: '',
         forward_by: '',
         freight_cost: '',
         image_url: '',
-        serial_numbers: '' 
+        serial_array: [''] // Dynamic array corresponding to quantity
     });
 
     useEffect(() => {
@@ -97,7 +97,6 @@ const StockManagement = () => {
     };
 
     const startScanningLoop = () => {
-        // Check if browser supports native BarcodeDetector API (safely accessed via window)
         const WindowBarcodeDetector = window.BarcodeDetector;
         if (!WindowBarcodeDetector) {
             alert("BarcodeDetector API is not fully supported on this browser. Please use Chrome on Android/iOS or input manually.");
@@ -117,7 +116,7 @@ const StockManagement = () => {
                         handleSuccessfulScan(scannedVal);
                     }
                 } catch (err) {
-                    // Scanning frame error fallback, keep looping
+                    // Scanning frame error fallback
                 }
             }
         }, 300);
@@ -129,14 +128,20 @@ const StockManagement = () => {
         }
 
         setFormData(prev => {
-            const currentList = prev.serial_numbers.trim();
-            const updatedSerials = currentList ? `${currentList}\n${code}` : code;
-            const newQty = updatedSerials.split(/[\n,]+/).filter(s => s.trim().length > 0).length;
+            const updatedSerials = [...prev.serial_array];
+            // Find the first empty input field to fill, or append if all are filled
+            const emptyIndex = updatedSerials.findIndex(s => !s || s.trim() === '');
+            
+            if (emptyIndex !== -1) {
+                updatedSerials[emptyIndex] = code;
+            } else {
+                updatedSerials.push(code);
+            }
 
             return {
                 ...prev,
-                serial_numbers: updatedSerials,
-                quantity: newQty.toString()
+                serial_array: updatedSerials,
+                quantity: updatedSerials.length.toString()
             };
         });
     };
@@ -190,25 +195,51 @@ const StockManagement = () => {
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
-        setFormData({ ...formData, [name]: value });
+        
+        if (name === 'quantity') {
+            const qty = Math.max(1, parseInt(value) || 1);
+            setFormData(prev => {
+                const newArray = [...prev.serial_array];
+                if (qty > newArray.length) {
+                    // Add empty slots
+                    while (newArray.length < qty) {
+                        newArray.push('');
+                    }
+                } else {
+                    // Trim slots
+                    newArray.length = qty;
+                }
+                return { ...prev, quantity: qty.toString(), serial_array: newArray };
+            });
+        } else {
+            setFormData({ ...formData, [name]: value });
+        }
+    };
+
+    const handleSerialChange = (index, value) => {
+        setFormData(prev => {
+            const newArray = [...prev.serial_array];
+            newArray[index] = value;
+            return { ...prev, serial_array: newArray };
+        });
     };
 
     const handleItemSelectChange = (e) => {
         const selectedId = e.target.value;
         if (!selectedId) {
-            setFormData({ ...formData, item_name: '', description: '', srp_amount: '', image_url: '' });
+            setFormData(prev => ({ ...prev, item_name: '', description: '', srp_amount: '', image_url: '' }));
             return;
         }
 
         const found = inventory.find(i => i.id.toString() === selectedId);
         if (found) {
-            setFormData({
-                ...formData,
+            setFormData(prev => ({
+                ...prev,
                 item_name: found.item_name || '',
                 description: found.item_description || '',
                 srp_amount: found.srp_amount || '',
                 image_url: found.image_url || ''
-            });
+            }));
         }
     };
 
@@ -223,20 +254,26 @@ const StockManagement = () => {
         setSubmitting(true);
 
         try {
-            await axios.post(`${BASE_URL}/api/inventory/add`, formData);
+            // Map serial_array into newline-separated string for backend compatibility
+            const payload = {
+                ...formData,
+                serial_numbers: formData.serial_array.join('\n')
+            };
+
+            await axios.post(`${BASE_URL}/api/inventory/add`, payload);
 
             setShowModal(false);
             setFormData({
                 supplier_id: '',
                 item_name: '',
                 description: '',
-                quantity: '',
+                quantity: '1',
                 ws_price: '',
                 srp_amount: '',
                 forward_by: '',
                 freight_cost: '',
                 image_url: '',
-                serial_numbers: ''
+                serial_array: ['']
             });
 
             fetchInventory();
@@ -682,7 +719,7 @@ const StockManagement = () => {
                                     <div className="position-absolute top-50 start-50 translate-middle border border-success border-2 rounded opacity-50 pointer-event-none" style={{ width: '80%', height: '120px' }}></div>
                                 </div>
                                 <p className="text-secondary small mt-3 mb-0" style={{fontSize: '11px'}}>
-                                    Align barcode or QR code inside the frame. Scanned numbers will automatically append into your serials list.
+                                    Align barcode or QR code inside the frame. Scanned numbers will automatically fill up the serial slots sequentially.
                                 </p>
                             </div>
                             <div className="modal-footer border-secondary bg-black py-3 px-4">
@@ -748,7 +785,7 @@ const StockManagement = () => {
                                         
                                         <div className="col-12 col-md-4">
                                             <label className="text-secondary fw-bold mb-1.5">QUANTITY</label>
-                                            <input type="number" name="quantity" className="form-control bg-black text-white border-secondary py-2" placeholder="0" min="1" value={formData.quantity} onChange={handleInputChange} style={{fontSize: '12px'}} required />
+                                            <input type="number" name="quantity" className="form-control bg-black text-white border-secondary py-2" placeholder="1" min="1" value={formData.quantity} onChange={handleInputChange} style={{fontSize: '12px'}} required />
                                         </div>
                                         
                                         <div className="col-12 col-md-4">
@@ -771,30 +808,41 @@ const StockManagement = () => {
                                             <input type="number" step="0.01" name="freight_cost" className="form-control bg-black text-white border-secondary py-2" placeholder="0.00" value={formData.freight_cost} onChange={handleInputChange} style={{fontSize: '12px'}} />
                                         </div>
 
-                                        {/* SERIAL NUMBERS WITH SCANNER BUTTON */}
+                                        {/* DYNAMIC INDIVIDUAL SERIAL INPUT FIELDS */}
                                         <div className="col-12">
                                             <div className="d-flex justify-content-between align-items-center mb-1.5">
-                                                <label className="text-success fw-bold mb-0">SERIAL NUMBERS</label>
+                                                <label className="text-success fw-bold mb-0">
+                                                    SERIAL NUMBERS ({formData.serial_array.length} Required)
+                                                </label>
                                                 <button 
                                                     type="button" 
                                                     className="btn btn-sm btn-outline-success py-1 px-2.5 fw-bold"
                                                     onClick={() => setShowScanner(true)}
                                                     style={{fontSize: '11px'}}
                                                 >
-                                                    <i className="fas fa-camera me-1.5"></i>SCAN BARCODE / QR WITH PHONE
+                                                    <i className="fas fa-camera me-1.5"></i>SCAN WITH PHONE CAMERA
                                                 </button>
                                             </div>
-                                            <textarea 
-                                                name="serial_numbers" 
-                                                className="form-control bg-black text-white border-secondary py-2" 
-                                                rows="3" 
-                                                placeholder="Scanned serials will appear here one by one..." 
-                                                value={formData.serial_numbers} 
-                                                onChange={handleInputChange} 
-                                                style={{fontSize: '12px'}}
-                                            ></textarea>
-                                            <small className="text-secondary mt-1 d-block" style={{fontSize: '10px'}}>
-                                                Quantity automatically syncs with the number of scanned items.
+                                            
+                                            <div className="d-flex flex-column gap-2 p-2.5 bg-black rounded border border-secondary" style={{maxHeight: '200px', overflowY: 'auto'}}>
+                                                {formData.serial_array.map((serialVal, index) => (
+                                                    <div key={index} className="input-group input-group-sm">
+                                                        <span className="input-group-text bg-dark text-secondary border-secondary" style={{width: '42px', fontSize: '11px'}}>
+                                                            #{index + 1}
+                                                        </span>
+                                                        <input 
+                                                            type="text" 
+                                                            className="form-control bg-black text-white border-secondary" 
+                                                            placeholder={`Enter serial number for item #${index + 1}`} 
+                                                            value={serialVal} 
+                                                            onChange={(e) => handleSerialChange(index, e.target.value)} 
+                                                            style={{fontSize: '12px'}}
+                                                        />
+                                                    </div>
+                                                ))}
+                                            </div>
+                                            <small className="text-secondary mt-1.5 d-block" style={{fontSize: '10px'}}>
+                                                Changing the quantity above will automatically add or remove individual serial input slots.
                                             </small>
                                         </div>
                                     </div>
