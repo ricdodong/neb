@@ -382,7 +382,7 @@ const StockManagement = () => {
                                                 </button>
                                             </div>
 
-                                            {/* LIVE IMAGE PREVIEW BOX: Know immediately if a link/image is valid */}
+                                            {/* LIVE IMAGE PREVIEW BOX with Bulletproof Local SVG Fallback */}
                                             {formData.image_url && (
                                                 <div className="d-flex align-items-center gap-2 p-2 bg-light rounded border mb-2">
                                                     <span className="small fw-semibold text-secondary">Live Preview:</span>
@@ -391,7 +391,10 @@ const StockManagement = () => {
                                                         alt="Preview" 
                                                         className="border bg-white rounded" 
                                                         style={{ height: '40px', width: '40px', objectFit: 'contain' }}
-                                                        onError={(e) => { e.target.src = 'https://via.placeholder.com/40?text=Invalid'; }}
+                                                        onError={(e) => { 
+                                                            e.target.onerror = null; 
+                                                            e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Crect width='100%25' height='100%25' fill='%23f8d7da'/%3E%3Ctext x='50%25' y='50%25' font-size='10' fill='%23721c24' dominant-baseline='middle' text-anchor='middle'%3EError%3C/text%3E%3C/svg%3E"; 
+                                                        }}
                                                     />
                                                     <span className="text-success small"><i className="fa fa-check-circle"></i> Image link active</span>
                                                 </div>
