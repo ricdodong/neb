@@ -15,7 +15,7 @@ const StockManagement = () => {
     const [imageResults, setImageResults] = useState([]);
     const [isSearchingImages, setIsSearchingImages] = useState(false);
 
-    // Modal Form State (Updated with image_url)
+    // Modal Form State
     const [showModal, setShowModal] = useState(false);
     const [formData, setFormData] = useState({
         supplier_id: '',
@@ -51,8 +51,7 @@ const StockManagement = () => {
             const res = await axios.get(`${BASE_URL}/api/suppliers`);
             setSuppliers(res.data);
         } catch (err) {
-            console.error("Error fetching suppliers", err);
-            // Fallback mock suppliers
+            console.error("Error fetching suppliers, using fallbacks", err);
             setSuppliers([
                 { id: 1, name: 'Default Supplier Inc.' },
                 { id: 2, name: 'Global Logistics Corp.' }
@@ -67,6 +66,7 @@ const StockManagement = () => {
             setLedger(res.data);
         } catch (err) {
             console.error("Error fetching ledger", err);
+            setLedger([]);
         }
     };
 
@@ -75,7 +75,7 @@ const StockManagement = () => {
         setFormData({ ...formData, [name]: value });
     };
 
-    // Free, no-key image search using Wikimedia Commons API
+    // Free web image lookup using Wikimedia Commons API
     const searchWebImages = async (query) => {
         if (!query) return;
         setIsSearchingImages(true);
@@ -88,12 +88,11 @@ const StockManagement = () => {
             
             const pages = res.data.query?.pages;
             if (pages) {
-                // Extract URLs from the Wikipedia response
                 const urls = Object.values(pages)
                     .map(page => page.imageinfo?.[0]?.url)
-                    .filter(url => url && (url.endsWith('.jpg') || url.endsWith('.png') || url.endsWith('.jpeg')));
+                    .filter(url => url && /\.(jpg|jpeg|png)$/i.test(url));
                 
-                setImageResults(urls.slice(0, 4)); // Limit to top 4 results
+                setImageResults(urls.slice(0, 4));
             }
         } catch (err) {
             console.error("Image search failed", err);
@@ -107,10 +106,9 @@ const StockManagement = () => {
         setSubmitting(true);
 
         try {
-            // Sending standard JSON since we are passing a URL string, not a file
             await axios.post(`${BASE_URL}/api/inventory/add`, formData);
 
-            // Reset form & close modal
+            // Reset Form & Close Modal
             setShowModal(false);
             setFormData({
                 supplier_id: '',
@@ -125,11 +123,11 @@ const StockManagement = () => {
             });
             setImageResults([]);
 
-            // Refresh table
+            // Refresh Inventory Grid
             fetchInventory();
         } catch (err) {
             console.error("Error adding stock entry", err);
-            alert("Failed to save stock entry. Please check your inputs.");
+            alert("Failed to save stock entry. Please verify backend fields.");
         } finally {
             setSubmitting(false);
         }
@@ -177,9 +175,20 @@ const StockManagement = () => {
                                             inventory.map(item => (
                                                 <tr key={item.id}>
                                                     <td className="ps-4 text-muted">#{item.id}</td>
-                                                    <td className="fw-bold">
-                                                        {/* Optional: Show small thumbnail in table if you fetch image_url in master list */}
-                                                        {item.image_url && <img src={item.image_url} alt="item" className="rounded-circle me-2" style={{width: '30px', height: '30px', objectFit: 'cover'}} />}
+                                                    <td className="fw-bold d-flex align-items-center">
+                                                        {item.image_url ? (
+                                                            <img 
+                                                                src={item.image_url} 
+                                                                alt={item.item_name} 
+                                                                className="rounded-circle me-2 border" 
+                                                                style={{width: '35px', height: '35px', objectFit: 'cover'}} 
+                                                                onError={(e) => { e.target.style.display = 'none'; }}
+                                                            />
+                                                        ) : (
+                                                            <div className="rounded-circle bg-light text-secondary d-flex align-items-center justify-content-center me-2 border" style={{width: '35px', height: '35px', fontSize: '12px'}}>
+                                                                <i className="fa fa-image"></i>
+                                                            </div>
+                                                        )}
                                                         {item.item_name}
                                                     </td>
                                                     <td className="text-center">
@@ -221,9 +230,58 @@ const StockManagement = () => {
                     </div>
                 </div>
 
-                {/* Detailed Stock Ledger (Omitted here for brevity, remains unchanged from previous version) */}
-                {/* ... */}
-                
+                {/* Detailed Stock Ledger */}
+                {selectedItem && (
+                    <div className="col-lg-12">
+                        <div className="card shadow-sm border-0 border-top border-primary border-4">
+                            <div className="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                                <h5 className="mb-0 fw-bold">
+                                    Movement History: <span className="text-primary">{selectedItem.item_name}</span>
+                                </h5>
+                                <button className="btn btn-sm btn-outline-secondary" onClick={() => setSelectedItem(null)}>
+                                    <i className="fa fa-times me-1"></i> Close
+                                </button>
+                            </div>
+                            <div className="card-body p-0">
+                                <div className="table-responsive">
+                                    <table className="table table-striped mb-0 align-middle">
+                                        <thead className="table-dark">
+                                            <tr>
+                                                <th className="ps-4">Date</th>
+                                                <th>Type</th>
+                                                <th>Qty Change</th>
+                                                <th>Source/Customer</th>
+                                                <th className="pe-4">Address</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {ledger.length > 0 ? ledger.map((entry, index) => (
+                                                <tr key={index} className="small">
+                                                    <td className="ps-4">{new Date(entry.date).toLocaleString()}</td>
+                                                    <td>
+                                                        <span className={`badge ${['in', 'input'].includes(entry.type.toLowerCase()) ? 'bg-success' : 'bg-danger'}`}>
+                                                            {entry.type.toUpperCase()}
+                                                        </span>
+                                                    </td>
+                                                    <td className="fw-bold">
+                                                        {entry.qty > 0 ? `+${entry.qty}` : entry.qty}
+                                                    </td>
+                                                    <td>
+                                                        <i className={`fa ${entry.qty > 0 ? 'fa-truck' : 'fa-shopping-cart'} me-2 opacity-50`}></i>
+                                                        {entry.source}
+                                                    </td>
+                                                    <td className="pe-4 text-muted fst-italic">{entry.address}</td>
+                                                </tr>
+                                            )) : (
+                                                <tr><td colSpan="5" className="text-center py-4 text-muted">No movement history found for this item.</td></tr>
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* Add Stock Modal */}
@@ -283,16 +341,16 @@ const StockManagement = () => {
                                                     type="text" 
                                                     name="image_url" 
                                                     className="form-control" 
-                                                    placeholder="Click search above, or manually paste an Image URL" 
+                                                    placeholder="Search item name above or paste image URL manually" 
                                                     value={formData.image_url} 
                                                     onChange={handleInputChange} 
                                                 />
                                             </div>
                                             
-                                            {/* Render Web Image Results */}
+                                            {/* Web Image Results Grid */}
                                             {imageResults.length > 0 && (
                                                 <div className="row g-2 mt-2 bg-light p-2 rounded border">
-                                                    <span className="small text-muted mb-1 d-block"><i className="fa fa-info-circle"></i> Click an image to select it:</span>
+                                                    <span className="small text-muted mb-1 d-block"><i className="fa fa-info-circle me-1"></i> Click an image to assign it:</span>
                                                     {imageResults.map((url, idx) => (
                                                         <div className="col-3" key={idx}>
                                                             <div 
@@ -304,7 +362,7 @@ const StockManagement = () => {
                                                                     src={url} 
                                                                     alt={`result-${idx}`} 
                                                                     className="img-fluid rounded" 
-                                                                    style={{ height: '80px', width: '100%', objectFit: 'cover' }} 
+                                                                    style={{ height: '75px', width: '100%', objectFit: 'cover' }} 
                                                                 />
                                                             </div>
                                                         </div>
