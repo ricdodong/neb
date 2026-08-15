@@ -153,8 +153,9 @@ const StockManagement = () => {
                                         <tr>
                                             <th className="ps-4">Item #</th>
                                             <th>Item Name</th>
-                                            <th className="text-center">Total Stock (Lifetime)</th>
-                                            <th className="text-center">Remaining (On-Hand)</th>
+                                            <th className="text-center">Total Stock (Input)</th>
+                                            <th className="text-center">Sold Out (Output)</th>
+                                            <th className="text-center">Available (On-Hand)</th>
                                             <th>Status</th>
                                             <th className="text-end pe-4">Action</th>
                                         </tr>
@@ -162,7 +163,7 @@ const StockManagement = () => {
                                     <tbody>
                                         {loading ? (
                                             <tr>
-                                                <td colSpan="6" className="text-center py-4 text-muted">
+                                                <td colSpan="7" className="text-center py-4 text-muted">
                                                     <div className="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
                                                     Loading inventory...
                                                 </td>
@@ -191,14 +192,17 @@ const StockManagement = () => {
                                                         <span className="text-secondary fw-bold">{item.total_qty}</span>
                                                     </td>
                                                     <td className="text-center">
-                                                        <span className={`fw-bold fs-6 ${item.remaining_stock === 0 ? 'text-danger' : 'text-primary'}`}>
-                                                            {item.remaining_stock}
+                                                        <span className="text-danger fw-bold">{item.soldout_qty}</span>
+                                                    </td>
+                                                    <td className="text-center">
+                                                        <span className={`fw-bold fs-6 ${item.available_qty === 0 ? 'text-danger' : 'text-primary'}`}>
+                                                            {item.available_qty}
                                                         </span>
                                                     </td>
                                                     <td>
-                                                        {item.remaining_stock <= 0 ? (
+                                                        {item.available_qty <= 0 ? (
                                                             <span className="badge bg-danger">OUT OF STOCK</span>
-                                                        ) : item.remaining_stock <= 2 ? (
+                                                        ) : item.available_qty <= 2 ? (
                                                             <span className="badge bg-warning text-dark">LOW STOCK</span>
                                                         ) : (
                                                             <span className="badge bg-success">HEALTHY</span>
@@ -216,7 +220,7 @@ const StockManagement = () => {
                                             ))
                                         ) : (
                                             <tr>
-                                                <td colSpan="6" className="text-center py-4 text-muted">No inventory records found.</td>
+                                                <td colSpan="7" className="text-center py-4 text-muted">No inventory records found.</td>
                                             </tr>
                                         )}
                                     </tbody>
