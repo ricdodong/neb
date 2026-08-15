@@ -15,7 +15,7 @@ const StockManagement = () => {
     const [imageResults, setImageResults] = useState([]);
     const [isSearchingImages, setIsSearchingImages] = useState(false);
 
-    // Modal Form State
+    // Modal Form State (Updated to match /api/suppliers schema)
     const [showModal, setShowModal] = useState(false);
     const [formData, setFormData] = useState({
         supplier_id: '',
@@ -48,7 +48,7 @@ const StockManagement = () => {
 
     const fetchSuppliers = async () => {
         try {
-            const res = await axios.get(`${BASE_URL}/api/customers`);
+            const res = await axios.get(`${BASE_URL}/api/suppliers`);
             setSuppliers(res.data);
         } catch (err) {
             console.error("Error fetching suppliers, using fallbacks", err);
