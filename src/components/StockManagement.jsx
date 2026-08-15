@@ -96,7 +96,7 @@ const StockManagement = () => {
         }
     };
 
-    // Using Google Custom Search Engine (CSE) API to retrieve product & logo images
+    // Google Custom Search Engine (CSE) API integration
     const searchWebImages = async (query) => {
         if (!query) return;
         setIsSearchingImages(true);
@@ -104,7 +104,6 @@ const StockManagement = () => {
         setSearchPerformed(false);
         
         try {
-            // Replace with your Google Custom Search API key and Programmable Search Engine ID (CX)
             const apiKey = "AIzaSyAyur479VcmfhUIeSBbRzhA6sDpaN4yMSM";
             const cxId = "e4e812fc701df4163";
 
@@ -121,8 +120,7 @@ const StockManagement = () => {
                 setImageResults(urls);
             }
         } catch (err) {
-            console.error("Google Image search failed", err);
-            alert("Google Image search requires a valid API Key and CSE ID. Please check console configuration or paste URL directly.");
+            console.error("Google Image search failed", err.response?.data || err.message);
         } finally {
             setIsSearchingImages(false);
             setSearchPerformed(true);
@@ -363,7 +361,7 @@ const StockManagement = () => {
                                             />
                                         </div>
 
-                                        {/* Picture Field with Integrated Google Web Image Search & Live Preview */}
+                                        {/* Picture Field with Integrated Google Search & Live Preview */}
                                         <div className="col-12 mt-3">
                                             <label className="form-label fw-semibold text-primary">Picture (Image URL)</label>
                                             <div className="input-group mb-2">
@@ -381,7 +379,7 @@ const StockManagement = () => {
                                                     className="btn btn-outline-primary"
                                                     onClick={() => searchWebImages(formData.item_name)}
                                                     disabled={!formData.item_name || isSearchingImages}
-                                                    title="Search Web Images"
+                                                    title="Search Google Images"
                                                 >
                                                     <i className={`fa ${isSearchingImages ? 'fa-spinner fa-spin' : 'fa-search'}`}></i> Google Search
                                                 </button>
@@ -415,7 +413,7 @@ const StockManagement = () => {
 
                                             {searchPerformed && imageResults.length === 0 && !isSearchingImages && (
                                                 <div className="alert alert-warning py-2 small mb-2">
-                                                    <i className="fa fa-exclamation-triangle me-1"></i> No matching images found. You can paste an external URL (such as from Office Warehouse) directly above.
+                                                    <i className="fa fa-exclamation-triangle me-1"></i> No matching Google images found for "{formData.item_name}". You can paste a direct URL above.
                                                 </div>
                                             )}
 
