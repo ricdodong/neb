@@ -11,11 +11,6 @@ const StockManagement = () => {
     const [loading, setLoading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
 
-    // Image Search States
-    const [imageResults, setImageResults] = useState([]);
-    const [isSearchingImages, setIsSearchingImages] = useState(false);
-    const [searchPerformed, setSearchPerformed] = useState(false);
-
     // Modal Form State
     const [showModal, setShowModal] = useState(false);
     const [formData, setFormData] = useState({
@@ -96,35 +91,11 @@ const StockManagement = () => {
         }
     };
 
-    // Google Custom Search Engine (CSE) API integration
-    const searchWebImages = async (query) => {
-        if (!query) return;
-        setIsSearchingImages(true);
-        setImageResults([]);
-        setSearchPerformed(false);
-        
-        try {
-            const apiKey = "AIzaSyAyur479VcmfhUIeSBbRzhA6sDpaN4yMSM";
-            const cxId = "e4e812fc701df4163";
-
-            const res = await axios.get(
-                `https://www.googleapis.com/customsearch/v1?key=${apiKey}&cx=${cxId}&q=${encodeURIComponent(query)}&searchType=image&num=8`
-            );
-            
-            const items = res.data.items;
-            if (items && items.length > 0) {
-                const urls = items
-                    .map(item => item.link)
-                    .filter(url => url && /\.(jpg|jpeg|png|svg|webp)$/i.test(url));
-                
-                setImageResults(urls);
-            }
-        } catch (err) {
-            console.error("Google Image search failed", err.response?.data || err.message);
-        } finally {
-            setIsSearchingImages(false);
-            setSearchPerformed(true);
-        }
+    // Opens a new tab directly to Google Image Search for the item name
+    const openGoogleImageSearch = () => {
+        if (!formData.item_name) return;
+        const searchUrl = `https://www.google.com/search?tbm=isch&q=${encodeURIComponent(formData.item_name)}`;
+        window.open(searchUrl, '_blank');
     };
 
     const handleSubmitStock = async (e) => {
@@ -147,8 +118,6 @@ const StockManagement = () => {
                 freight_cost: '',
                 image_url: ''
             });
-            setImageResults([]);
-            setSearchPerformed(false);
 
             // Refresh Inventory Grid
             fetchInventory();
@@ -361,7 +330,7 @@ const StockManagement = () => {
                                             />
                                         </div>
 
-                                        {/* Picture Field with Integrated Google Search & Live Preview */}
+                                        {/* Picture Field with Google Images Tab Redirect & Live Preview */}
                                         <div className="col-12 mt-3">
                                             <label className="form-label fw-semibold text-primary">Picture (Image URL)</label>
                                             <div className="input-group mb-2">
@@ -370,19 +339,22 @@ const StockManagement = () => {
                                                     type="text" 
                                                     name="image_url" 
                                                     className="form-control" 
-                                                    placeholder="Paste URL or search web using item name" 
+                                                    placeholder="Paste image address URL here" 
                                                     value={formData.image_url} 
                                                     onChange={handleInputChange} 
                                                 />
                                                 <button 
                                                     type="button" 
                                                     className="btn btn-outline-primary"
-                                                    onClick={() => searchWebImages(formData.item_name)}
-                                                    disabled={!formData.item_name || isSearchingImages}
-                                                    title="Search Google Images"
+                                                    onClick={openGoogleImageSearch}
+                                                    disabled={!formData.item_name}
+                                                    title="Open Google Image Search in new tab"
                                                 >
-                                                    <i className={`fa ${isSearchingImages ? 'fa-spinner fa-spin' : 'fa-search'}`}></i> Google Search
+                                                    <i className="fa fa-external-link-alt me-1"></i> Search on Google Images
                                                 </button>
+                                            </div>
+                                            <div className="form-text text-muted small mb-2">
+                                                <i className="fa fa-info-circle me-1"></i> Click "Search on Google Images" to find your item, right-click the image to <strong>Copy image address</strong>, and paste it above.
                                             </div>
 
                                             {/* LIVE IMAGE PREVIEW BOX with Bulletproof Local SVG Fallback */}
@@ -400,42 +372,6 @@ const StockManagement = () => {
                                                         }}
                                                     />
                                                     <span className="text-success small"><i className="fa fa-check-circle"></i> Image link active</span>
-                                                </div>
-                                            )}
-                                            
-                                            {/* Web Image Results Loading & Empty States */}
-                                            {isSearchingImages && (
-                                                <div className="text-center py-2 text-muted small">
-                                                    <div className="spinner-border spinner-border-sm text-primary me-1" role="status"></div>
-                                                    Searching Google Images for "{formData.item_name}"...
-                                                </div>
-                                            )}
-
-                                            {searchPerformed && imageResults.length === 0 && !isSearchingImages && (
-                                                <div className="alert alert-warning py-2 small mb-2">
-                                                    <i className="fa fa-exclamation-triangle me-1"></i> No matching Google images found for "{formData.item_name}". You can paste a direct URL above.
-                                                </div>
-                                            )}
-
-                                            {imageResults.length > 0 && (
-                                                <div className="row g-2 mt-2 bg-light p-2 rounded border" style={{ maxHeight: '220px', overflowY: 'auto' }}>
-                                                    <span className="small text-muted mb-1 d-block"><i className="fa fa-info-circle me-1"></i> Click an image thumbnail to set it as the picture link:</span>
-                                                    {imageResults.map((url, idx) => (
-                                                        <div className="col-3" key={idx}>
-                                                            <div 
-                                                                className={`border rounded p-1 text-center bg-white ${formData.image_url === url ? 'border-primary border-3 shadow' : 'border-secondary'}`}
-                                                                onClick={() => setFormData({...formData, image_url: url})}
-                                                                style={{ cursor: 'pointer', transition: 'all 0.2s' }}
-                                                            >
-                                                                <img 
-                                                                    src={url} 
-                                                                    alt={`result-${idx}`} 
-                                                                    className="img-fluid rounded" 
-                                                                    style={{ height: '70px', width: '100%', objectFit: 'contain' }} 
-                                                                />
-                                                            </div>
-                                                        </div>
-                                                    ))}
                                                 </div>
                                             )}
                                         </div>
