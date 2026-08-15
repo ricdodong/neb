@@ -48,7 +48,7 @@ const StockManagement = () => {
 
     const fetchSuppliers = async () => {
         try {
-            const res = await axios.get(`${BASE_URL}/api/suppliers`);
+            const res = await axios.get(`${BASE_URL}/api/customers`);
             setSuppliers(res.data);
         } catch (err) {
             console.error("Error fetching suppliers, using fallbacks", err);
@@ -75,7 +75,7 @@ const StockManagement = () => {
         setFormData({ ...formData, [name]: value });
     };
 
-    // Free web image lookup using Wikimedia Commons API with robust response parser
+    // Wikimedia Commons API image fetcher matching your schema output
     const searchWebImages = async (query) => {
         if (!query) return;
         setIsSearchingImages(true);
@@ -92,7 +92,7 @@ const StockManagement = () => {
                     .map(page => page.imageinfo?.[0]?.url)
                     .filter(url => url && /\.(jpg|jpeg|png|svg|webp)$/i.test(url));
                 
-                setImageResults(urls.slice(0, 8)); // Display up to 8 matching image choices
+                setImageResults(urls.slice(0, 8));
             }
         } catch (err) {
             console.error("Image search failed", err);
@@ -127,7 +127,7 @@ const StockManagement = () => {
             fetchInventory();
         } catch (err) {
             console.error("Error adding stock entry", err);
-            alert("Failed to save stock entry. Please verify backend fields.");
+            alert("Failed to save stock entry. Please check console log.");
         } finally {
             setSubmitting(false);
         }
