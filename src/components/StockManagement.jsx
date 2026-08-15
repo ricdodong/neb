@@ -156,14 +156,14 @@ const StockManagement = () => {
 
     const renderStatusBadge = (qty) => {
         if (qty <= 0) {
-            return <span className="badge rounded-pill bg-danger-subtle text-danger px-2 py-1" style={{fontSize: '11px'}}>OUT OF STOCK</span>;
+            return <span className="badge rounded-pill bg-danger-subtle text-danger px-3 py-1">OUT OF STOCK</span>;
         } else if (qty <= 2) {
-            return <span className="badge rounded-pill bg-warning-subtle text-warning-emphasis px-2 py-1" style={{fontSize: '11px'}}>LOW STOCK</span>;
+            return <span className="badge rounded-pill bg-warning-subtle text-warning-emphasis px-3 py-1">LOW STOCK</span>;
         }
-        return <span className="badge rounded-pill bg-success-subtle text-success px-2 py-1" style={{fontSize: '11px'}}>HEALTHY</span>;
+        return <span className="badge rounded-pill bg-success-subtle text-success px-3 py-1">HEALTHY</span>;
     };
 
-    // Filter Inventory based on Search Query (Item Name, Description, or Supplier/Source history if available)
+    // Filter Inventory based on Search Query
     const filteredInventory = inventory.filter(item => {
         const query = searchQuery.toLowerCase();
         const itemName = (item.item_name || '').toLowerCase();
@@ -174,47 +174,46 @@ const StockManagement = () => {
     });
 
     return (
-        <div className="container-fluid px-1 px-md-2 py-2 animate-fade-in">
-            <div className="row g-2">
+        <div className="container-fluid px-2 py-3 animate-fade-in">
+            <div className="row g-3">
                 {/* Master Inventory List */}
                 <div className="col-12">
-                    <div className="card shadow-sm border-0 rounded-2 mb-3">
-                        <div className="card-header bg-white border-bottom py-2 px-2 px-md-3">
-                            <div className="row align-items-center g-2">
+                    <div className="card shadow-sm border-0 rounded-3 mb-4">
+                        <div className="card-header bg-white border-bottom py-3 px-3 px-md-4">
+                            <div className="row align-items-center g-3">
                                 {/* Title and Subtitle */}
                                 <div className="col-12 col-lg-4">
-                                    <h6 className="mb-0 fw-bold text-dark">
-                                        <i className="fa fa-boxes text-primary me-2"></i>Current Stock Levels & Inventory
-                                    </h6>
-                                    <small className="text-muted" style={{fontSize: '11px'}}>Manage master stock records and ledger movements.</small>
+                                    <h5 className="mb-1 fw-bold text-dark">
+                                        <i className="fa fa-boxes text-primary me-2"></i>Current Stock Levels
+                                    </h5>
+                                    <p className="text-muted small mb-0">Manage master inventory, track quantities, and review on-hand stock status.</p>
                                 </div>
 
                                 {/* Professional Search Bar */}
                                 <div className="col-12 col-lg-5">
-                                    <div className="input-group input-group-sm shadow-sm">
-                                        <span className="input-group-text bg-light border-end-0 text-muted px-2">
-                                            <i className="fa fa-search" style={{fontSize: '12px'}}></i>
+                                    <div className="input-group shadow-sm">
+                                        <span className="input-group-text bg-light border-end-0 text-muted ps-3">
+                                            <i className="fa fa-search"></i>
                                         </span>
                                         <input 
                                             ref={searchInputRef}
                                             type="text" 
-                                            className="form-control border-start-0 ps-1 bg-light form-control-sm" 
+                                            className="form-control border-start-0 ps-0 bg-light" 
                                             placeholder="Search by item name, description... (Press F1)" 
                                             value={searchQuery}
                                             onChange={(e) => setSearchQuery(e.target.value)}
-                                            style={{fontSize: '12px'}}
                                         />
                                         {searchQuery && (
                                             <button 
-                                                className="btn btn-light border border-start-0 text-muted px-2" 
+                                                className="btn btn-light border border-start-0 text-muted" 
                                                 type="button"
                                                 onClick={() => setSearchQuery('')}
                                                 title="Clear search"
                                             >
-                                                <i className="fa fa-times" style={{fontSize: '12px'}}></i>
+                                                <i className="fa fa-times"></i>
                                             </button>
                                         )}
-                                        <span className="input-group-text bg-light text-muted small d-none d-md-flex px-2" style={{fontSize: '10px'}}>
+                                        <span className="input-group-text bg-light text-muted small d-none d-md-flex">
                                             <kbd className="bg-white text-dark border px-1 rounded shadow-sm">F1</kbd>
                                         </span>
                                     </div>
@@ -223,8 +222,7 @@ const StockManagement = () => {
                                 {/* Add Stock Action Button */}
                                 <div className="col-12 col-lg-3 text-lg-end">
                                     <button 
-                                        className="btn btn-primary btn-sm shadow-sm px-2 py-1 w-100 w-lg-auto"
-                                        style={{fontSize: '12px'}}
+                                        className="btn btn-primary shadow-sm px-3 py-2 w-100 w-lg-auto"
                                         onClick={() => setShowModal(true)}
                                     >
                                         <i className="fa fa-plus-circle me-1"></i> Add / Entry Stocks
@@ -235,24 +233,24 @@ const StockManagement = () => {
                         
                         <div className="card-body p-0">
                             {loading ? (
-                                <div className="text-center py-4 text-muted small">
+                                <div className="text-center py-5 text-muted">
                                     <div className="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
                                     Loading inventory levels...
                                 </div>
                             ) : filteredInventory.length > 0 ? (
                                 <>
-                                    {/* Desktop Compact Table View with Tight Padding */}
+                                    {/* Desktop Table View */}
                                     <div className="table-responsive d-none d-lg-block">
-                                        <table className="table table-hover table-bordered align-middle mb-0 text-nowrap" style={{fontSize: '12px'}}>
-                                            <thead className="table-light text-uppercase text-secondary fw-bold">
+                                        <table className="table table-hover align-middle mb-0 text-nowrap">
+                                            <thead className="table-light text-uppercase fs-7 text-secondary fw-bold">
                                                 <tr>
-                                                    <th className="py-2 px-2 text-center" style={{width: '50px'}}>Item #</th>
-                                                    <th className="py-2 px-3">Item Name & Description</th>
-                                                    <th className="py-2 px-2 text-center" style={{width: '90px'}}>Total Stock</th>
-                                                    <th className="py-2 px-2 text-center" style={{width: '90px'}}>Sold Out</th>
-                                                    <th className="py-2 px-2 text-center" style={{width: '90px'}}>Available</th>
-                                                    <th className="py-2 px-2 text-center" style={{width: '110px'}}>Status</th>
-                                                    <th className="py-2 px-2 text-end" style={{width: '110px'}}>Action</th>
+                                                    <th className="py-3 ps-4">Item #</th>
+                                                    <th className="py-3">Item Name</th>
+                                                    <th className="py-3 text-center">Total Stock</th>
+                                                    <th className="py-3 text-center">Sold Out</th>
+                                                    <th className="py-3 text-center">Available</th>
+                                                    <th className="py-3">Status</th>
+                                                    <th className="py-3 text-end pe-4">Action</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -263,48 +261,47 @@ const StockManagement = () => {
                                                     return (
                                                         <React.Fragment key={item.id}>
                                                             <tr className={isExpanded ? 'table-active' : ''}>
-                                                                <td className="px-2 text-center text-muted fw-semibold">#{item.id}</td>
-                                                                <td className="px-3 py-1.5 fw-semibold">
+                                                                <td className="ps-4 text-muted fw-semibold">#{item.id}</td>
+                                                                <td className="fw-semibold">
                                                                     <div className="d-flex align-items-center">
                                                                         {item.image_url ? (
                                                                             <img 
                                                                                 src={item.image_url} 
                                                                                 alt={item.item_name} 
-                                                                                className="rounded-circle me-2 border bg-light shadow-sm" 
-                                                                                style={{width: '28px', height: '28px', objectFit: 'contain'}} 
+                                                                                className="rounded-circle me-3 border bg-light shadow-sm" 
+                                                                                style={{width: '38px', height: '38px', objectFit: 'contain'}} 
                                                                                 onError={(e) => { e.target.style.display = 'none'; }}
                                                                             />
                                                                         ) : (
-                                                                            <div className="rounded-circle bg-light text-secondary d-flex align-items-center justify-content-center me-2 border shadow-sm" style={{width: '28px', height: '28px', fontSize: '10px'}}>
+                                                                            <div className="rounded-circle bg-light text-secondary d-flex align-items-center justify-content-center me-3 border shadow-sm" style={{width: '38px', height: '38px', fontSize: '14px'}}>
                                                                                 <i className="fa fa-image"></i>
                                                                             </div>
                                                                         )}
                                                                         <div>
                                                                             <span className="text-dark fw-bold d-block">{item.item_name}</span>
-                                                                            {item.item_description && <small className="text-muted text-truncate d-block" style={{maxWidth: '280px', fontSize: '10px'}}>{item.item_description}</small>}
+                                                                            {item.item_description && <small className="text-muted text-truncate d-block" style={{maxWidth: '250px'}}>{item.item_description}</small>}
                                                                         </div>
                                                                     </div>
                                                                 </td>
-                                                                <td className="px-2 text-center">
-                                                                    <span className="badge bg-light text-dark border px-2 py-1 fw-bold">{item.total_qty || 0}</span>
+                                                                <td className="text-center">
+                                                                    <span className="badge bg-light text-dark border px-3 py-2 fw-bold">{item.total_qty || 0}</span>
                                                                 </td>
-                                                                <td className="px-2 text-center">
-                                                                    <span className="badge bg-light text-danger border px-2 py-1 fw-bold">{item.soldout_qty || 0}</span>
+                                                                <td className="text-center">
+                                                                    <span className="badge bg-light text-danger border px-3 py-2 fw-bold">{item.soldout_qty || 0}</span>
                                                                 </td>
-                                                                <td className="px-2 text-center">
-                                                                    <span className={`fw-bold ${item.available_qty === 0 ? 'text-danger' : 'text-primary'}`}>
+                                                                <td className="text-center">
+                                                                    <span className={`fw-bold fs-6 ${item.available_qty === 0 ? 'text-danger' : 'text-primary'}`}>
                                                                         {item.available_qty || 0}
                                                                     </span>
                                                                 </td>
-                                                                <td className="px-2 text-center">{renderStatusBadge(item.available_qty)}</td>
-                                                                <td className="px-2 text-end">
+                                                                <td>{renderStatusBadge(item.available_qty)}</td>
+                                                                <td className="text-end pe-4">
                                                                     <button 
-                                                                        className={`btn btn-xs shadow-sm px-2 py-1 ${isExpanded ? 'btn-primary' : 'btn-outline-primary'}`}
-                                                                        style={{fontSize: '11px'}}
+                                                                        className={`btn btn-sm shadow-sm px-3 ${isExpanded ? 'btn-primary' : 'btn-outline-primary'}`}
                                                                         onClick={() => toggleLedger(item)}
                                                                     >
                                                                         <i className={`fa ${isExpanded ? 'fa-chevron-up' : 'fa-history'} me-1`}></i> 
-                                                                        {isExpanded ? 'Hide Ledger' : 'Ledger'}
+                                                                        {isExpanded ? 'Hide Ledger' : 'View Ledger'}
                                                                     </button>
                                                                 </td>
                                                             </tr>
@@ -312,59 +309,59 @@ const StockManagement = () => {
                                                             {/* Inline Ledger Expandable Row */}
                                                             {isExpanded && (
                                                                 <tr>
-                                                                    <td colSpan="7" className="bg-light p-2 border-bottom shadow-inner">
-                                                                        <div className="card border-0 shadow-sm rounded-2">
-                                                                            <div className="card-header bg-white py-1 px-2 d-flex justify-content-between align-items-center">
-                                                                                <span className="fw-bold text-primary" style={{fontSize: '11px'}}>
-                                                                                    <i className="fa fa-list-alt me-1"></i> Detailed Movement History for {item.item_name}
+                                                                    <td colSpan="7" className="bg-light p-4 border-bottom shadow-inner">
+                                                                        <div className="card border-0 shadow-sm rounded-3">
+                                                                            <div className="card-header bg-white py-2 px-3 d-flex justify-content-between align-items-center">
+                                                                                <span className="fw-bold text-primary small">
+                                                                                    <i className="fa fa-list-alt me-1"></i> Movement History for {item.item_name}
                                                                                 </span>
-                                                                                <button className="btn btn-xs btn-link text-muted p-0" onClick={() => setExpandedItemId(null)}>
+                                                                                <button className="btn btn-sm btn-link text-muted p-0" onClick={() => setExpandedItemId(null)}>
                                                                                     <i className="fa fa-times"></i>
                                                                                 </button>
                                                                             </div>
                                                                             <div className="card-body p-0">
                                                                                 {ledgerLoading ? (
-                                                                                    <div className="text-center py-2 text-muted small" style={{fontSize: '11px'}}>
+                                                                                    <div className="text-center py-3 text-muted small">
                                                                                         <div className="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
                                                                                         Loading movement history...
                                                                                     </div>
                                                                                 ) : itemLedger.length > 0 ? (
                                                                                     <div className="table-responsive mb-0">
-                                                                                        <table className="table table-sm table-striped table-bordered mb-0 align-middle text-nowrap" style={{fontSize: '11px'}}>
+                                                                                        <table className="table table-sm table-striped mb-0 align-middle text-nowrap small">
                                                                                             <thead className="table-dark text-uppercase">
                                                                                                 <tr>
-                                                                                                    <th className="py-1 px-2">Date & Time</th>
-                                                                                                    <th className="py-1 px-2">Type</th>
-                                                                                                    <th className="py-1 px-2">Qty</th>
-                                                                                                    <th className="py-1 px-2">Source / Customer</th>
-                                                                                                    <th className="py-1 px-2">Address</th>
-                                                                                                    <th className="py-1 px-2">Forward By</th>
-                                                                                                    <th className="py-1 px-2">Freight Cost</th>
+                                                                                                    <th className="py-2 ps-3">Date & Time</th>
+                                                                                                    <th className="py-2">Type</th>
+                                                                                                    <th className="py-2">Qty Change</th>
+                                                                                                    <th className="py-2">Source/Customer</th>
+                                                                                                    <th className="py-2">Address</th>
+                                                                                                    <th className="py-2">Forward By</th>
+                                                                                                    <th className="py-2 pe-3">Freight Cost</th>
                                                                                                 </tr>
                                                                                             </thead>
                                                                                             <tbody>
                                                                                                 {itemLedger.map((entry, idx) => (
                                                                                                     <tr key={idx}>
-                                                                                                        <td className="px-2 text-muted">{new Date(entry.date).toLocaleString()}</td>
-                                                                                                        <td className="px-2">
-                                                                                                            <span className={`badge rounded-pill px-2 py-0.5 ${['in', 'input'].includes(entry.type.toLowerCase()) ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger'}`} style={{fontSize: '9px'}}>
+                                                                                                        <td className="ps-3 text-muted">{new Date(entry.date).toLocaleString()}</td>
+                                                                                                        <td>
+                                                                                                            <span className={`badge rounded-pill px-2 py-1 ${['in', 'input'].includes(entry.type.toLowerCase()) ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger'}`}>
                                                                                                                 {entry.type.toUpperCase()}
                                                                                                             </span>
                                                                                                         </td>
-                                                                                                        <td className="px-2 fw-bold">
+                                                                                                        <td className="fw-bold">
                                                                                                             <span className={entry.qty > 0 ? 'text-success' : 'text-danger'}>
                                                                                                                 {entry.qty > 0 ? `+${entry.qty}` : entry.qty}
                                                                                                             </span>
                                                                                                         </td>
-                                                                                                        <td className="px-2">
+                                                                                                        <td>
                                                                                                             <i className={`fa ${entry.qty > 0 ? 'fa-user' : 'fa-shopping-cart'} me-1 opacity-50`}></i>
                                                                                                             <span className="fw-semibold">{entry.source || 'N/A'}</span>
                                                                                                         </td>
-                                                                                                        <td className="px-2 text-muted fst-italic">{entry.address || 'N/A'}</td>
-                                                                                                        <td className="px-2">
+                                                                                                        <td className="text-muted fst-italic">{entry.address || 'N/A'}</td>
+                                                                                                        <td>
                                                                                                             <i className="fa fa-truck me-1 text-muted"></i> {entry.forwardBy || entry.courier || 'N/A'}
                                                                                                         </td>
-                                                                                                        <td className="px-2 fw-semibold text-dark">
+                                                                                                        <td className="pe-3 fw-semibold text-dark">
                                                                                                             ₱{parseFloat(entry.freightCost || entry.shipping_cost || 0).toFixed(2)}
                                                                                                         </td>
                                                                                                     </tr>
@@ -373,7 +370,7 @@ const StockManagement = () => {
                                                                                         </table>
                                                                                     </div>
                                                                                 ) : (
-                                                                                    <div className="text-center py-2 text-muted small" style={{fontSize: '11px'}}>No movement history found for this item.</div>
+                                                                                    <div className="text-center py-3 text-muted small">No movement history found for this item.</div>
                                                                                 )}
                                                                             </div>
                                                                         </div>
@@ -388,53 +385,52 @@ const StockManagement = () => {
                                     </div>
 
                                     {/* Mobile & Tablet Card List View */}
-                                    <div className="d-lg-none p-2 d-flex flex-column gap-2">
+                                    <div className="d-lg-none p-3 d-flex flex-column gap-3">
                                         {filteredInventory.map(item => {
                                             const isExpanded = expandedItemId === item.id;
                                             const itemLedger = ledgers[item.id] || [];
 
                                             return (
-                                                <div key={item.id} className="card border shadow-sm rounded-2 p-2 bg-white" style={{fontSize: '12px'}}>
-                                                    <div className="d-flex align-items-center justify-content-between mb-1">
+                                                <div key={item.id} className="card border shadow-sm rounded-3 p-3 bg-white">
+                                                    <div className="d-flex align-items-center justify-content-between mb-2">
                                                         <div className="d-flex align-items-center gap-2">
                                                             {item.image_url ? (
                                                                 <img 
                                                                     src={item.image_url} 
                                                                     alt={item.item_name} 
                                                                     className="rounded-circle border bg-light" 
-                                                                    style={{width: '30px', height: '30px', objectFit: 'contain'}} 
+                                                                    style={{width: '36px', height: '36px', objectFit: 'contain'}} 
                                                                     onError={(e) => { e.target.style.display = 'none'; }}
                                                                 />
                                                             ) : (
-                                                                <div className="rounded-circle bg-light text-secondary d-flex align-items-center justify-content-center border" style={{width: '30px', height: '30px', fontSize: '10px'}}>
+                                                                <div className="rounded-circle bg-light text-secondary d-flex align-items-center justify-content-center border" style={{width: '36px', height: '36px', fontSize: '12px'}}>
                                                                     <i className="fa fa-image"></i>
                                                                 </div>
                                                             )}
                                                             <div>
-                                                                <h6 className="mb-0 fw-bold text-dark" style={{fontSize: '12px'}}>{item.item_name}</h6>
-                                                                <small className="text-muted" style={{fontSize: '10px'}}>#{item.id}</small>
+                                                                <h6 className="mb-0 fw-bold text-dark">{item.item_name}</h6>
+                                                                <small className="text-muted">#{item.id}</small>
                                                             </div>
                                                         </div>
                                                         {renderStatusBadge(item.available_qty)}
                                                     </div>
-                                                    <div className="row g-1 text-center bg-light rounded-1 p-1 my-1" style={{fontSize: '11px'}}>
+                                                    <div className="row g-2 text-center bg-light rounded-2 p-2 my-2 small">
                                                         <div className="col-4 border-end">
-                                                            <span className="text-muted d-block" style={{fontSize: '10px'}}>Total</span>
+                                                            <span className="text-muted d-block" style={{fontSize: '11px'}}>Total</span>
                                                             <span className="fw-bold">{item.total_qty || 0}</span>
                                                         </div>
                                                         <div className="col-4 border-end">
-                                                            <span className="text-muted d-block" style={{fontSize: '10px'}}>Sold</span>
+                                                            <span className="text-muted d-block" style={{fontSize: '11px'}}>Sold</span>
                                                             <span className="fw-bold text-danger">{item.soldout_qty || 0}</span>
                                                         </div>
                                                         <div className="col-4">
-                                                            <span className="text-muted d-block" style={{fontSize: '10px'}}>Available</span>
+                                                            <span className="text-muted d-block" style={{fontSize: '11px'}}>Available</span>
                                                             <span className="fw-bold text-primary">{item.available_qty || 0}</span>
                                                         </div>
                                                     </div>
                                                     <div className="d-flex justify-content-end mt-1">
                                                         <button 
-                                                            className={`btn btn-xs w-100 py-1 ${isExpanded ? 'btn-primary' : 'btn-outline-primary'}`}
-                                                            style={{fontSize: '11px'}}
+                                                            className={`btn btn-sm w-100 ${isExpanded ? 'btn-primary' : 'btn-outline-primary'}`}
                                                             onClick={() => toggleLedger(item)}
                                                         >
                                                             <i className={`fa ${isExpanded ? 'fa-chevron-up' : 'fa-history'} me-1`}></i> 
@@ -444,32 +440,32 @@ const StockManagement = () => {
 
                                                     {/* Mobile Expandable Ledger Accordion */}
                                                     {isExpanded && (
-                                                        <div className="mt-2 pt-2 border-top bg-light p-2 rounded-1 animate-fade-in" style={{fontSize: '11px'}}>
-                                                            <span className="fw-bold text-primary d-block mb-1" style={{fontSize: '11px'}}>
+                                                        <div className="mt-3 pt-3 border-top bg-light p-2 rounded-2 animate-fade-in">
+                                                            <span className="fw-bold text-primary small d-block mb-2">
                                                                 <i className="fa fa-list-alt me-1"></i> Movement History:
                                                             </span>
                                                             {ledgerLoading ? (
-                                                                <div className="text-center py-1 text-muted">Loading history...</div>
+                                                                <div className="text-center py-2 text-muted small">Loading history...</div>
                                                             ) : itemLedger.length > 0 ? (
-                                                                <div className="d-flex flex-column gap-1">
+                                                                <div className="d-flex flex-column gap-2">
                                                                     {itemLedger.map((entry, idx) => (
-                                                                        <div key={idx} className="bg-white border rounded p-1.5" style={{fontSize: '11px'}}>
-                                                                            <div className="d-flex justify-content-between text-muted" style={{fontSize: '9px'}}>
+                                                                        <div key={idx} className="bg-white border rounded p-2 small">
+                                                                            <div className="d-flex justify-content-between text-muted" style={{fontSize: '10px'}}>
                                                                                 <span>{new Date(entry.date).toLocaleString()}</span>
-                                                                                <span className={`badge ${['in', 'input'].includes(entry.type.toLowerCase()) ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger'}`} style={{fontSize: '8px'}}>
+                                                                                <span className={`badge ${['in', 'input'].includes(entry.type.toLowerCase()) ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger'}`}>
                                                                                     {entry.type.toUpperCase()}
                                                                                 </span>
                                                                             </div>
-                                                                            <div className="fw-bold mt-0.5">
+                                                                            <div className="fw-bold mt-1">
                                                                                 Qty: <span className={entry.qty > 0 ? 'text-success' : 'text-danger'}>{entry.qty > 0 ? `+${entry.qty}` : entry.qty}</span>
                                                                             </div>
-                                                                            <div className="text-dark">Source: {entry.source || 'N/A'}</div>
-                                                                            <div className="text-muted fst-italic" style={{fontSize: '10px'}}>{entry.address || 'N/A'}</div>
+                                                                            <div className="text-dark small">Source: {entry.source || 'N/A'}</div>
+                                                                            <div className="text-muted fst-italic" style={{fontSize: '11px'}}>{entry.address || 'N/A'}</div>
                                                                         </div>
                                                                     ))}
                                                                 </div>
                                                             ) : (
-                                                                <div className="text-center py-1 text-muted">No movement history found.</div>
+                                                                <div className="text-center py-2 text-muted small">No movement history found.</div>
                                                             )}
                                                         </div>
                                                     )}
@@ -479,10 +475,10 @@ const StockManagement = () => {
                                     </div>
                                 </>
                             ) : (
-                                <div className="text-center py-4 text-muted small">
-                                    <i className="fa fa-search fa-lg mb-1 opacity-50"></i>
+                                <div className="text-center py-5 text-muted">
+                                    <i className="fa fa-search fa-2x mb-2 opacity-50"></i>
                                     <p className="mb-1">No matching inventory records found for "{searchQuery}".</p>
-                                    <button className="btn btn-xs btn-outline-primary mt-1" style={{fontSize: '11px'}} onClick={() => setSearchQuery('')}>Clear Search</button>
+                                    <button className="btn btn-sm btn-outline-primary mt-2" onClick={() => setSearchQuery('')}>Clear Search</button>
                                 </div>
                             )}
                         </div>
@@ -492,23 +488,23 @@ const StockManagement = () => {
 
             {/* Add Stock Modal */}
             {showModal && (
-                <div className="modal show d-block px-1" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}>
+                <div className="modal show d-block px-2" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}>
                     <div className="modal-dialog modal-dialog-centered modal-lg">
-                        <div className="modal-content border-0 shadow-lg rounded-2">
-                            <div className="modal-header bg-primary text-white py-2 px-3">
-                                <h6 className="modal-title fw-bold mb-0">
+                        <div className="modal-content border-0 shadow-lg rounded-3">
+                            <div className="modal-header bg-primary text-white py-3 px-4">
+                                <h5 className="modal-title fw-bold">
                                     <i className="fa fa-plus-circle me-2"></i> Add / Entry Stocks
-                                </h6>
+                                </h5>
                                 <button type="button" className="btn-close btn-close-white" onClick={() => setShowModal(false)}></button>
                             </div>
                             <form onSubmit={handleSubmitStock}>
-                                <div className="modal-body p-2 p-md-3">
-                                    <div className="row g-2">
+                                <div className="modal-body p-3 p-md-4">
+                                    <div className="row g-3">
                                         
                                         {/* Supplier Select */}
                                         <div className="col-12 col-md-6">
-                                            <label className="form-label fw-semibold text-secondary small mb-1">Supplier Name</label>
-                                            <select name="supplier_id" className="form-select form-select-sm" value={formData.supplier_id} onChange={handleInputChange} required>
+                                            <label className="form-label fw-semibold text-secondary small">Supplier Name</label>
+                                            <select name="supplier_id" className="form-select" value={formData.supplier_id} onChange={handleInputChange} required>
                                                 <option value="">Select Supplier</option>
                                                 {suppliers.map(sup => (
                                                     <option key={sup.id} value={sup.id}>{sup.name}</option>
@@ -518,9 +514,9 @@ const StockManagement = () => {
                                         
                                         {/* Item Name */}
                                         <div className="col-12 col-md-6">
-                                            <label className="form-label fw-semibold text-secondary small mb-1">Item Name</label>
+                                            <label className="form-label fw-semibold text-secondary small">Item Name</label>
                                             <select 
-                                                className="form-select form-select-sm mb-1" 
+                                                className="form-select mb-2" 
                                                 onChange={handleItemSelectChange}
                                                 defaultValue=""
                                             >
@@ -532,7 +528,7 @@ const StockManagement = () => {
                                             <input 
                                                 type="text" 
                                                 name="item_name" 
-                                                className="form-control form-control-sm" 
+                                                className="form-control" 
                                                 placeholder="Or type new item name" 
                                                 value={formData.item_name} 
                                                 onChange={handleInputChange} 
@@ -541,21 +537,21 @@ const StockManagement = () => {
                                         </div>
 
                                         {/* Picture Field */}
-                                        <div className="col-12 mt-2">
-                                            <label className="form-label fw-semibold text-primary small mb-1">Picture (Image URL)</label>
-                                            <div className="input-group input-group-sm mb-1">
+                                        <div className="col-12 mt-3">
+                                            <label className="form-label fw-semibold text-primary small">Picture (Image URL)</label>
+                                            <div className="input-group mb-2">
                                                 <span className="input-group-text bg-light"><i className="fa fa-link"></i></span>
                                                 <input 
                                                     type="text" 
                                                     name="image_url" 
-                                                    className="form-control form-control-sm" 
+                                                    className="form-control" 
                                                     placeholder="Paste image address URL here" 
                                                     value={formData.image_url} 
                                                     onChange={handleInputChange} 
                                                 />
                                                 <button 
                                                     type="button" 
-                                                    className="btn btn-outline-primary btn-sm"
+                                                    className="btn btn-outline-primary"
                                                     onClick={openGoogleImageSearch}
                                                     disabled={!formData.item_name}
                                                     title="Open Google Image Search in new tab"
@@ -563,65 +559,65 @@ const StockManagement = () => {
                                                     <i className="fa fa-external-link-alt me-1"></i> <span className="d-none d-sm-inline">Google</span> Images
                                                 </button>
                                             </div>
-                                            <div className="form-text text-muted small mb-1" style={{fontSize: '10px'}}>
+                                            <div className="form-text text-muted small mb-2">
                                                 <i className="fa fa-info-circle me-1"></i> Click search to find your item, right-click to <strong>Copy image address</strong>, and paste above.
                                             </div>
 
                                             {/* LIVE IMAGE PREVIEW BOX */}
                                             {formData.image_url && (
-                                                <div className="d-flex align-items-center gap-2 p-1.5 bg-light rounded border mb-1">
-                                                    <span className="small fw-semibold text-secondary" style={{fontSize: '11px'}}>Live Preview:</span>
+                                                <div className="d-flex align-items-center gap-3 p-2 bg-light rounded border mb-2">
+                                                    <span className="small fw-semibold text-secondary">Live Preview:</span>
                                                     <img 
                                                         src={formData.image_url} 
                                                         alt="Preview" 
                                                         className="border bg-white rounded shadow-sm" 
-                                                        style={{ height: '32px', width: '32px', objectFit: 'contain' }}
+                                                        style={{ height: '40px', width: '40px', objectFit: 'contain' }}
                                                         onError={(e) => { 
                                                             e.target.onerror = null; 
-                                                            e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32'%3E%3Crect width='100%25' height='100%25' fill='%23f8d7da'/%3E%3Ctext x='50%25' y='50%25' font-size='9' fill='%23721c24' dominant-baseline='middle' text-anchor='middle'%3EErr%3C/text%3E%3C/svg%3E"; 
+                                                            e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Crect width='100%25' height='100%25' fill='%23f8d7da'/%3E%3Ctext x='50%25' y='50%25' font-size='10' fill='%23721c24' dominant-baseline='middle' text-anchor='middle'%3EError%3C/text%3E%3C/svg%3E"; 
                                                         }}
                                                     />
-                                                    <span className="text-success small" style={{fontSize: '11px'}}><i className="fa fa-check-circle"></i> Active</span>
+                                                    <span className="text-success small"><i className="fa fa-check-circle"></i> Image link active</span>
                                                 </div>
                                             )}
                                         </div>
 
-                                        <div className="col-12 mt-2">
-                                            <label className="form-label fw-semibold text-secondary small mb-1">Description</label>
-                                            <textarea name="description" className="form-control form-control-sm" rows="2" placeholder="Enter product description" value={formData.description} onChange={handleInputChange}></textarea>
+                                        <div className="col-12 mt-3">
+                                            <label className="form-label fw-semibold text-secondary small">Description</label>
+                                            <textarea name="description" className="form-control" rows="2" placeholder="Enter product description" value={formData.description} onChange={handleInputChange}></textarea>
                                         </div>
                                         
                                         <div className="col-12 col-md-4">
-                                            <label className="form-label fw-semibold text-secondary small mb-1">Quantity</label>
-                                            <input type="number" name="quantity" className="form-control form-control-sm" placeholder="0" min="1" value={formData.quantity} onChange={handleInputChange} required />
+                                            <label className="form-label fw-semibold text-secondary small">Quantity</label>
+                                            <input type="number" name="quantity" className="form-control" placeholder="0" min="1" value={formData.quantity} onChange={handleInputChange} required />
                                         </div>
                                         
                                         <div className="col-12 col-md-4">
-                                            <label className="form-label fw-semibold text-secondary small mb-1">W/S Price</label>
-                                            <input type="number" step="0.01" name="ws_price" className="form-control form-control-sm" placeholder="0.00" value={formData.ws_price} onChange={handleInputChange} required />
+                                            <label className="form-label fw-semibold text-secondary small">W/S Price</label>
+                                            <input type="number" step="0.01" name="ws_price" className="form-control" placeholder="0.00" value={formData.ws_price} onChange={handleInputChange} required />
                                         </div>
                                         
                                         <div className="col-12 col-md-4">
-                                            <label className="form-label fw-semibold text-secondary small mb-1">SRP Amount</label>
-                                            <input type="number" step="0.01" name="srp_amount" className="form-control form-control-sm" placeholder="0.00" value={formData.srp_amount} onChange={handleInputChange} required />
+                                            <label className="form-label fw-semibold text-secondary small">SRP Amount</label>
+                                            <input type="number" step="0.01" name="srp_amount" className="form-control" placeholder="0.00" value={formData.srp_amount} onChange={handleInputChange} required />
                                         </div>
                                         
                                         <div className="col-12 col-md-6">
-                                            <label className="form-label fw-semibold text-secondary small mb-1">Forward By</label>
-                                            <input type="text" name="forward_by" className="form-control form-control-sm" placeholder="Courier or Handler" value={formData.forward_by} onChange={handleInputChange} />
+                                            <label className="form-label fw-semibold text-secondary small">Forward By</label>
+                                            <input type="text" name="forward_by" className="form-control" placeholder="Courier or Handler" value={formData.forward_by} onChange={handleInputChange} />
                                         </div>
                                         
                                         <div className="col-12 col-md-6">
-                                            <label className="form-label fw-semibold text-secondary small mb-1">Freight Cost</label>
-                                            <input type="number" step="0.01" name="freight_cost" className="form-control form-control-sm" placeholder="0.00" value={formData.freight_cost} onChange={handleInputChange} />
+                                            <label className="form-label fw-semibold text-secondary small">Freight Cost</label>
+                                            <input type="number" step="0.01" name="freight_cost" className="form-control" placeholder="0.00" value={formData.freight_cost} onChange={handleInputChange} />
                                         </div>
                                     </div>
                                 </div>
-                                <div className="modal-footer bg-light py-2 px-3">
-                                    <button type="button" className="btn btn-outline-secondary btn-sm px-3" onClick={() => setShowModal(false)}>Cancel</button>
-                                    <button type="submit" className="btn btn-primary btn-sm px-3" disabled={submitting}>
+                                <div className="modal-footer bg-light py-3 px-4">
+                                    <button type="button" className="btn btn-outline-secondary px-4" onClick={() => setShowModal(false)}>Cancel</button>
+                                    <button type="submit" className="btn btn-primary px-4" disabled={submitting}>
                                         {submitting ? (
-                                            <><span className="spinner-border spinner-border-sm me-1" role="status"></span>Saving...</>
+                                            <><span className="spinner-border spinner-border-sm me-2" role="status"></span>Saving...</>
                                         ) : 'Save Stock Entry'}
                                     </button>
                                 </div>
