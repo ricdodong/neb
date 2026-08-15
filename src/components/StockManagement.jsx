@@ -96,7 +96,7 @@ const StockManagement = () => {
         }
     };
 
-    // Upgraded Wikimedia Commons Search (Properly handles dictionary response objects)
+    // Using Google Custom Search Engine (CSE) API to retrieve product & logo images
     const searchWebImages = async (query) => {
         if (!query) return;
         setIsSearchingImages(true);
@@ -104,29 +104,25 @@ const StockManagement = () => {
         setSearchPerformed(false);
         
         try {
-            const searchRes = await axios.get(
-                `https://commons.wikimedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&srnamespace=6&srlimit=8&format=json&origin=*`
+            // Replace with your Google Custom Search API key and Programmable Search Engine ID (CX)
+            const apiKey = "AIzaSyAyur479VcmfhUIeSBbRzhA6sDpaN4yMSM";
+            const cxId = "e4e812fc701df4163";
+
+            const res = await axios.get(
+                `https://www.googleapis.com/customsearch/v1?key=${apiKey}&cx=${cxId}&q=${encodeURIComponent(query)}&searchType=image&num=8`
             );
             
-            const searchHits = searchRes.data.query?.search;
-            if (searchHits && searchHits.length > 0) {
-                const titles = searchHits.map(item => item.title).join('|');
+            const items = res.data.items;
+            if (items && items.length > 0) {
+                const urls = items
+                    .map(item => item.link)
+                    .filter(url => url && /\.(jpg|jpeg|png|svg|webp)$/i.test(url));
                 
-                const infoRes = await axios.get(
-                    `https://commons.wikimedia.org/w/api.php?action=query&titles=${encodeURIComponent(titles)}&prop=imageinfo&iiprop=url&format=json&origin=*`
-                );
-                
-                const pages = infoRes.data.query?.pages;
-                if (pages) {
-                    const urls = Object.values(pages)
-                        .map(page => page.imageinfo?.[0]?.url)
-                        .filter(url => url && /\.(jpg|jpeg|png|svg|webp)$/i.test(url));
-                    
-                    setImageResults(urls);
-                }
+                setImageResults(urls);
             }
         } catch (err) {
-            console.error("Image search failed", err);
+            console.error("Google Image search failed", err);
+            alert("Google Image search requires a valid API Key and CSE ID. Please check console configuration or paste URL directly.");
         } finally {
             setIsSearchingImages(false);
             setSearchPerformed(true);
@@ -367,7 +363,7 @@ const StockManagement = () => {
                                             />
                                         </div>
 
-                                        {/* Picture Field with Integrated Commons Web Image Search & Live Preview */}
+                                        {/* Picture Field with Integrated Google Web Image Search & Live Preview */}
                                         <div className="col-12 mt-3">
                                             <label className="form-label fw-semibold text-primary">Picture (Image URL)</label>
                                             <div className="input-group mb-2">
@@ -387,7 +383,7 @@ const StockManagement = () => {
                                                     disabled={!formData.item_name || isSearchingImages}
                                                     title="Search Web Images"
                                                 >
-                                                    <i className={`fa ${isSearchingImages ? 'fa-spinner fa-spin' : 'fa-search'}`}></i> Search Web
+                                                    <i className={`fa ${isSearchingImages ? 'fa-spinner fa-spin' : 'fa-search'}`}></i> Google Search
                                                 </button>
                                             </div>
 
@@ -413,13 +409,13 @@ const StockManagement = () => {
                                             {isSearchingImages && (
                                                 <div className="text-center py-2 text-muted small">
                                                     <div className="spinner-border spinner-border-sm text-primary me-1" role="status"></div>
-                                                    Searching Wikimedia Commons for "{formData.item_name}"...
+                                                    Searching Google Images for "{formData.item_name}"...
                                                 </div>
                                             )}
 
                                             {searchPerformed && imageResults.length === 0 && !isSearchingImages && (
                                                 <div className="alert alert-warning py-2 small mb-2">
-                                                    <i className="fa fa-exclamation-triangle me-1"></i> No matching images found on Wikimedia Commons for "{formData.item_name}". You can paste an external URL directly above.
+                                                    <i className="fa fa-exclamation-triangle me-1"></i> No matching images found. You can paste an external URL (such as from Office Warehouse) directly above.
                                                 </div>
                                             )}
 
