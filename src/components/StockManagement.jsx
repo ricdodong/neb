@@ -175,6 +175,21 @@ const StockManagement = () => {
     return (
         <div className="container-fluid min-vh-100 bg-black text-light p-0 d-flex flex-column font-monospace overflow-x-hidden position-relative">
             
+            {/* INJECT HOVER ZOOM STYLES */}
+            <style>{`
+                .zoom-hover-img {
+                    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+                    cursor: pointer;
+                }
+                .zoom-hover-img:hover {
+                    transform: scale(3);
+                    z-index: 1050;
+                    position: relative;
+                    box-shadow: 0 10px 25px rgba(0,0,0,0.8);
+                    border-color: #198754 !important;
+                }
+            `}</style>
+
             {/* HEADER */}
             <header className="navbar navbar-dark bg-dark border-bottom border-secondary px-3 py-3 sticky-top shadow-sm" style={{zIndex: 1060}}>
                 <div className="d-flex align-items-center justify-content-between w-100 flex-wrap gap-3">
@@ -239,7 +254,7 @@ const StockManagement = () => {
                         ) : filteredInventory.length > 0 ? (
                             <>
                                 {/* DESKTOP TABLE VIEW */}
-                                <div className="table-responsive mb-0 d-none d-lg-block">
+                                <div className="table-responsive mb-0 d-none d-lg-block overflow-visible">
                                     <table className="table table-dark table-hover table-striped align-middle mb-0 text-nowrap" style={{fontSize: '13px'}}>
                                         <thead className="table-secondary text-uppercase text-black fw-bold" style={{fontSize: '12px'}}>
                                             <tr>
@@ -267,7 +282,7 @@ const StockManagement = () => {
                                                                         <img 
                                                                             src={item.image_url} 
                                                                             alt={item.item_name} 
-                                                                            className="rounded me-3 border border-secondary bg-black" 
+                                                                            className="rounded me-3 border border-secondary bg-black zoom-hover-img" 
                                                                             style={{width: '38px', height: '38px', objectFit: 'contain'}} 
                                                                             onError={(e) => { e.target.style.display = 'none'; }}
                                                                         />
@@ -386,7 +401,7 @@ const StockManagement = () => {
                                                             <img 
                                                                 src={item.image_url} 
                                                                 alt={item.item_name} 
-                                                                className="rounded border border-secondary bg-dark" 
+                                                                className="rounded border border-secondary bg-dark zoom-hover-img" 
                                                                 style={{width: '38px', height: '38px', objectFit: 'contain'}} 
                                                                 onError={(e) => { e.target.style.display = 'none'; }}
                                                             />
@@ -548,7 +563,7 @@ const StockManagement = () => {
                                             {formData.image_url && (
                                                 <div className="d-flex align-items-center gap-2.5 p-2 bg-black rounded border border-secondary mt-1.5">
                                                     <span className="text-secondary">Preview:</span>
-                                                    <img src={formData.image_url} alt="" style={{width: '32px', height: '32px', objectFit: 'contain'}} onError={(e) => { e.target.style.display = 'none'; }} />
+                                                    <img src={formData.image_url} alt="" className="zoom-hover-img rounded" style={{width: '32px', height: '32px', objectFit: 'contain'}} onError={(e) => { e.target.style.display = 'none'; }} />
                                                     <span className="text-success"><i className="fas fa-check-circle"></i> Active Link</span>
                                                 </div>
                                             )}
