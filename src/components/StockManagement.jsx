@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 
 const BASE_URL = 'https://dpsapi.ricalgen.eu.org';
@@ -11,6 +11,9 @@ const StockManagement = () => {
     const [suppliers, setSuppliers] = useState([]);
     const [loading, setLoading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+
+    const searchInputRef = useRef(null);
 
     // Modal Form State
     const [showModal, setShowModal] = useState(false);
@@ -29,6 +32,20 @@ const StockManagement = () => {
     useEffect(() => {
         fetchInventory();
         fetchSuppliers();
+
+        // Global F1 Key Listener
+        const handleKeyDown = (e) => {
+            if (e.key === 'F1') {
+                e.preventDefault(); // Prevent browser help menu
+                if (searchInputRef.current) {
+                    searchInputRef.current.focus();
+                    searchInputRef.current.select();
+                }
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
     }, []);
 
     const fetchInventory = async () => {
@@ -64,7 +81,6 @@ const StockManagement = () => {
 
         setExpandedItemId(item.id);
         
-        // Fetch only if not already cached
         if (!ledgers[item.id]) {
             setLedgerLoading(true);
             try {
@@ -147,25 +163,72 @@ const StockManagement = () => {
         return <span className="badge rounded-pill bg-success-subtle text-success px-3 py-1">HEALTHY</span>;
     };
 
+    // Filter Inventory based on Search Query (Item Name, Description, or Supplier/Source history if available)
+    const filteredInventory = inventory.filter(item => {
+        const query = searchQuery.toLowerCase();
+        const itemName = (item.item_name || '').toLowerCase();
+        const itemDesc = (item.item_description || '').toLowerCase();
+        const itemId = item.id.toString();
+        
+        return itemName.includes(query) || itemDesc.includes(query) || itemId.includes(query);
+    });
+
     return (
         <div className="container-fluid px-2 px-md-4 py-4 animate-fade-in">
             <div className="row g-4">
                 {/* Master Inventory List */}
                 <div className="col-12">
                     <div className="card shadow-sm border-0 rounded-3 mb-4">
-                        <div className="card-header bg-white border-bottom-0 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 py-3 px-3 px-md-4">
-                            <div>
-                                <h5 className="mb-1 fw-bold text-dark">
-                                    <i className="fa fa-boxes text-primary me-2"></i>Current Stock Levels
-                                </h5>
-                                <p className="text-muted small mb-0">Manage master inventory, track quantities, and review on-hand stock status.</p>
+                        <div className="card-header bg-white border-bottom py-3 px-3 px-md-4">
+                            <div className="row align-items-center g-3">
+                                {/* Title and Subtitle */}
+                                <div className="col-12 col-lg-4">
+                                    <h5 className="mb-1 fw-bold text-dark">
+                                        <i className="fa fa-boxes text-primary me-2"></i>Current Stock Levels
+                                    </h5>
+                                    <p className="text-muted small mb-0">Manage master inventory, track quantities, and review on-hand stock status.</p>
+                                </div>
+
+                                {/* Professional Search Bar */}
+                                <div className="col-12 col-lg-5">
+                                    <div className="input-group input-group-sm shadow-sm">
+                                        <span className="input-group-text bg-light border-end-0 text-muted ps-3">
+                                            <i className="fa fa-search"></i>
+                                        </span>
+                                        <input 
+                                            ref={searchInputRef}
+                                            type="text" 
+                                            className="form-control border-start-0 ps-0 bg-light" 
+                                            placeholder="Search by item name, description... (Press F1)" 
+                                            value={searchQuery}
+                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                        />
+                                        {searchQuery && (
+                                            <button 
+                                                className="btn btn-light border border-start-0 text-muted" 
+                                                type="button"
+                                                onClick={() => setSearchQuery('')}
+                                                title="Clear search"
+                                            >
+                                                <i className="fa fa-times"></i>
+                                            </button>
+                                        )}
+                                        <span className="input-group-text bg-light text-muted small d-none d-md-flex" style={{fontSize: '11px'}}>
+                                            <kbd className="bg-white text-dark border px-1 rounded shadow-sm">F1</kbd>
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {/* Add Stock Action Button */}
+                                <div className="col-12 col-lg-3 text-lg-end">
+                                    <button 
+                                        className="btn btn-primary btn-sm shadow-sm px-3 py-2 w-100 w-lg-auto"
+                                        onClick={() => setShowModal(true)}
+                                    >
+                                        <i className="fa fa-plus-circle me-1"></i> Add / Entry Stocks
+                                    </button>
+                                </div>
                             </div>
-                            <button 
-                                className="btn btn-primary btn-sm shadow-sm px-3 py-2 align-self-start align-self-md-auto"
-                                onClick={() => setShowModal(true)}
-                            >
-                                <i className="fa fa-plus-circle me-1"></i> Add / Entry Stocks
-                            </button>
                         </div>
                         
                         <div className="card-body p-0">
@@ -174,7 +237,7 @@ const StockManagement = () => {
                                     <div className="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
                                     Loading inventory levels...
                                 </div>
-                            ) : inventory.length > 0 ? (
+                            ) : filteredInventory.length > 0 ? (
                                 <>
                                     {/* Desktop Table View */}
                                     <div className="table-responsive d-none d-lg-block">
@@ -191,7 +254,7 @@ const StockManagement = () => {
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                {inventory.map(item => {
+                                                {filteredInventory.map(item => {
                                                     const isExpanded = expandedItemId === item.id;
                                                     const itemLedger = ledgers[item.id] || [];
 
@@ -323,7 +386,7 @@ const StockManagement = () => {
 
                                     {/* Mobile & Tablet Card List View */}
                                     <div className="d-lg-none p-3 d-flex flex-column gap-3">
-                                        {inventory.map(item => {
+                                        {filteredInventory.map(item => {
                                             const isExpanded = expandedItemId === item.id;
                                             const itemLedger = ledgers[item.id] || [];
 
@@ -412,7 +475,11 @@ const StockManagement = () => {
                                     </div>
                                 </>
                             ) : (
-                                <div className="text-center py-5 text-muted">No inventory records found.</div>
+                                <div className="text-center py-5 text-muted">
+                                    <i className="fa fa-search fa-2x mb-2 opacity-50"></i>
+                                    <p className="mb-1">No matching inventory records found for "{searchQuery}".</p>
+                                    <button className="btn btn-sm btn-outline-primary mt-2" onClick={() => setSearchQuery('')}>Clear Search</button>
+                                </div>
                             )}
                         </div>
                     </div>
