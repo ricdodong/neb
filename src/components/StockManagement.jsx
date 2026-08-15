@@ -96,7 +96,7 @@ const StockManagement = () => {
         }
     };
 
-    // Wikimedia Commons API image fetcher
+    // Upgraded Wikimedia Commons Search (Handles natural filenames and multi-word queries like logos)
     const searchWebImages = async (query) => {
         if (!query) return;
         setIsSearchingImages(true);
@@ -104,17 +104,29 @@ const StockManagement = () => {
         setSearchPerformed(false);
         
         try {
-            const res = await axios.get(
-                `https://en.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(query)}&gsrnamespace=6&prop=imageinfo&iiprop=url&format=json&origin=*`
+            // Step 1: Query Wikimedia Commons API for matching file pages
+            const searchRes = await axios.get(
+                `https://commons.wikimedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&srnamespace=6&srlimit=8&format=json&origin=*`
             );
             
-            const pages = res.data.query?.pages;
-            if (pages) {
-                const urls = Object.values(pages)
-                    .map(page => page.imageinfo?.[0]?.url)
-                    .filter(url => url && /\.(jpg|jpeg|png|svg|webp)$/i.test(url));
+            const searchHits = searchRes.data.query?.search;
+            if (searchHits && searchHits.length > 0) {
+                // Extract file titles (e.g., "File:TV5 Logo (2021).png")
+                const titles = searchHits.map(item => item.title).join('|');
                 
-                setImageResults(urls.slice(0, 8));
+                // Step 2: Fetch direct image source URLs for those files
+                const infoRes = await axios.get(
+                    `https://commons.wikimedia.org/w/api.php?action=query&titles=${encodeURIComponent(titles)}&prop=imageinfo&iiprop=url&format=json&origin=*`
+                );
+                
+                const pages = infoRes.data.query?.pages;
+                if (pages) {
+                    const urls = Object.values(pages)
+                        .map(page => page.imageinfo?.[0]?.url)
+                        .filter(url => url && /\.(jpg|jpeg|png|svg|webp)$/i.test(url));
+                    
+                    setImageResults(urls);
+                }
             }
         } catch (err) {
             console.error("Image search failed", err);
@@ -358,7 +370,7 @@ const StockManagement = () => {
                                             />
                                         </div>
 
-                                        {/* Picture Field with Integrated Web Image Search & Live Preview */}
+                                        {/* Picture Field with Integrated Commons Web Image Search & Live Preview */}
                                         <div className="col-12 mt-3">
                                             <label className="form-label fw-semibold text-primary">Picture (Image URL)</label>
                                             <div className="input-group mb-2">
@@ -382,7 +394,7 @@ const StockManagement = () => {
                                                 </button>
                                             </div>
 
-                                            {/* LIVE IMAGE PREVIEW BOX with Bulletproof Local SVG Fallback */}
+                                            {/* LIVE IMAGE PREVIEW BOX */}
                                             {formData.image_url && (
                                                 <div className="d-flex align-items-center gap-2 p-2 bg-light rounded border mb-2">
                                                     <span className="small fw-semibold text-secondary">Live Preview:</span>
@@ -400,17 +412,17 @@ const StockManagement = () => {
                                                 </div>
                                             )}
                                             
-                                            {/* Web Image Results Grid */}
+                                            {/* Web Image Results Loading & Empty States */}
                                             {isSearchingImages && (
                                                 <div className="text-center py-2 text-muted small">
                                                     <div className="spinner-border spinner-border-sm text-primary me-1" role="status"></div>
-                                                    Searching web for images matching "{formData.item_name}"...
+                                                    Searching Wikimedia Commons for "{formData.item_name}"...
                                                 </div>
                                             )}
 
                                             {searchPerformed && imageResults.length === 0 && !isSearchingImages && (
                                                 <div className="alert alert-warning py-2 small mb-2">
-                                                    <i className="fa fa-exclamation-triangle me-1"></i> No images found on web for "{formData.item_name}". You can manually paste an image URL or source link.
+                                                    <i className="fa fa-exclamation-triangle me-1"></i> No matching images found on Wikimedia Commons for "{formData.item_name}". You can paste an external URL (like an office warehouse direct link) directly above.
                                                 </div>
                                             )}
 
