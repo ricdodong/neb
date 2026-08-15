@@ -185,15 +185,19 @@ const StockManagement = () => {
                     cursor: pointer;
                 }
                 .zoom-hover-img:hover {
-                    transform: scale(3.5);
-                    z-index: 1050;
-                    position: relative;
-                    box-shadow: 0 10px 30px rgba(0,0,0,0.9);
+                    transform: scale(1.05);
                     border-color: #198754 !important;
+                }
+                .fb-post-card {
+                    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+                }
+                .fb-post-card:hover {
+                    border-color: #198754 !important;
+                    box-shadow: 0 4px 20px rgba(25, 135, 84, 0.15) !important;
                 }
             `}</style>
 
-            {/* HEADER */}
+            {/* NAVBAR HEADER */}
             <header className="navbar navbar-dark bg-dark border-bottom border-secondary px-3 py-3 sticky-top shadow-sm" style={{zIndex: 1020}}>
                 <div className="d-flex align-items-center justify-content-between w-100 flex-wrap gap-3">
                     <div className="d-flex align-items-center">
@@ -203,7 +207,7 @@ const StockManagement = () => {
                         <div className="d-none d-md-flex align-items-center bg-black border border-secondary rounded px-2.5 py-1.5">
                             <div className="rounded-circle me-2 bg-success" style={{width: '6px', height: '6px'}}></div>
                             <span className="text-secondary fw-bold" style={{fontSize: '11px'}}>
-                                NODE: <span className="text-white">ACTIVE</span>
+                                FEED NODE: <span className="text-white">ONLINE</span>
                             </span>
                         </div>
                     </div>
@@ -215,7 +219,7 @@ const StockManagement = () => {
                                 ref={searchInputRef}
                                 type="text" 
                                 className="form-control bg-black border-secondary text-white ps-5 w-100" 
-                                placeholder="Search inventory... (Press F1)" 
+                                placeholder="Search inventory feed... (F1)" 
                                 style={{borderRadius: '20px', fontSize: '13px', padding: '8px 12px 8px 36px'}}
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -232,201 +236,106 @@ const StockManagement = () => {
                             onClick={() => setShowModal(true)}
                             style={{fontSize: '13px'}}
                         >
-                            <i className="fas fa-plus-circle me-1.5"></i>ADD STOCK
+                            <i className="fas fa-plus-circle me-1.5"></i>CREATE POST / STOCK
                         </button>
                     </div>
                 </div>
             </header>
 
-            {/* MAIN CONTENT GRID */}
+            {/* MAIN CONTENT CONTAINER */}
             <main className="flex-grow-1 p-3 p-md-4 bg-dark bg-opacity-10">
-                <div className="card bg-dark border border-secondary shadow-lg rounded-3">
-                    <div className="card-header bg-black bg-opacity-50 border-bottom border-secondary py-3 px-4 d-flex justify-content-between align-items-center">
-                        <span className="fw-bold text-success uppercase" style={{fontSize: '13px'}}>
-                            <i className="fas fa-boxes me-2"></i>INVENTORY LEDGER & STOCK LEVELS
-                        </span>
-                        <span className="badge bg-secondary text-white px-2.5 py-1.5" style={{fontSize: '11px'}}>
-                            TOTAL ITEMS: {filteredInventory.length}
-                        </span>
-                    </div>
-                    <div className="card-body p-0">
+                <div className="row justify-content-center">
+                    <div className="col-12 col-xl-10">
+                        
+                        {/* FACEBOOK STYLE COVER / FEED HEADER BANNER */}
+                        <div className="card bg-dark border border-secondary rounded-3 shadow-sm mb-4">
+                            <div className="card-body p-3 p-md-4 d-flex align-items-center justify-content-between flex-wrap gap-3">
+                                <div className="d-flex align-items-center gap-3">
+                                    <div className="rounded-circle bg-black text-success border border-success d-flex align-items-center justify-content-center shadow" style={{width: '50px', height: '50px', fontSize: '20px'}}>
+                                        <i className="fas fa-stream"></i>
+                                    </div>
+                                    <div>
+                                        <h5 className="fw-bold text-white mb-0">INVENTORY FEED & ACTIVITY STREAM</h5>
+                                        <p className="text-secondary small mb-0" style={{fontSize: '11px'}}>Real-time stock tracking, movement history, and item telemetry</p>
+                                    </div>
+                                </div>
+                                <div className="d-flex gap-2">
+                                    <span className="badge bg-black text-white border border-secondary px-3 py-2" style={{fontSize: '11px'}}>
+                                        TOTAL ITEMS: <span className="text-success fw-bold">{filteredInventory.length}</span>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* FEED LOADER / POSTS */}
                         {loading ? (
                             <div className="d-flex justify-content-center align-items-center py-5">
                                 <div className="spinner-border text-success" role="status"></div>
                             </div>
                         ) : filteredInventory.length > 0 ? (
-                            <>
-                                {/* DESKTOP TABLE VIEW */}
-                                <div className="table-responsive mb-0 d-none d-lg-block overflow-visible">
-                                    <table className="table table-dark table-hover table-striped align-middle mb-0 text-nowrap" style={{fontSize: '13px'}}>
-                                        <thead className="table-secondary text-uppercase text-black fw-bold" style={{fontSize: '12px'}}>
-                                            <tr>
-                                                <th className="py-3 ps-4">Item #</th>
-                                                <th className="py-3">Item Name & Description</th>
-                                                <th className="py-3 text-center">Total Stock</th>
-                                                <th className="py-3 text-center">Sold</th>
-                                                <th className="py-3 text-center">Available</th>
-                                                <th className="py-3">Status</th>
-                                                <th className="py-3 text-end pe-4">Action</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {filteredInventory.map(item => {
-                                                const isExpanded = expandedItemId === item.id;
-                                                const itemLedger = ledgers[item.id] || [];
+                            <div className="d-flex flex-column gap-3">
+                                {filteredInventory.map(item => {
+                                    const isExpanded = expandedItemId === item.id;
+                                    const itemLedger = ledgers[item.id] || [];
 
-                                                return (
-                                                    <React.Fragment key={item.id}>
-                                                        <tr className={isExpanded ? 'bg-black' : ''}>
-                                                            <td className="ps-4 text-secondary fw-semibold">#{item.id}</td>
-                                                            <td className="fw-semibold py-3">
-                                                                <div className="d-flex align-items-center">
-                                                                    {item.image_url ? (
-                                                                        <img 
-                                                                            src={item.image_url} 
-                                                                            alt={item.item_name} 
-                                                                            className="rounded me-3 border border-secondary bg-black zoom-hover-img" 
-                                                                            style={{width: '38px', height: '38px', objectFit: 'contain'}} 
-                                                                            onClick={() => setLightboxItem(item)}
-                                                                            title="Click to view details & lightbox"
-                                                                            onError={(e) => { e.target.style.display = 'none'; }}
-                                                                        />
-                                                                    ) : (
-                                                                        <div className="rounded bg-black text-secondary d-flex align-items-center justify-content-center me-3 border border-secondary" style={{width: '38px', height: '38px', fontSize: '12px'}}>
-                                                                            <i className="fas fa-image"></i>
-                                                                        </div>
-                                                                    )}
-                                                                    <div>
-                                                                        <span className="text-white fw-bold d-block fs-6">{item.item_name}</span>
-                                                                        {item.item_description && <small className="text-secondary text-truncate d-block mt-0.5" style={{maxWidth: '300px', fontSize: '11px'}}>{item.item_description}</small>}
-                                                                    </div>
-                                                                </div>
-                                                            </td>
-                                                            <td className="text-center">
-                                                                <span className="badge bg-black text-white border border-secondary px-2.5 py-1.5" style={{fontSize: '12px'}}>{item.total_qty || 0}</span>
-                                                            </td>
-                                                            <td className="text-center">
-                                                                <span className="badge bg-black text-danger border border-secondary px-2.5 py-1.5" style={{fontSize: '12px'}}>{item.soldout_qty || 0}</span>
-                                                            </td>
-                                                            <td className="text-center fw-bold text-success fs-6">
-                                                                {item.available_qty || 0}
-                                                            </td>
-                                                            <td>{renderStatusBadge(item.available_qty)}</td>
-                                                            <td className="text-end pe-4">
-                                                                <button 
-                                                                    className={`btn px-3 py-1.5 fw-bold ${isExpanded ? 'btn-success text-black' : 'btn-outline-success text-success'}`}
-                                                                    style={{fontSize: '12px'}}
-                                                                    onClick={() => toggleLedger(item)}
-                                                                >
-                                                                    <i className={`fas ${isExpanded ? 'fa-chevron-up' : 'fa-history'} me-1.5`}></i> 
-                                                                    {isExpanded ? 'HIDE' : 'LEDGER'}
-                                                                </button>
-                                                            </td>
-                                                        </tr>
-
-                                                        {/* EXPANDABLE INLINE LEDGER */}
-                                                        {isExpanded && (
-                                                            <tr>
-                                                                <td colSpan="7" className="bg-black p-4 border-bottom border-secondary">
-                                                                    <div className="card bg-dark border border-secondary rounded-3 shadow-inner">
-                                                                        <div className="card-header bg-black py-2.5 px-4 d-flex justify-content-between align-items-center border-bottom border-secondary">
-                                                                            <span className="fw-bold text-success uppercase" style={{fontSize: '12px'}}>
-                                                                                <i className="fas fa-list-alt me-2"></i> Movement History // {item.item_name}
-                                                                            </span>
-                                                                            <button className="btn btn-sm btn-link text-secondary p-0" onClick={() => setExpandedItemId(null)}>
-                                                                                <i className="fas fa-times"></i>
-                                                                            </button>
-                                                                        </div>
-                                                                        <div className="card-body p-0">
-                                                                            {ledgerLoading ? (
-                                                                                <div className="text-center py-4 text-secondary">Loading ledger transactions...</div>
-                                                                            ) : itemLedger.length > 0 ? (
-                                                                                <div className="table-responsive mb-0">
-                                                                                    <table className="table table-dark table-striped mb-0 align-middle text-nowrap" style={{fontSize: '12px'}}>
-                                                                                        <thead className="text-secondary uppercase" style={{fontSize: '11px'}}>
-                                                                                            <tr>
-                                                                                                <th className="py-2.5 ps-4">Date & Time</th>
-                                                                                                <th className="py-2.5">Type</th>
-                                                                                                <th className="py-2.5">Qty</th>
-                                                                                                <th className="py-2.5">Source / Customer</th>
-                                                                                                <th className="py-2.5">Address</th>
-                                                                                                <th className="py-2.5">Forward By</th>
-                                                                                                <th className="py-2.5 pe-4">Freight Cost</th>
-                                                                                            </tr>
-                                                                                        </thead>
-                                                                                        <tbody>
-                                                                                            {itemLedger.map((entry, idx) => (
-                                                                                                <tr key={idx}>
-                                                                                                    <td className="ps-4 text-secondary">{new Date(entry.date).toLocaleString()}</td>
-                                                                                                    <td>
-                                                                                                        <span className={`badge px-2.5 py-1 ${['in', 'input'].includes(entry.type.toLowerCase()) ? 'bg-success text-black' : 'bg-danger text-white'}`} style={{fontSize: '10px'}}>
-                                                                                                            {entry.type.toUpperCase()}
-                                                                                                        </span>
-                                                                                                    </td>
-                                                                                                    <td className="fw-bold">
-                                                                                                        <span className={entry.qty > 0 ? 'text-success' : 'text-danger'}>
-                                                                                                            {entry.qty > 0 ? `+${entry.qty}` : entry.qty}
-                                                                                                        </span>
-                                                                                                    </td>
-                                                                                                    <td className="text-white">{entry.source || 'N/A'}</td>
-                                                                                                    <td className="text-secondary fst-italic">{entry.address || 'N/A'}</td>
-                                                                                                    <td className="text-secondary">{entry.forwardBy || entry.courier || 'N/A'}</td>
-                                                                                                    <td className="pe-4 text-success fw-bold">₱{parseFloat(entry.freightCost || entry.shipping_cost || 0).toFixed(2)}</td>
-                                                                                                </tr>
-                                                                                            ))}
-                                                                                        </tbody>
-                                                                                    </table>
-                                                                                </div>
-                                                                            ) : (
-                                                                                <div className="text-center py-4 text-secondary">No ledger entries registered for this item.</div>
-                                                                            )}
-                                                                        </div>
-                                                                    </div>
-                                                                </td>
-                                                            </tr>
-                                                        )}
-                                                    </React.Fragment>
-                                                );
-                                            })}
-                                        </tbody>
-                                    </table>
-                                </div>
-
-                                {/* MOBILE & TABLET CARD VIEW */}
-                                <div className="d-lg-none p-3 d-flex flex-column gap-3">
-                                    {filteredInventory.map(item => {
-                                        const isExpanded = expandedItemId === item.id;
-                                        const itemLedger = ledgers[item.id] || [];
-
-                                        return (
-                                            <div key={item.id} className="card bg-black border border-secondary rounded-3 p-3 text-light" style={{fontSize: '12px'}}>
-                                                <div className="d-flex align-items-center justify-content-between mb-2.5">
-                                                    <div className="d-flex align-items-center gap-2.5">
-                                                        {item.image_url ? (
-                                                            <img 
-                                                                src={item.image_url} 
-                                                                alt={item.item_name} 
-                                                                className="rounded border border-secondary bg-dark zoom-hover-img" 
-                                                                style={{width: '38px', height: '38px', objectFit: 'contain'}} 
-                                                                onClick={() => setLightboxItem(item)}
-                                                                onError={(e) => { e.target.style.display = 'none'; }}
-                                                            />
-                                                        ) : (
-                                                            <div className="rounded bg-dark text-secondary d-flex align-items-center justify-content-center border border-secondary" style={{width: '38px', height: '38px', fontSize: '12px'}}>
-                                                                <i className="fas fa-image"></i>
-                                                            </div>
-                                                        )}
-                                                        <div>
-                                                            <h6 className="mb-0 fw-bold text-white text-truncate" style={{fontSize: '13px', maxWidth: '190px'}}>{item.item_name}</h6>
-                                                            <small className="text-secondary" style={{fontSize: '10px'}}>ID: #{item.id}</small>
+                                    return (
+                                        <div key={item.id} className="card bg-dark border border-secondary rounded-3 shadow-lg fb-post-card">
+                                            
+                                            {/* POST HEADER */}
+                                            <div className="card-header bg-black bg-opacity-50 border-bottom border-secondary p-3 d-flex justify-content-between align-items-center">
+                                                <div className="d-flex align-items-center gap-2.5">
+                                                    {item.image_url ? (
+                                                        <img 
+                                                            src={item.image_url} 
+                                                            alt={item.item_name} 
+                                                            className="rounded-circle border border-secondary bg-black" 
+                                                            style={{width: '42px', height: '42px', objectFit: 'contain'}} 
+                                                            onError={(e) => { e.target.style.display = 'none'; }}
+                                                        />
+                                                    ) : (
+                                                        <div className="rounded-circle bg-black text-secondary d-flex align-items-center justify-content-center border border-secondary" style={{width: '42px', height: '42px', fontSize: '14px'}}>
+                                                            <i className="fas fa-box"></i>
                                                         </div>
+                                                    )}
+                                                    <div>
+                                                        <h6 className="mb-0 fw-bold text-white fs-6">{item.item_name}</h6>
+                                                        <small className="text-secondary" style={{fontSize: '10px'}}>Item ID: #{item.id} • Posted System Entry</small>
                                                     </div>
+                                                </div>
+                                                <div>
                                                     {renderStatusBadge(item.available_qty)}
                                                 </div>
+                                            </div>
 
-                                                <div className="row g-2 text-center bg-dark rounded-2 p-2 my-2" style={{fontSize: '11px'}}>
+                                            {/* POST BODY */}
+                                            <div className="card-body p-3">
+                                                {item.item_description && (
+                                                    <p className="text-light mb-3" style={{fontSize: '12px', lineHeight: '1.5'}}>
+                                                        {item.item_description}
+                                                    </p>
+                                                )}
+
+                                                {/* ITEM IMAGE EMBED */}
+                                                {item.image_url && (
+                                                    <div 
+                                                        className="bg-black p-3 rounded border border-secondary mb-3 text-center overflow-hidden position-relative zoom-hover-img"
+                                                        style={{maxHeight: '320px', cursor: 'pointer'}}
+                                                        onClick={() => setLightboxItem(item)}
+                                                        title="Click to expand lightbox"
+                                                    >
+                                                        <img 
+                                                            src={item.image_url} 
+                                                            alt={item.item_name} 
+                                                            className="img-fluid rounded" 
+                                                            style={{maxHeight: '280px', objectFit: 'contain'}} 
+                                                        />
+                                                    </div>
+                                                )}
+
+                                                {/* METRICS / STATS COUNTER BAR */}
+                                                <div className="row g-2 text-center bg-black p-2.5 rounded border border-secondary" style={{fontSize: '11px'}}>
                                                     <div className="col-4 border-end border-secondary">
-                                                        <span className="text-secondary d-block" style={{fontSize: '10px'}}>TOTAL</span>
+                                                        <span className="text-secondary d-block" style={{fontSize: '10px'}}>TOTAL STOCK</span>
                                                         <span className="fw-bold text-white fs-6">{item.total_qty || 0}</span>
                                                     </div>
                                                     <div className="col-4 border-end border-secondary">
@@ -434,62 +343,86 @@ const StockManagement = () => {
                                                         <span className="fw-bold text-danger fs-6">{item.soldout_qty || 0}</span>
                                                     </div>
                                                     <div className="col-4">
-                                                        <span className="text-secondary d-block" style={{fontSize: '10px'}}>AVAILABLE</span>
+                                                        <span className="text-secondary d-block" style={{fontSize: '10px'}}>AVAILABLE QTY</span>
                                                         <span className="fw-bold text-success fs-6">{item.available_qty || 0}</span>
                                                     </div>
                                                 </div>
+                                            </div>
+
+                                            {/* POST ACTION FOOTER */}
+                                            <div className="card-footer bg-black bg-opacity-40 border-top border-secondary p-2 d-flex justify-content-between align-items-center">
+                                                <button 
+                                                    className="btn btn-dark text-secondary btn-sm px-3 border border-secondary"
+                                                    style={{fontSize: '11px'}}
+                                                    onClick={() => setLightboxItem(item)}
+                                                >
+                                                    <i className="fas fa-search-plus me-1.5 text-success"></i> Inspect Lightbox
+                                                </button>
 
                                                 <button 
-                                                    className={`btn w-100 py-2 fw-bold ${isExpanded ? 'btn-success text-black' : 'btn-outline-success text-success'}`}
-                                                    style={{fontSize: '11px'}}
+                                                    className={`btn btn-sm px-4 py-1.5 fw-bold ${isExpanded ? 'btn-success text-black' : 'btn-outline-success text-success'}`}
+                                                    style={{fontSize: '12px'}}
                                                     onClick={() => toggleLedger(item)}
                                                 >
                                                     <i className={`fas ${isExpanded ? 'fa-chevron-up' : 'fa-history'} me-1.5`}></i> 
-                                                    {isExpanded ? 'HIDE LEDGER' : 'VIEW LEDGER MOVEMENT'}
+                                                    {isExpanded ? 'Hide Ledger Stream' : 'View Ledger Movement'}
                                                 </button>
-
-                                                {/* MOBILE EXPANDABLE LEDGER ACCORDION */}
-                                                {isExpanded && (
-                                                    <div className="mt-3 pt-3 border-top border-secondary bg-dark p-2.5 rounded-2 animate-fade-in">
-                                                        <span className="fw-bold text-success d-block mb-2" style={{fontSize: '11px'}}>
-                                                            <i className="fas fa-list-alt me-1.5"></i> LEDGER HISTORY:
-                                                        </span>
-                                                        {ledgerLoading ? (
-                                                            <div className="text-center py-3 text-secondary">Loading history...</div>
-                                                        ) : itemLedger.length > 0 ? (
-                                                            <div className="d-flex flex-column gap-2">
-                                                                {itemLedger.map((entry, idx) => (
-                                                                    <div key={idx} className="bg-black border border-secondary rounded-2 p-2 text-light" style={{fontSize: '11px'}}>
-                                                                        <div className="d-flex justify-content-between text-secondary mb-1" style={{fontSize: '10px'}}>
-                                                                            <span>{new Date(entry.date).toLocaleString()}</span>
-                                                                            <span className={`badge ${['in', 'input'].includes(entry.type.toLowerCase()) ? 'bg-success text-black' : 'bg-danger text-white'}`} style={{fontSize: '9px'}}>
-                                                                                {entry.type.toUpperCase()}
-                                                                            </span>
-                                                                        </div>
-                                                                        <div className="fw-bold text-white mb-1">
-                                                                            Qty: <span className={entry.qty > 0 ? 'text-success' : 'text-danger'}>{entry.qty > 0 ? `+${entry.qty}` : entry.qty}</span>
-                                                                        </div>
-                                                                        <div className="text-secondary mb-0.5">Source: <span className="text-white">{entry.source || 'N/A'}</span></div>
-                                                                        <div className="text-secondary fst-italic" style={{fontSize: '10px'}}>{entry.address || 'N/A'}</div>
-                                                                    </div>
-                                                                ))}
-                                                            </div>
-                                                        ) : (
-                                                            <div className="text-center py-3 text-secondary">No ledger movements registered.</div>
-                                                        )}
-                                                    </div>
-                                                )}
                                             </div>
-                                        );
-                                    })}
-                                </div>
-                            </>
+
+                                            {/* EXPANDABLE LEDGER / ACTIVITY THREAD */}
+                                            {isExpanded && (
+                                                <div className="card-footer bg-black p-3 border-top border-secondary animate-fade-in">
+                                                    <div className="d-flex justify-content-between align-items-center mb-2.5">
+                                                        <span className="fw-bold text-success uppercase" style={{fontSize: '11px'}}>
+                                                            <i className="fas fa-comments me-2"></i>Movement History & Audit Thread
+                                                        </span>
+                                                        <button className="btn btn-sm btn-link text-secondary p-0" onClick={() => setExpandedItemId(null)}>
+                                                            <i className="fas fa-times"></i>
+                                                        </button>
+                                                    </div>
+
+                                                    {ledgerLoading ? (
+                                                        <div className="text-center py-3 text-secondary" style={{fontSize: '11px'}}>Loading movement thread...</div>
+                                                    ) : itemLedger.length > 0 ? (
+                                                        <div className="d-flex flex-column gap-2">
+                                                            {itemLedger.map((entry, idx) => (
+                                                                <div key={idx} className="bg-dark border border-secondary rounded-3 p-2.5" style={{fontSize: '11px'}}>
+                                                                    <div className="d-flex justify-content-between align-items-center text-secondary mb-1" style={{fontSize: '10px'}}>
+                                                                        <span><i className="fas fa-clock me-1"></i>{new Date(entry.date).toLocaleString()}</span>
+                                                                        <span className={`badge px-2 py-0.5 ${['in', 'input'].includes(entry.type.toLowerCase()) ? 'bg-success text-black' : 'bg-danger text-white'}`} style={{fontSize: '9px'}}>
+                                                                            {entry.type.toUpperCase()}
+                                                                        </span>
+                                                                    </div>
+                                                                    <div className="d-flex justify-content-between align-items-center">
+                                                                        <div>
+                                                                            <span className="text-white fw-bold">Qty: </span>
+                                                                            <span className={`fw-bold ${entry.qty > 0 ? 'text-success' : 'text-danger'}`}>{entry.qty > 0 ? `+${entry.qty}` : entry.qty}</span>
+                                                                            <span className="text-secondary ms-3">Source: <span className="text-white">{entry.source || 'N/A'}</span></span>
+                                                                        </div>
+                                                                        <div className="text-success fw-bold">
+                                                                            ₱{parseFloat(entry.freightCost || entry.shipping_cost || 0).toFixed(2)}
+                                                                        </div>
+                                                                    </div>
+                                                                    {entry.address && <div className="text-secondary fst-italic mt-1" style={{fontSize: '10px'}}>Addr: {entry.address}</div>}
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    ) : (
+                                                        <div className="text-center py-3 text-secondary" style={{fontSize: '11px'}}>No movement history threads found.</div>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
                         ) : (
-                            <div className="text-center py-5 text-secondary">
+                            <div className="text-center py-5 text-secondary card bg-dark border border-secondary p-5 rounded-3">
                                 <i className="fas fa-ghost fs-1 mb-3"></i>
-                                <p className="mb-0">NO INVENTORY RECORDS MATCHING "{searchQuery}"</p>
+                                <p className="mb-0">NO INVENTORY POSTS MATCHING "{searchQuery}"</p>
                             </div>
                         )}
+
                     </div>
                 </div>
             </main>
