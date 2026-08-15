@@ -191,7 +191,7 @@ const StockManagement = () => {
             `}</style>
 
             {/* HEADER */}
-            <header className="navbar navbar-dark bg-dark border-bottom border-secondary px-3 py-3 sticky-top shadow-sm" style={{zIndex: 1060}}>
+            <header className="navbar navbar-dark bg-dark border-bottom border-secondary px-3 py-3 sticky-top shadow-sm" style={{zIndex: 1020}}>
                 <div className="d-flex align-items-center justify-content-between w-100 flex-wrap gap-3">
                     <div className="d-flex align-items-center">
                         <div className="rounded-circle me-2 bg-success pulse-dot" style={{width: '10px', height: '10px'}}></div>
