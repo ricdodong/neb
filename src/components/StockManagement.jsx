@@ -274,7 +274,7 @@ const StockManagement = () => {
                                                     </td>
                                                     <td className="pe-4 text-muted fst-italic">{entry.address}</td>
                                                     <td className="fa fa-truck fw-bold">{entry.forwardBy}</td>
-                                                    <td className="fw-bold">P{entry.freightCost.toFixed(2)}</td>
+                                                    <td className="fw-bold">P{entry.freightCost}</td>
                                                 </tr>
                                             )) : (
                                                 <tr><td colSpan="5" className="text-center py-4 text-muted">No movement history found for this item.</td></tr>
