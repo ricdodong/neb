@@ -252,6 +252,8 @@ const StockManagement = () => {
                                                 <th>Qty Change</th>
                                                 <th>Source/Customer</th>
                                                 <th className="pe-4">Address</th>
+                                                <th>Forward By</th>
+                                                <th>Freight Cost</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -267,10 +269,12 @@ const StockManagement = () => {
                                                         {entry.qty > 0 ? `+${entry.qty}` : entry.qty}
                                                     </td>
                                                     <td>
-                                                        <i className={`fa ${entry.qty > 0 ? 'fa-truck' : 'fa-shopping-cart'} me-2 opacity-50`}></i>
+                                                        <i className={`fa ${entry.qty > 0 ? 'fa-user' : 'fa-shopping-cart'} me-2 opacity-50`}></i>
                                                         {entry.source}
                                                     </td>
                                                     <td className="pe-4 text-muted fst-italic">{entry.address}</td>
+                                                    <td className="fa fa-truck fw-bold">{entry.forwardBy}</td>
+                                                    <td className="fw-bold">P{entry.freightCost.toFixed(2)}</td>
                                                 </tr>
                                             )) : (
                                                 <tr><td colSpan="5" className="text-center py-4 text-muted">No movement history found for this item.</td></tr>
