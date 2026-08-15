@@ -70,7 +70,7 @@ const StockManagement = () => {
     const startCamera = async () => {
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ 
-                video: { facingMode: 'environment' } // Uses back camera on mobile phones
+                video: { facingMode: 'environment' } 
             });
             if (videoRef.current) {
                 videoRef.current.srcObject = stream;
@@ -97,13 +97,14 @@ const StockManagement = () => {
     };
 
     const startScanningLoop = () => {
-        // Check if browser supports native BarcodeDetector API (supported on Chrome Android & modern mobile browsers)
-        if (!('BarcodeDetector' in window)) {
+        // Check if browser supports native BarcodeDetector API (safely accessed via window)
+        const WindowBarcodeDetector = window.BarcodeDetector;
+        if (!WindowBarcodeDetector) {
             alert("BarcodeDetector API is not fully supported on this browser. Please use Chrome on Android/iOS or input manually.");
             return;
         }
 
-        const barcodeDetector = new BarcodeDetector({ 
+        const barcodeDetector = new WindowBarcodeDetector({ 
             formats: ['code_128', 'code_39', 'ean_13', 'qr_code', 'upc_a', 'data_matrix'] 
         });
 
@@ -123,7 +124,6 @@ const StockManagement = () => {
     };
 
     const handleSuccessfulScan = (code) => {
-        // Vibrate phone on successful scan if available
         if (navigator.vibrate) {
             navigator.vibrate(150);
         }
@@ -131,8 +131,6 @@ const StockManagement = () => {
         setFormData(prev => {
             const currentList = prev.serial_numbers.trim();
             const updatedSerials = currentList ? `${currentList}\n${code}` : code;
-            
-            // Auto increment quantity matching the number of scanned serials
             const newQty = updatedSerials.split(/[\n,]+/).filter(s => s.trim().length > 0).length;
 
             return {
@@ -141,8 +139,6 @@ const StockManagement = () => {
                 quantity: newQty.toString()
             };
         });
-
-        // Brief flash or sound feedback can go here
     };
 
     const fetchInventory = async () => {
