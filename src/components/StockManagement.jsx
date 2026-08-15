@@ -19,7 +19,7 @@ const StockManagement = () => {
         description: '',
         quantity: '',
         ws_price: '',
-        srp_price: '',
+        srp_amount: '',
         forward_by: '',
         freight_cost: '',
         image_url: '' 
@@ -75,7 +75,7 @@ const StockManagement = () => {
     const handleItemSelectChange = (e) => {
         const selectedId = e.target.value;
         if (!selectedId) {
-            setFormData({ ...formData, item_name: '', description: '', srp_price: '', image_url: '' });
+            setFormData({ ...formData, item_name: '', description: '', srp_amount: '', image_url: '' });
             return;
         }
 
@@ -85,7 +85,7 @@ const StockManagement = () => {
                 ...formData,
                 item_name: found.item_name || '',
                 description: found.item_description || '',
-                srp_price: found.srp_amount || '',
+                srp_amount: found.srp_amount || '',
                 image_url: found.image_url || ''
             });
         }
@@ -113,7 +113,7 @@ const StockManagement = () => {
                 description: '',
                 quantity: '',
                 ws_price: '',
-                srp_price: '',
+                srp_amount: '',
                 forward_by: '',
                 freight_cost: '',
                 image_url: ''
