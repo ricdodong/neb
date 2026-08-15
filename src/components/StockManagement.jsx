@@ -14,6 +14,7 @@ const StockManagement = () => {
     // Image Search States
     const [imageResults, setImageResults] = useState([]);
     const [isSearchingImages, setIsSearchingImages] = useState(false);
+    const [searchPerformed, setSearchPerformed] = useState(false);
 
     // Modal Form State
     const [showModal, setShowModal] = useState(false);
@@ -75,7 +76,7 @@ const StockManagement = () => {
         setFormData({ ...formData, [name]: value });
     };
 
-    // Handle Item Selection from existing inventory list (Auto-fills name, description, srp, and image if chosen)
+    // Handle Item Selection from existing inventory list
     const handleItemSelectChange = (e) => {
         const selectedId = e.target.value;
         if (!selectedId) {
@@ -95,11 +96,12 @@ const StockManagement = () => {
         }
     };
 
-    // Wikimedia Commons API image fetcher attached directly to the Picture field
+    // Wikimedia Commons API image fetcher
     const searchWebImages = async (query) => {
         if (!query) return;
         setIsSearchingImages(true);
         setImageResults([]);
+        setSearchPerformed(false);
         
         try {
             const res = await axios.get(
@@ -118,6 +120,7 @@ const StockManagement = () => {
             console.error("Image search failed", err);
         } finally {
             setIsSearchingImages(false);
+            setSearchPerformed(true);
         }
     };
 
@@ -142,6 +145,7 @@ const StockManagement = () => {
                 image_url: ''
             });
             setImageResults([]);
+            setSearchPerformed(false);
 
             // Refresh Inventory Grid
             fetchInventory();
@@ -333,22 +337,20 @@ const StockManagement = () => {
                                         {/* Item Name (Auto-select from inventory OR custom type) */}
                                         <div className="col-md-6">
                                             <label className="form-label fw-semibold">Item Name</label>
-                                            <div className="d-flex gap-2">
-                                                <select 
-                                                    className="form-select" 
-                                                    onChange={handleItemSelectChange}
-                                                    defaultValue=""
-                                                >
-                                                    <option value="">-- Select Existing Item or Type Below --</option>
-                                                    {inventory.map(inv => (
-                                                        <option key={inv.id} value={inv.id}>{inv.item_name}</option>
-                                                    ))}
-                                                </select>
-                                            </div>
+                                            <select 
+                                                className="form-select mb-2" 
+                                                onChange={handleItemSelectChange}
+                                                defaultValue=""
+                                            >
+                                                <option value="">-- Select Existing Item or Type Below --</option>
+                                                {inventory.map(inv => (
+                                                    <option key={inv.id} value={inv.id}>{inv.item_name}</option>
+                                                ))}
+                                            </select>
                                             <input 
                                                 type="text" 
                                                 name="item_name" 
-                                                className="form-control mt-2" 
+                                                className="form-control" 
                                                 placeholder="Or type new item name" 
                                                 value={formData.item_name} 
                                                 onChange={handleInputChange} 
@@ -356,7 +358,7 @@ const StockManagement = () => {
                                             />
                                         </div>
 
-                                        {/* Picture Field with Integrated Web Image Search */}
+                                        {/* Picture Field with Integrated Web Image Search & Live Preview */}
                                         <div className="col-12 mt-3">
                                             <label className="form-label fw-semibold text-primary">Picture (Image URL)</label>
                                             <div className="input-group mb-2">
@@ -379,8 +381,36 @@ const StockManagement = () => {
                                                     <i className={`fa ${isSearchingImages ? 'fa-spinner fa-spin' : 'fa-search'}`}></i> Search Web
                                                 </button>
                                             </div>
+
+                                            {/* LIVE IMAGE PREVIEW BOX: Know immediately if a link/image is valid */}
+                                            {formData.image_url && (
+                                                <div className="d-flex align-items-center gap-2 p-2 bg-light rounded border mb-2">
+                                                    <span className="small fw-semibold text-secondary">Live Preview:</span>
+                                                    <img 
+                                                        src={formData.image_url} 
+                                                        alt="Preview" 
+                                                        className="border bg-white rounded" 
+                                                        style={{ height: '40px', width: '40px', objectFit: 'contain' }}
+                                                        onError={(e) => { e.target.src = 'https://via.placeholder.com/40?text=Invalid'; }}
+                                                    />
+                                                    <span className="text-success small"><i className="fa fa-check-circle"></i> Image link active</span>
+                                                </div>
+                                            )}
                                             
                                             {/* Web Image Results Grid */}
+                                            {isSearchingImages && (
+                                                <div className="text-center py-2 text-muted small">
+                                                    <div className="spinner-border spinner-border-sm text-primary me-1" role="status"></div>
+                                                    Searching web for images matching "{formData.item_name}"...
+                                                </div>
+                                            )}
+
+                                            {searchPerformed && imageResults.length === 0 && !isSearchingImages && (
+                                                <div className="alert alert-warning py-2 small mb-2">
+                                                    <i className="fa fa-exclamation-triangle me-1"></i> No images found on web for "{formData.item_name}". You can manually paste an image URL or source link.
+                                                </div>
+                                            )}
+
                                             {imageResults.length > 0 && (
                                                 <div className="row g-2 mt-2 bg-light p-2 rounded border" style={{ maxHeight: '220px', overflowY: 'auto' }}>
                                                     <span className="small text-muted mb-1 d-block"><i className="fa fa-info-circle me-1"></i> Click an image thumbnail to set it as the picture link:</span>
