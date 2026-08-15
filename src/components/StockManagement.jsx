@@ -15,7 +15,7 @@ const StockManagement = () => {
     const [imageResults, setImageResults] = useState([]);
     const [isSearchingImages, setIsSearchingImages] = useState(false);
 
-    // Modal Form State (Updated to match /api/suppliers schema)
+    // Modal Form State
     const [showModal, setShowModal] = useState(false);
     const [formData, setFormData] = useState({
         supplier_id: '',
@@ -75,7 +75,27 @@ const StockManagement = () => {
         setFormData({ ...formData, [name]: value });
     };
 
-    // Wikimedia Commons API image fetcher matching your schema output
+    // Handle Item Selection from existing inventory list (Auto-fills name, description, srp, and image if chosen)
+    const handleItemSelectChange = (e) => {
+        const selectedId = e.target.value;
+        if (!selectedId) {
+            setFormData({ ...formData, item_name: '', description: '', srp_price: '', image_url: '' });
+            return;
+        }
+
+        const found = inventory.find(i => i.id.toString() === selectedId);
+        if (found) {
+            setFormData({
+                ...formData,
+                item_name: found.item_name || '',
+                description: found.item_description || '',
+                srp_price: found.srp_amount || '',
+                image_url: found.image_url || ''
+            });
+        }
+    };
+
+    // Wikimedia Commons API image fetcher attached directly to the Picture field
     const searchWebImages = async (query) => {
         if (!query) return;
         setIsSearchingImages(true);
@@ -299,6 +319,7 @@ const StockManagement = () => {
                                 <div className="modal-body p-4">
                                     <div className="row g-3">
                                         
+                                        {/* Supplier Select */}
                                         <div className="col-md-6">
                                             <label className="form-label fw-semibold">Supplier Name</label>
                                             <select name="supplier_id" className="form-select" value={formData.supplier_id} onChange={handleInputChange} required>
@@ -309,48 +330,60 @@ const StockManagement = () => {
                                             </select>
                                         </div>
                                         
+                                        {/* Item Name (Auto-select from inventory OR custom type) */}
                                         <div className="col-md-6">
                                             <label className="form-label fw-semibold">Item Name</label>
-                                            <div className="input-group">
-                                                <input 
-                                                    type="text" 
-                                                    name="item_name" 
-                                                    className="form-control" 
-                                                    placeholder="Enter item name" 
-                                                    value={formData.item_name} 
-                                                    onChange={handleInputChange} 
-                                                    required 
-                                                />
-                                                <button 
-                                                    type="button" 
-                                                    className="btn btn-outline-primary"
-                                                    onClick={() => searchWebImages(formData.item_name)}
-                                                    disabled={!formData.item_name || isSearchingImages}
-                                                    title="Find Image on Web"
+                                            <div className="d-flex gap-2">
+                                                <select 
+                                                    className="form-select" 
+                                                    onChange={handleItemSelectChange}
+                                                    defaultValue=""
                                                 >
-                                                    <i className={`fa ${isSearchingImages ? 'fa-spinner fa-spin' : 'fa-search'}`}></i>
-                                                </button>
+                                                    <option value="">-- Select Existing Item or Type Below --</option>
+                                                    {inventory.map(inv => (
+                                                        <option key={inv.id} value={inv.id}>{inv.item_name}</option>
+                                                    ))}
+                                                </select>
                                             </div>
+                                            <input 
+                                                type="text" 
+                                                name="item_name" 
+                                                className="form-control mt-2" 
+                                                placeholder="Or type new item name" 
+                                                value={formData.item_name} 
+                                                onChange={handleInputChange} 
+                                                required 
+                                            />
                                         </div>
 
+                                        {/* Picture Field with Integrated Web Image Search */}
                                         <div className="col-12 mt-3">
-                                            <label className="form-label fw-semibold text-primary">Item Image Selection</label>
+                                            <label className="form-label fw-semibold text-primary">Picture (Image URL)</label>
                                             <div className="input-group mb-2">
                                                 <span className="input-group-text"><i className="fa fa-link"></i></span>
                                                 <input 
                                                     type="text" 
                                                     name="image_url" 
                                                     className="form-control" 
-                                                    placeholder="Search item name above or paste image URL manually" 
+                                                    placeholder="Paste URL or search web using item name" 
                                                     value={formData.image_url} 
                                                     onChange={handleInputChange} 
                                                 />
+                                                <button 
+                                                    type="button" 
+                                                    className="btn btn-outline-primary"
+                                                    onClick={() => searchWebImages(formData.item_name)}
+                                                    disabled={!formData.item_name || isSearchingImages}
+                                                    title="Search Web Images"
+                                                >
+                                                    <i className={`fa ${isSearchingImages ? 'fa-spinner fa-spin' : 'fa-search'}`}></i> Search Web
+                                                </button>
                                             </div>
                                             
                                             {/* Web Image Results Grid */}
                                             {imageResults.length > 0 && (
                                                 <div className="row g-2 mt-2 bg-light p-2 rounded border" style={{ maxHeight: '220px', overflowY: 'auto' }}>
-                                                    <span className="small text-muted mb-1 d-block"><i className="fa fa-info-circle me-1"></i> Click an image to assign it:</span>
+                                                    <span className="small text-muted mb-1 d-block"><i className="fa fa-info-circle me-1"></i> Click an image thumbnail to set it as the picture link:</span>
                                                     {imageResults.map((url, idx) => (
                                                         <div className="col-3" key={idx}>
                                                             <div 
