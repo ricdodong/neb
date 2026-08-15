@@ -181,11 +181,14 @@ const StockManagement = () => {
             {/* INJECT HOVER ZOOM STYLES */}
             <style>{`
                 .zoom-hover-img {
-                    transition: transform 0.2s ease, border-color 0.2s ease;
+                    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.2s ease;
                     cursor: pointer;
                 }
                 .zoom-hover-img:hover {
-                    transform: scale(1.15);
+                    transform: scale(3.5);
+                    z-index: 1050;
+                    position: relative;
+                    box-shadow: 0 10px 30px rgba(0,0,0,0.9);
                     border-color: #198754 !important;
                 }
             `}</style>
@@ -254,14 +257,14 @@ const StockManagement = () => {
                         ) : filteredInventory.length > 0 ? (
                             <>
                                 {/* DESKTOP TABLE VIEW */}
-                                <div className="table-responsive mb-0 d-none d-lg-block">
+                                <div className="table-responsive mb-0 d-none d-lg-block overflow-visible">
                                     <table className="table table-dark table-hover table-striped align-middle mb-0 text-nowrap" style={{fontSize: '13px'}}>
                                         <thead className="table-secondary text-uppercase text-black fw-bold" style={{fontSize: '12px'}}>
                                             <tr>
                                                 <th className="py-3 ps-4">Item #</th>
                                                 <th className="py-3">Item Name & Description</th>
                                                 <th className="py-3 text-center">Total Stock</th>
-                                                <th className="py-3 text-center">Sold Out</th>
+                                                <th className="py-3 text-center">Sold</th>
                                                 <th className="py-3 text-center">Available</th>
                                                 <th className="py-3">Status</th>
                                                 <th className="py-3 text-end pe-4">Action</th>
@@ -517,7 +520,7 @@ const StockManagement = () => {
                                 <div className="row g-2 text-start bg-black p-3 rounded border border-secondary">
                                     <div className="col-5 text-secondary">TOTAL STOCK:</div>
                                     <div className="col-7 text-white fw-bold">{lightboxItem.total_qty || 0}</div>
-                                    <div className="col-5 text-secondary">SOLD OUT:</div>
+                                    <div className="col-5 text-secondary">SOLD:</div>
                                     <div className="col-7 text-danger fw-bold">{lightboxItem.soldout_qty || 0}</div>
                                     <div className="col-5 text-secondary">AVAILABLE QTY:</div>
                                     <div className="col-7 text-success fw-bold">{lightboxItem.available_qty || 0}</div>
