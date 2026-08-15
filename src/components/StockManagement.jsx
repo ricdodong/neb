@@ -156,14 +156,13 @@ const StockManagement = () => {
 
     const renderStatusBadge = (qty) => {
         if (qty <= 0) {
-            return <span className="badge rounded-pill bg-danger-subtle text-danger px-3 py-1">OUT OF STOCK</span>;
+            return <span className="badge rounded-pill bg-danger text-black fw-bold px-2 py-1" style={{fontSize: '10px'}}>OUT OF STOCK</span>;
         } else if (qty <= 2) {
-            return <span className="badge rounded-pill bg-warning-subtle text-warning-emphasis px-3 py-1">LOW STOCK</span>;
+            return <span className="badge rounded-pill bg-warning text-black fw-bold px-2 py-1" style={{fontSize: '10px'}}>LOW STOCK</span>;
         }
-        return <span className="badge rounded-pill bg-success-subtle text-success px-3 py-1">HEALTHY</span>;
+        return <span className="badge rounded-pill bg-success text-black fw-bold px-2 py-1" style={{fontSize: '10px'}}>HEALTHY</span>;
     };
 
-    // Filter Inventory based on Search Query
     const filteredInventory = inventory.filter(item => {
         const query = searchQuery.toLowerCase();
         const itemName = (item.item_name || '').toLowerCase();
@@ -174,337 +173,229 @@ const StockManagement = () => {
     });
 
     return (
-        <div className="container-fluid px-2 py-3 animate-fade-in">
-            <div className="row g-3">
-                {/* Master Inventory List */}
-                <div className="col-12">
-                    <div className="card shadow-sm border-0 rounded-3 mb-4">
-                        <div className="card-header bg-white border-bottom py-3 px-3 px-md-4">
-                            <div className="row align-items-center g-3">
-                                {/* Title and Subtitle */}
-                                <div className="col-12 col-lg-4">
-                                    <h5 className="mb-1 fw-bold text-dark">
-                                        <i className="fa fa-boxes text-primary me-2"></i>Current Stock Levels
-                                    </h5>
-                                    <p className="text-muted small mb-0">Manage master inventory, track quantities, and review on-hand stock status.</p>
-                                </div>
-
-                                {/* Professional Search Bar */}
-                                <div className="col-12 col-lg-5">
-                                    <div className="input-group shadow-sm">
-                                        <span className="input-group-text bg-light border-end-0 text-muted ps-3">
-                                            <i className="fa fa-search"></i>
-                                        </span>
-                                        <input 
-                                            ref={searchInputRef}
-                                            type="text" 
-                                            className="form-control border-start-0 ps-0 bg-light" 
-                                            placeholder="Search by item name, description... (Press F1)" 
-                                            value={searchQuery}
-                                            onChange={(e) => setSearchQuery(e.target.value)}
-                                        />
-                                        {searchQuery && (
-                                            <button 
-                                                className="btn btn-light border border-start-0 text-muted" 
-                                                type="button"
-                                                onClick={() => setSearchQuery('')}
-                                                title="Clear search"
-                                            >
-                                                <i className="fa fa-times"></i>
-                                            </button>
-                                        )}
-                                        <span className="input-group-text bg-light text-muted small d-none d-md-flex">
-                                            <kbd className="bg-white text-dark border px-1 rounded shadow-sm">F1</kbd>
-                                        </span>
-                                    </div>
-                                </div>
-
-                                {/* Add Stock Action Button */}
-                                <div className="col-12 col-lg-3 text-lg-end">
-                                    <button 
-                                        className="btn btn-primary shadow-sm px-3 py-2 w-100 w-lg-auto"
-                                        onClick={() => setShowModal(true)}
-                                    >
-                                        <i className="fa fa-plus-circle me-1"></i> Add / Entry Stocks
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
+        <div className="container-fluid min-vh-100 bg-black text-light p-0 d-flex flex-column font-monospace overflow-hidden position-relative">
+            
+            {/* HEADER */}
+            <header className="navbar navbar-dark bg-dark border-bottom border-secondary px-3 py-2 sticky-top shadow-sm" style={{zIndex: 1060}}>
+                <div className="d-flex align-items-center flex-wrap w-100 justify-content-between">
+                    <div className="d-flex align-items-center">
+                        <div className="rounded-circle me-2 bg-success pulse-dot" style={{width: '10px', height: '10px'}}></div>
+                        <h5 className="mb-0 fw-bold tracking-tighter me-3">JADE<span className="text-success">STOCK</span></h5>
                         
-                        <div className="card-body p-0">
-                            {loading ? (
-                                <div className="text-center py-5 text-muted">
-                                    <div className="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
-                                    Loading inventory levels...
-                                </div>
-                            ) : filteredInventory.length > 0 ? (
-                                <>
-                                    {/* Desktop Table View */}
-                                    <div className="table-responsive d-none d-lg-block">
-                                        <table className="table table-hover align-middle mb-0 text-nowrap">
-                                            <thead className="table-light text-uppercase fs-7 text-secondary fw-bold">
-                                                <tr>
-                                                    <th className="py-3 ps-4">Item #</th>
-                                                    <th className="py-3">Item Name</th>
-                                                    <th className="py-3 text-center">Total Stocks</th>
-                                                    <th className="py-3 text-center">Sold</th>
-                                                    <th className="py-3 text-center">Available</th>
-                                                    <th className="py-3">Status</th>
-                                                    <th className="py-3 text-end pe-4">Action</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {filteredInventory.map(item => {
-                                                    const isExpanded = expandedItemId === item.id;
-                                                    const itemLedger = ledgers[item.id] || [];
+                        <div className="d-none d-md-flex align-items-center bg-black border border-secondary rounded px-2 py-1">
+                            <div className="rounded-circle me-2 bg-success" style={{width: '6px', height: '6px'}}></div>
+                            <span className="text-secondary fw-bold" style={{fontSize: '10px'}}>
+                                NODE: <span className="text-white">STOCK MANAGEMENT PORTAL</span>
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div className="d-flex gap-2 align-items-center mt-2 mt-md-0 flex-grow-1 justify-content-end">
+                        <div className="position-relative flex-grow-1 flex-md-grow-0" style={{ maxWidth: '300px' }}>
+                            <i className="fas fa-search position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+                            <input 
+                                ref={searchInputRef}
+                                type="text" 
+                                className="form-control form-control-sm bg-black border-secondary text-white ps-5 w-100" 
+                                placeholder="Search inventory... (Press F1)" 
+                                style={{borderRadius: '20px', fontSize: '12px'}}
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                            />
+                        </div>
+                        {searchQuery && (
+                            <button className="btn btn-sm btn-dark border-secondary text-secondary px-2" onClick={() => setSearchQuery('')}>
+                                <i className="fas fa-times"></i>
+                            </button>
+                        )}
 
-                                                    return (
-                                                        <React.Fragment key={item.id}>
-                                                            <tr className={isExpanded ? 'table-active' : ''}>
-                                                                <td className="ps-4 text-muted fw-semibold">#{item.id}</td>
-                                                                <td className="fw-semibold">
-                                                                    <div className="d-flex align-items-center">
-                                                                        {item.image_url ? (
-                                                                            <img 
-                                                                                src={item.image_url} 
-                                                                                alt={item.item_name} 
-                                                                                className="rounded-circle me-3 border bg-light shadow-sm" 
-                                                                                style={{width: '38px', height: '38px', objectFit: 'contain'}} 
-                                                                                onError={(e) => { e.target.style.display = 'none'; }}
-                                                                            />
-                                                                        ) : (
-                                                                            <div className="rounded-circle bg-light text-secondary d-flex align-items-center justify-content-center me-3 border shadow-sm" style={{width: '38px', height: '38px', fontSize: '14px'}}>
-                                                                                <i className="fa fa-image"></i>
-                                                                            </div>
-                                                                        )}
-                                                                        <div>
-                                                                            <span className="text-dark fw-bold d-block">{item.item_name}</span>
-                                                                            {item.item_description && <small className="text-muted text-truncate d-block" style={{maxWidth: '250px'}}>{item.item_description}</small>}
-                                                                        </div>
-                                                                    </div>
-                                                                </td>
-                                                                <td className="text-center">
-                                                                    <span className="badge bg-light text-dark border px-3 py-2 fw-bold">{item.total_qty || 0}</span>
-                                                                </td>
-                                                                <td className="text-center">
-                                                                    <span className="badge bg-light text-danger border px-3 py-2 fw-bold">{item.soldout_qty || 0}</span>
-                                                                </td>
-                                                                <td className="text-center">
-                                                                    <span className={`fw-bold fs-6 ${item.available_qty === 0 ? 'text-danger' : 'text-primary'}`}>
-                                                                        {item.available_qty || 0}
-                                                                    </span>
-                                                                </td>
-                                                                <td>{renderStatusBadge(item.available_qty)}</td>
-                                                                <td className="text-end pe-4">
-                                                                    <button 
-                                                                        className={`btn btn-sm shadow-sm px-3 ${isExpanded ? 'btn-primary' : 'btn-outline-primary'}`}
-                                                                        onClick={() => toggleLedger(item)}
-                                                                    >
-                                                                        <i className={`fa ${isExpanded ? 'fa-chevron-up' : 'fa-history'} me-1`}></i> 
-                                                                        {isExpanded ? 'Hide Ledger' : 'View Ledger'}
-                                                                    </button>
-                                                                </td>
-                                                            </tr>
+                        <button 
+                            className="btn btn-sm btn-success fw-bold px-3 py-1 text-black"
+                            onClick={() => setShowModal(true)}
+                            style={{fontSize: '12px'}}
+                        >
+                            <i className="fas fa-plus-circle me-1"></i>ADD STOCK
+                        </button>
+                    </div>
+                </div>
+            </header>
 
-                                                            {/* Inline Ledger Expandable Row */}
-                                                            {isExpanded && (
-                                                                <tr>
-                                                                    <td colSpan="7" className="bg-light p-4 border-bottom shadow-inner">
-                                                                        <div className="card border-0 shadow-sm rounded-3">
-                                                                            <div className="card-header bg-white py-2 px-3 d-flex justify-content-between align-items-center">
-                                                                                <span className="fw-bold text-primary small">
-                                                                                    <i className="fa fa-list-alt me-1"></i> Movement History for {item.item_name}
-                                                                                </span>
-                                                                                <button className="btn btn-sm btn-link text-muted p-0" onClick={() => setExpandedItemId(null)}>
-                                                                                    <i className="fa fa-times"></i>
-                                                                                </button>
-                                                                            </div>
-                                                                            <div className="card-body p-0">
-                                                                                {ledgerLoading ? (
-                                                                                    <div className="text-center py-3 text-muted small">
-                                                                                        <div className="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
-                                                                                        Loading movement history...
-                                                                                    </div>
-                                                                                ) : itemLedger.length > 0 ? (
-                                                                                    <div className="table-responsive mb-0">
-                                                                                        <table className="table table-sm table-striped mb-0 align-middle text-nowrap small">
-                                                                                            <thead className="table-dark text-uppercase">
-                                                                                                <tr>
-                                                                                                    <th className="py-2 ps-3">Date & Time</th>
-                                                                                                    <th className="py-2">Type</th>
-                                                                                                    <th className="py-2">Qty Change</th>
-                                                                                                    <th className="py-2">Source/Customer</th>
-                                                                                                    <th className="py-2">Address</th>
-                                                                                                    <th className="py-2">Forward By</th>
-                                                                                                    <th className="py-2 pe-3">Freight Cost</th>
-                                                                                                </tr>
-                                                                                            </thead>
-                                                                                            <tbody>
-                                                                                                {itemLedger.map((entry, idx) => (
-                                                                                                    <tr key={idx}>
-                                                                                                        <td className="ps-3 text-muted">{new Date(entry.date).toLocaleString()}</td>
-                                                                                                        <td>
-                                                                                                            <span className={`badge rounded-pill px-2 py-1 ${['in', 'input'].includes(entry.type.toLowerCase()) ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger'}`}>
-                                                                                                                {entry.type.toUpperCase()}
-                                                                                                            </span>
-                                                                                                        </td>
-                                                                                                        <td className="fw-bold">
-                                                                                                            <span className={entry.qty > 0 ? 'text-success' : 'text-danger'}>
-                                                                                                                {entry.qty > 0 ? `+${entry.qty}` : entry.qty}
-                                                                                                            </span>
-                                                                                                        </td>
-                                                                                                        <td>
-                                                                                                            <i className={`fa ${entry.qty > 0 ? 'fa-user' : 'fa-shopping-cart'} me-1 opacity-50`}></i>
-                                                                                                            <span className="fw-semibold">{entry.source || 'N/A'}</span>
-                                                                                                        </td>
-                                                                                                        <td className="text-muted fst-italic">{entry.address || 'N/A'}</td>
-                                                                                                        <td>
-                                                                                                            <i className="fa fa-truck me-1 text-muted"></i> {entry.forwardBy || entry.courier || 'N/A'}
-                                                                                                        </td>
-                                                                                                        <td className="pe-3 fw-semibold text-dark">
-                                                                                                            ₱{parseFloat(entry.freightCost || entry.shipping_cost || 0).toFixed(2)}
-                                                                                                        </td>
-                                                                                                    </tr>
-                                                                                                ))}
-                                                                                            </tbody>
-                                                                                        </table>
-                                                                                    </div>
-                                                                                ) : (
-                                                                                    <div className="text-center py-3 text-muted small">No movement history found for this item.</div>
-                                                                                )}
-                                                                            </div>
-                                                                        </div>
-                                                                    </td>
-                                                                </tr>
-                                                            )}
-                                                        </React.Fragment>
-                                                    );
-                                                })}
-                                            </tbody>
-                                        </table>
-                                    </div>
-
-                                    {/* Mobile & Tablet Card List View */}
-                                    <div className="d-lg-none p-3 d-flex flex-column gap-3">
+            {/* MAIN CONTENT GRID */}
+            <main className="flex-grow-1 overflow-auto p-3 bg-dark bg-opacity-10">
+                <div className="card bg-dark border border-secondary shadow-lg rounded">
+                    <div className="card-header bg-black bg-opacity-50 border-bottom border-secondary py-3 px-3 d-flex justify-content-between align-items-center">
+                        <span className="small fw-bold text-success uppercase">
+                            <i className="fas fa-boxes me-2"></i>MASTER INVENTORY LEDGER
+                        </span>
+                        <span className="badge bg-secondary text-white" style={{fontSize: '11px'}}>
+                            TOTAL ITEMS: {filteredInventory.length}
+                        </span>
+                    </div>
+                    <div className="card-body p-0">
+                        {loading ? (
+                            <div className="d-flex justify-content-center align-items-center py-5">
+                                <div className="spinner-border text-success" role="status"></div>
+                            </div>
+                        ) : filteredInventory.length > 0 ? (
+                            <div className="table-responsive mb-0">
+                                <table className="table table-dark table-hover table-striped align-middle mb-0 text-nowrap" style={{fontSize: '12px'}}>
+                                    <thead className="table-secondary text-uppercase text-black fw-bold" style={{fontSize: '11px'}}>
+                                        <tr>
+                                            <th className="py-2 ps-3">Item #</th>
+                                            <th className="py-2">Item Name & Description</th>
+                                            <th className="py-2 text-center">Total Stock</th>
+                                            <th className="py-2 text-center">Sold Out</th>
+                                            <th className="py-2 text-center">Available</th>
+                                            <th className="py-2">Status</th>
+                                            <th className="py-2 text-end pe-3">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
                                         {filteredInventory.map(item => {
                                             const isExpanded = expandedItemId === item.id;
                                             const itemLedger = ledgers[item.id] || [];
 
                                             return (
-                                                <div key={item.id} className="card border shadow-sm rounded-3 p-3 bg-white">
-                                                    <div className="d-flex align-items-center justify-content-between mb-2">
-                                                        <div className="d-flex align-items-center gap-2">
-                                                            {item.image_url ? (
-                                                                <img 
-                                                                    src={item.image_url} 
-                                                                    alt={item.item_name} 
-                                                                    className="rounded-circle border bg-light" 
-                                                                    style={{width: '36px', height: '36px', objectFit: 'contain'}} 
-                                                                    onError={(e) => { e.target.style.display = 'none'; }}
-                                                                />
-                                                            ) : (
-                                                                <div className="rounded-circle bg-light text-secondary d-flex align-items-center justify-content-center border" style={{width: '36px', height: '36px', fontSize: '12px'}}>
-                                                                    <i className="fa fa-image"></i>
+                                                <React.Fragment key={item.id}>
+                                                    <tr className={isExpanded ? 'bg-black' : ''}>
+                                                        <td className="ps-3 text-secondary fw-semibold">#{item.id}</td>
+                                                        <td className="fw-semibold">
+                                                            <div className="d-flex align-items-center">
+                                                                {item.image_url ? (
+                                                                    <img 
+                                                                        src={item.image_url} 
+                                                                        alt={item.item_name} 
+                                                                        className="rounded me-2 border border-secondary bg-black" 
+                                                                        style={{width: '32px', height: '32px', objectFit: 'contain'}} 
+                                                                        onError={(e) => { e.target.style.display = 'none'; }}
+                                                                    />
+                                                                ) : (
+                                                                    <div className="rounded bg-black text-secondary d-flex align-items-center justify-content-center me-2 border border-secondary" style={{width: '32px', height: '32px', fontSize: '11px'}}>
+                                                                        <i className="fas fa-image"></i>
+                                                                    </div>
+                                                                )}
+                                                                <div>
+                                                                    <span className="text-white fw-bold d-block">{item.item_name}</span>
+                                                                    {item.item_description && <small className="text-secondary text-truncate d-block" style={{maxWidth: '220px', fontSize: '10px'}}>{item.item_description}</small>}
                                                                 </div>
-                                                            )}
-                                                            <div>
-                                                                <h6 className="mb-0 fw-bold text-dark">{item.item_name}</h6>
-                                                                <small className="text-muted">#{item.id}</small>
                                                             </div>
-                                                        </div>
-                                                        {renderStatusBadge(item.available_qty)}
-                                                    </div>
-                                                    <div className="row g-2 text-center bg-light rounded-2 p-2 my-2 small">
-                                                        <div className="col-4 border-end">
-                                                            <span className="text-muted d-block" style={{fontSize: '11px'}}>Total</span>
-                                                            <span className="fw-bold">{item.total_qty || 0}</span>
-                                                        </div>
-                                                        <div className="col-4 border-end">
-                                                            <span className="text-muted d-block" style={{fontSize: '11px'}}>Sold</span>
-                                                            <span className="fw-bold text-danger">{item.soldout_qty || 0}</span>
-                                                        </div>
-                                                        <div className="col-4">
-                                                            <span className="text-muted d-block" style={{fontSize: '11px'}}>Available</span>
-                                                            <span className="fw-bold text-primary">{item.available_qty || 0}</span>
-                                                        </div>
-                                                    </div>
-                                                    <div className="d-flex justify-content-end mt-1">
-                                                        <button 
-                                                            className={`btn btn-sm w-100 ${isExpanded ? 'btn-primary' : 'btn-outline-primary'}`}
-                                                            onClick={() => toggleLedger(item)}
-                                                        >
-                                                            <i className={`fa ${isExpanded ? 'fa-chevron-up' : 'fa-history'} me-1`}></i> 
-                                                            {isExpanded ? 'Hide Ledger' : 'View Ledger Movement'}
-                                                        </button>
-                                                    </div>
+                                                        </td>
+                                                        <td className="text-center">
+                                                            <span className="badge bg-black text-white border border-secondary px-2 py-1">{item.total_qty || 0}</span>
+                                                        </td>
+                                                        <td className="text-center">
+                                                            <span className="badge bg-black text-danger border border-secondary px-2 py-1">{item.soldout_qty || 0}</span>
+                                                        </td>
+                                                        <td className="text-center fw-bold text-success">
+                                                            {item.available_qty || 0}
+                                                        </td>
+                                                        <td>{renderStatusBadge(item.available_qty)}</td>
+                                                        <td className="text-end pe-3">
+                                                            <button 
+                                                                className={`btn btn-sm px-3 py-1 fw-bold ${isExpanded ? 'btn-success text-black' : 'btn-outline-success text-success'}`}
+                                                                style={{fontSize: '11px'}}
+                                                                onClick={() => toggleLedger(item)}
+                                                            >
+                                                                <i className={`fas ${isExpanded ? 'fa-chevron-up' : 'fa-history'} me-1`}></i> 
+                                                                {isExpanded ? 'HIDE' : 'LEDGER'}
+                                                            </button>
+                                                        </td>
+                                                    </tr>
 
-                                                    {/* Mobile Expandable Ledger Accordion */}
+                                                    {/* EXPANDABLE INLINE LEDGER */}
                                                     {isExpanded && (
-                                                        <div className="mt-3 pt-3 border-top bg-light p-2 rounded-2 animate-fade-in">
-                                                            <span className="fw-bold text-primary small d-block mb-2">
-                                                                <i className="fa fa-list-alt me-1"></i> Movement History:
-                                                            </span>
-                                                            {ledgerLoading ? (
-                                                                <div className="text-center py-2 text-muted small">Loading history...</div>
-                                                            ) : itemLedger.length > 0 ? (
-                                                                <div className="d-flex flex-column gap-2">
-                                                                    {itemLedger.map((entry, idx) => (
-                                                                        <div key={idx} className="bg-white border rounded p-2 small">
-                                                                            <div className="d-flex justify-content-between text-muted" style={{fontSize: '10px'}}>
-                                                                                <span>{new Date(entry.date).toLocaleString()}</span>
-                                                                                <span className={`badge ${['in', 'input'].includes(entry.type.toLowerCase()) ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger'}`}>
-                                                                                    {entry.type.toUpperCase()}
-                                                                                </span>
+                                                        <tr>
+                                                            <td colSpan="7" className="bg-black p-3 border-bottom border-secondary">
+                                                                <div className="card bg-dark border border-secondary rounded shadow-inner">
+                                                                    <div className="card-header bg-black py-2 px-3 d-flex justify-content-between align-items-center border-bottom border-secondary">
+                                                                        <span className="fw-bold text-success tiny-text uppercase">
+                                                                            <i className="fas fa-list-alt me-1"></i> Movement History // {item.item_name}
+                                                                        </span>
+                                                                        <button className="btn btn-sm btn-link text-secondary p-0" onClick={() => setExpandedItemId(null)}>
+                                                                            <i className="fas fa-times"></i>
+                                                                        </button>
+                                                                    </div>
+                                                                    <div className="card-body p-0">
+                                                                        {ledgerLoading ? (
+                                                                            <div className="text-center py-3 text-secondary tiny-text">Loading ledger transactions...</div>
+                                                                        ) : itemLedger.length > 0 ? (
+                                                                            <div className="table-responsive mb-0">
+                                                                                <table className="table table-dark table-sm table-striped mb-0 align-middle text-nowrap" style={{fontSize: '11px'}}>
+                                                                                    <thead className="text-secondary uppercase" style={{fontSize: '10px'}}>
+                                                                                        <tr>
+                                                                                            <th className="py-2 ps-3">Date & Time</th>
+                                                                                            <th className="py-2">Type</th>
+                                                                                            <th className="py-2">Qty</th>
+                                                                                            <th className="py-2">Source / Customer</th>
+                                                                                            <th className="py-2">Address</th>
+                                                                                            <th className="py-2">Forward By</th>
+                                                                                            <th className="py-2 pe-3">Freight Cost</th>
+                                                                                        </tr>
+                                                                                    </thead>
+                                                                                    <tbody>
+                                                                                        {itemLedger.map((entry, idx) => (
+                                                                                            <tr key={idx}>
+                                                                                                <td className="ps-3 text-secondary">{new Date(entry.date).toLocaleString()}</td>
+                                                                                                <td>
+                                                                                                    <span className={`badge px-2 py-0.5 ${['in', 'input'].includes(entry.type.toLowerCase()) ? 'bg-success text-black' : 'bg-danger text-white'}`} style={{fontSize: '9px'}}>
+                                                                                                        {entry.type.toUpperCase()}
+                                                                                                    </span>
+                                                                                                </td>
+                                                                                                <td className="fw-bold">
+                                                                                                    <span className={entry.qty > 0 ? 'text-success' : 'text-danger'}>
+                                                                                                        {entry.qty > 0 ? `+${entry.qty}` : entry.qty}
+                                                                                                    </span>
+                                                                                                </td>
+                                                                                                <td className="text-white">{entry.source || 'N/A'}</td>
+                                                                                                <td className="text-secondary fst-italic">{entry.address || 'N/A'}</td>
+                                                                                                <td className="text-secondary">{entry.forwardBy || entry.courier || 'N/A'}</td>
+                                                                                                <td className="pe-3 text-success fw-bold">₱{parseFloat(entry.freightCost || entry.shipping_cost || 0).toFixed(2)}</td>
+                                                                                            </tr>
+                                                                                        ))}
+                                                                                    </tbody>
+                                                                                </table>
                                                                             </div>
-                                                                            <div className="fw-bold mt-1">
-                                                                                Qty: <span className={entry.qty > 0 ? 'text-success' : 'text-danger'}>{entry.qty > 0 ? `+${entry.qty}` : entry.qty}</span>
-                                                                            </div>
-                                                                            <div className="text-dark small">Source: {entry.source || 'N/A'}</div>
-                                                                            <div className="text-muted fst-italic" style={{fontSize: '11px'}}>{entry.address || 'N/A'}</div>
-                                                                        </div>
-                                                                    ))}
+                                                                        ) : (
+                                                                            <div className="text-center py-3 text-secondary tiny-text">No ledger entries registered for this item.</div>
+                                                                        )}
+                                                                    </div>
                                                                 </div>
-                                                            ) : (
-                                                                <div className="text-center py-2 text-muted small">No movement history found.</div>
-                                                            )}
-                                                        </div>
+                                                            </td>
+                                                        </tr>
                                                     )}
-                                                </div>
+                                                </React.Fragment>
                                             );
                                         })}
-                                    </div>
-                                </>
-                            ) : (
-                                <div className="text-center py-5 text-muted">
-                                    <i className="fa fa-search fa-2x mb-2 opacity-50"></i>
-                                    <p className="mb-1">No matching inventory records found for "{searchQuery}".</p>
-                                    <button className="btn btn-sm btn-outline-primary mt-2" onClick={() => setSearchQuery('')}>Clear Search</button>
-                                </div>
-                            )}
-                        </div>
+                                    </tbody>
+                                </table>
+                            </div>
+                        ) : (
+                            <div className="text-center py-5 text-secondary">
+                                <i className="fas fa-ghost fs-1 mb-2"></i>
+                                <p className="small mb-0">NO INVENTORY RECORDS MATCHING "{searchQuery}"</p>
+                            </div>
+                        )}
                     </div>
                 </div>
-            </div>
+            </main>
 
-            {/* Add Stock Modal */}
+            {/* ADD STOCK MODAL */}
             {showModal && (
-                <div className="modal show d-block px-2" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}>
+                <div className="modal d-block bg-black bg-opacity-75" tabIndex="-1" style={{ zIndex: 1070 }}>
                     <div className="modal-dialog modal-dialog-centered modal-lg">
-                        <div className="modal-content border-0 shadow-lg rounded-3">
-                            <div className="modal-header bg-primary text-white py-3 px-4">
-                                <h5 className="modal-title fw-bold">
-                                    <i className="fa fa-plus-circle me-2"></i> Add / Entry Stocks
-                                </h5>
-                                <button type="button" className="btn-close btn-close-white" onClick={() => setShowModal(false)}></button>
+                        <div className="modal-content bg-dark border border-secondary text-white font-monospace shadow-2xl">
+                            <div className="modal-header border-secondary py-2 bg-black bg-opacity-50">
+                                <h6 className="modal-title text-success fw-bold uppercase">
+                                    <i className="fas fa-plus-circle me-2"></i>Stock Entry / Inbound Terminal
+                                </h6>
+                                <button type="button" className="btn-close btn-close-white scale-75" onClick={() => setShowModal(false)}></button>
                             </div>
                             <form onSubmit={handleSubmitStock}>
-                                <div className="modal-body p-3 p-md-4">
+                                <div className="modal-body p-3">
                                     <div className="row g-3">
-                                        
-                                        {/* Supplier Select */}
                                         <div className="col-12 col-md-6">
-                                            <label className="form-label fw-semibold text-secondary small">Supplier Name</label>
-                                            <select name="supplier_id" className="form-select" value={formData.supplier_id} onChange={handleInputChange} required>
+                                            <label className="text-secondary tiny-text fw-bold mb-1">SUPPLIER</label>
+                                            <select name="supplier_id" className="form-select form-select-sm bg-black text-white border-secondary" value={formData.supplier_id} onChange={handleInputChange} required>
                                                 <option value="">Select Supplier</option>
                                                 {suppliers.map(sup => (
                                                     <option key={sup.id} value={sup.id}>{sup.name}</option>
@@ -512,15 +403,14 @@ const StockManagement = () => {
                                             </select>
                                         </div>
                                         
-                                        {/* Item Name */}
                                         <div className="col-12 col-md-6">
-                                            <label className="form-label fw-semibold text-secondary small">Item Name</label>
+                                            <label className="text-secondary tiny-text fw-bold mb-1">ITEM NAME</label>
                                             <select 
-                                                className="form-select mb-2" 
+                                                className="form-select form-select-sm bg-black text-white border-secondary mb-1" 
                                                 onChange={handleItemSelectChange}
                                                 defaultValue=""
                                             >
-                                                <option value="">-- Select Existing Item or Type Below --</option>
+                                                <option value="">-- Select Existing or Type New --</option>
                                                 {inventory.map(inv => (
                                                     <option key={inv.id} value={inv.id}>{inv.item_name}</option>
                                                 ))}
@@ -528,7 +418,7 @@ const StockManagement = () => {
                                             <input 
                                                 type="text" 
                                                 name="item_name" 
-                                                className="form-control" 
+                                                className="form-control form-control-sm bg-black text-white border-secondary" 
                                                 placeholder="Or type new item name" 
                                                 value={formData.item_name} 
                                                 onChange={handleInputChange} 
@@ -536,89 +426,71 @@ const StockManagement = () => {
                                             />
                                         </div>
 
-                                        {/* Picture Field */}
-                                        <div className="col-12 mt-3">
-                                            <label className="form-label fw-semibold text-primary small">Picture (Image URL)</label>
-                                            <div className="input-group mb-2">
-                                                <span className="input-group-text bg-light"><i className="fa fa-link"></i></span>
+                                        <div className="col-12">
+                                            <label className="text-success tiny-text fw-bold mb-1">PICTURE (IMAGE URL)</label>
+                                            <div className="input-group input-group-sm mb-1">
+                                                <span className="input-group-text bg-black border-secondary text-secondary"><i className="fas fa-link"></i></span>
                                                 <input 
                                                     type="text" 
                                                     name="image_url" 
-                                                    className="form-control" 
-                                                    placeholder="Paste image address URL here" 
+                                                    className="form-control form-control-sm bg-black text-white border-secondary" 
+                                                    placeholder="Paste image address URL" 
                                                     value={formData.image_url} 
                                                     onChange={handleInputChange} 
                                                 />
                                                 <button 
                                                     type="button" 
-                                                    className="btn btn-outline-primary"
+                                                    className="btn btn-outline-success btn-sm"
                                                     onClick={openGoogleImageSearch}
                                                     disabled={!formData.item_name}
-                                                    title="Open Google Image Search in new tab"
                                                 >
-                                                    <i className="fa fa-external-link-alt me-1"></i> <span className="d-none d-sm-inline">Google</span> Images
+                                                    <i className="fas fa-external-link-alt me-1"></i>Google Images
                                                 </button>
                                             </div>
-                                            <div className="form-text text-muted small mb-2">
-                                                <i className="fa fa-info-circle me-1"></i> Click search to find your item, right-click to <strong>Copy image address</strong>, and paste above.
-                                            </div>
-
-                                            {/* LIVE IMAGE PREVIEW BOX */}
                                             {formData.image_url && (
-                                                <div className="d-flex align-items-center gap-3 p-2 bg-light rounded border mb-2">
-                                                    <span className="small fw-semibold text-secondary">Live Preview:</span>
-                                                    <img 
-                                                        src={formData.image_url} 
-                                                        alt="Preview" 
-                                                        className="border bg-white rounded shadow-sm" 
-                                                        style={{ height: '40px', width: '40px', objectFit: 'contain' }}
-                                                        onError={(e) => { 
-                                                            e.target.onerror = null; 
-                                                            e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Crect width='100%25' height='100%25' fill='%23f8d7da'/%3E%3Ctext x='50%25' y='50%25' font-size='10' fill='%23721c24' dominant-baseline='middle' text-anchor='middle'%3EError%3C/text%3E%3C/svg%3E"; 
-                                                        }}
-                                                    />
-                                                    <span className="text-success small"><i className="fa fa-check-circle"></i> Image link active</span>
+                                                <div className="d-flex align-items-center gap-2 p-1 bg-black rounded border border-secondary mt-1">
+                                                    <span className="tiny-text text-secondary">Preview:</span>
+                                                    <img src={formData.image_url} alt="" style={{width: '28px', height: '28px', objectFit: 'contain'}} onError={(e) => { e.target.style.display = 'none'; }} />
+                                                    <span className="text-success tiny-text"><i className="fas fa-check-circle"></i> Active Link</span>
                                                 </div>
                                             )}
                                         </div>
 
-                                        <div className="col-12 mt-3">
-                                            <label className="form-label fw-semibold text-secondary small">Description</label>
-                                            <textarea name="description" className="form-control" rows="2" placeholder="Enter product description" value={formData.description} onChange={handleInputChange}></textarea>
+                                        <div className="col-12">
+                                            <label className="text-secondary tiny-text fw-bold mb-1">DESCRIPTION</label>
+                                            <textarea name="description" className="form-control form-control-sm bg-black text-white border-secondary" rows="2" placeholder="Hardware details..." value={formData.description} onChange={handleInputChange}></textarea>
                                         </div>
                                         
                                         <div className="col-12 col-md-4">
-                                            <label className="form-label fw-semibold text-secondary small">Quantity</label>
-                                            <input type="number" name="quantity" className="form-control" placeholder="0" min="1" value={formData.quantity} onChange={handleInputChange} required />
+                                            <label className="text-secondary tiny-text fw-bold mb-1">QUANTITY</label>
+                                            <input type="number" name="quantity" className="form-control form-control-sm bg-black text-white border-secondary" placeholder="0" min="1" value={formData.quantity} onChange={handleInputChange} required />
                                         </div>
                                         
                                         <div className="col-12 col-md-4">
-                                            <label className="form-label fw-semibold text-secondary small">W/S Price</label>
-                                            <input type="number" step="0.01" name="ws_price" className="form-control" placeholder="0.00" value={formData.ws_price} onChange={handleInputChange} required />
+                                            <label className="text-secondary tiny-text fw-bold mb-1">W/S PRICE</label>
+                                            <input type="number" step="0.01" name="ws_price" className="form-control form-control-sm bg-black text-white border-secondary" placeholder="0.00" value={formData.ws_price} onChange={handleInputChange} required />
                                         </div>
                                         
                                         <div className="col-12 col-md-4">
-                                            <label className="form-label fw-semibold text-secondary small">SRP Amount</label>
-                                            <input type="number" step="0.01" name="srp_amount" className="form-control" placeholder="0.00" value={formData.srp_amount} onChange={handleInputChange} required />
+                                            <label className="text-secondary tiny-text fw-bold mb-1">SRP AMOUNT</label>
+                                            <input type="number" step="0.01" name="srp_amount" className="form-control form-control-sm bg-black text-white border-secondary" placeholder="0.00" value={formData.srp_amount} onChange={handleInputChange} required />
                                         </div>
                                         
                                         <div className="col-12 col-md-6">
-                                            <label className="form-label fw-semibold text-secondary small">Forward By</label>
-                                            <input type="text" name="forward_by" className="form-control" placeholder="Courier or Handler" value={formData.forward_by} onChange={handleInputChange} />
+                                            <label className="text-secondary tiny-text fw-bold mb-1">FORWARD BY</label>
+                                            <input type="text" name="forward_by" className="form-control form-control-sm bg-black text-white border-secondary" placeholder="Courier / Handler" value={formData.forward_by} onChange={handleInputChange} />
                                         </div>
                                         
                                         <div className="col-12 col-md-6">
-                                            <label className="form-label fw-semibold text-secondary small">Freight Cost</label>
-                                            <input type="number" step="0.01" name="freight_cost" className="form-control" placeholder="0.00" value={formData.freight_cost} onChange={handleInputChange} />
+                                            <label className="text-secondary tiny-text fw-bold mb-1">FREIGHT COST</label>
+                                            <input type="number" step="0.01" name="freight_cost" className="form-control form-control-sm bg-black text-white border-secondary" placeholder="0.00" value={formData.freight_cost} onChange={handleInputChange} />
                                         </div>
                                     </div>
                                 </div>
-                                <div className="modal-footer bg-light py-3 px-4">
-                                    <button type="button" className="btn btn-outline-secondary px-4" onClick={() => setShowModal(false)}>Cancel</button>
-                                    <button type="submit" className="btn btn-primary px-4" disabled={submitting}>
-                                        {submitting ? (
-                                            <><span className="spinner-border spinner-border-sm me-2" role="status"></span>Saving...</>
-                                        ) : 'Save Stock Entry'}
+                                <div className="modal-footer border-secondary bg-black py-2">
+                                    <button type="button" className="btn btn-sm btn-dark border-secondary text-secondary px-3" onClick={() => setShowModal(false)}>CANCEL</button>
+                                    <button type="submit" className="btn btn-sm btn-success fw-bold text-black px-4" disabled={submitting}>
+                                        {submitting ? 'COMMITTING...' : 'COMMIT STOCK ENTRY'}
                                     </button>
                                 </div>
                             </form>
