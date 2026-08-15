@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import axios from 'axios';
+
 const BASE_URL = 'https://dpsapi.ricalgen.eu.org';
 const FILE_URL = 'https://jadefile.ricalgen.eu.org/';
+
 const CustomerManagement = () => {
     const [customers, setCustomers] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
@@ -10,8 +12,18 @@ const CustomerManagement = () => {
     const [serviceHistory, setServiceHistory] = useState([]);
     const [expandedRow, setExpandedRow] = useState(null);
     
-    const fileInputRef = useRef(null);
+    // Modal State
+    const [showAddModal, setShowAddModal] = useState(false);
+    const [formData, setFormData] = useState({
+        name: '',
+        address: '',
+        contact: '',
+        email: ''
+    });
+    const [submitting, setSubmitting] = useState(false);
+    const [modalError, setModalError] = useState('');
     
+    const fileInputRef = useRef(null);
 
     useEffect(() => {
         fetchCustomers();
@@ -42,6 +54,41 @@ const CustomerManagement = () => {
         }
     };
 
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleAddCustomer = async (e) => {
+        e.preventDefault();
+        setModalError('');
+
+        if (!formData.name.trim() || !formData.contact.trim()) {
+            setModalError('Client Name and Contact No are required.');
+            return;
+        }
+
+        setSubmitting(true);
+        try {
+            const res = await axios.post(`${BASE_URL}/api/customers`, formData);
+            await fetchCustomers();
+            
+            // Automatically select the newly created customer if returned
+            if (res.data && res.data.id) {
+                handleSelectCustomer(res.data);
+            }
+
+            // Reset and close modal
+            setFormData({ name: '', address: '', contact: '', email: '' });
+            setShowAddModal(false);
+        } catch (err) {
+            console.error("Error adding customer", err);
+            setModalError(err.response?.data?.message || 'Failed to save customer. Please try again.');
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
     const getStatusBadgeClass = (status) => {
         switch (status?.toLowerCase()) {
             case 'completed':
@@ -68,11 +115,11 @@ const CustomerManagement = () => {
         const file = e.target.files[0];
         if (!file || !selectedCustomer) return;
 
-        const formData = new FormData();
-        formData.append('image', file);
+        const formDataObj = new FormData();
+        formDataObj.append('image', file);
 
         try {
-            const res = await axios.post(`${BASE_URL}/api/customers/${selectedCustomer.id}/upload-photo`, formData, {
+            const res = await axios.post(`${BASE_URL}/api/customers/${selectedCustomer.id}/upload-photo`, formDataObj, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
             
@@ -129,11 +176,16 @@ const CustomerManagement = () => {
                         {/* Refined Professional Header */}
                         <div className="card-header bg-white border-0 py-3">
                             <div className="d-flex justify-content-between align-items-center mb-3">
-                                <h5 className="mb-0 fw-bold text-dark">Directory</h5>
-                                <span className="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2 rounded-pill">
-                                    <i className="fas fa-users me-2"></i>
-                                    {customers.length} Total
-                                </span>
+                                <div>
+                                    <h5 className="mb-0 fw-bold text-dark">Directory</h5>
+                                    <span className="text-muted small">{customers.length} Total Customers</span>
+                                </div>
+                                <button 
+                                    className="btn btn-primary btn-sm d-flex align-items-center gap-1 px-3 shadow-sm"
+                                    onClick={() => setShowAddModal(true)}
+                                >
+                                    <i className="fas fa-user-plus"></i> Add Customer
+                                </button>
                             </div>
                             <div className="input-group shadow-sm rounded">
                                 <span className="input-group-text bg-white border-end-0">
@@ -213,13 +265,18 @@ const CustomerManagement = () => {
                                         <div className="d-flex justify-content-between align-items-start">
                                             <div>
                                                 <h2 className="fw-bold mb-1">{selectedCustomer.name}</h2>
-                                                <div className="mb-2">
-                                                    <span className="badge bg-primary px-3 py-2 rounded-pill me-2">
+                                                <div className="mb-2 d-flex flex-wrap gap-2">
+                                                    <span className="badge bg-primary px-3 py-2 rounded-pill">
                                                         <i className="fas fa-phone-alt me-2"></i> {selectedCustomer.contact || 'N/A'}
                                                     </span>
+                                                    {selectedCustomer.email && (
+                                                        <span className="badge bg-secondary px-3 py-2 rounded-pill">
+                                                            <i className="fas fa-envelope me-2"></i> {selectedCustomer.email}
+                                                        </span>
+                                                    )}
                                                 </div>
                                                 <p className="mb-0 opacity-75">
-                                                    <i className="fas fa-map-marker-alt me-2 text-danger"></i>{selectedCustomer.address}
+                                                    <i className="fas fa-map-marker-alt me-2 text-danger"></i>{selectedCustomer.address || 'No address provided'}
                                                 </p>
                                             </div>
                                             <i className="fas fa-id-badge fa-3x opacity-25 d-none d-sm-block"></i>
@@ -350,6 +407,120 @@ const CustomerManagement = () => {
                     )}
                 </div>
             </div>
+
+            {/* Add Customer Modal */}
+            {showAddModal && (
+                <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+                    <div className="modal-dialog modal-dialog-centered">
+                        <div className="modal-content border-0 shadow-lg">
+                            <div className="modal-header bg-primary text-white">
+                                <h5 className="modal-title fw-bold">
+                                    <i className="fas fa-user-plus me-2"></i>Add New Client
+                                </h5>
+                                <button 
+                                    type="button" 
+                                    className="btn-close btn-close-white" 
+                                    onClick={() => setShowAddModal(false)}
+                                    disabled={submitting}
+                                ></button>
+                            </div>
+                            <form onSubmit={handleAddCustomer}>
+                                <div className="modal-body p-4">
+                                    {modalError && (
+                                        <div className="alert alert-danger py-2 small mb-3">
+                                            <i className="fas fa-exclamation-circle me-1"></i> {modalError}
+                                        </div>
+                                    )}
+                                    <div className="mb-3">
+                                        <label className="form-label fw-bold small text-muted">Client's Name <span className="text-danger">*</span></label>
+                                        <div className="input-group">
+                                            <span className="input-group-text bg-light"><i className="fas fa-user text-muted"></i></span>
+                                            <input 
+                                                type="text" 
+                                                className="form-control" 
+                                                name="name"
+                                                placeholder="Enter full name"
+                                                value={formData.name}
+                                                onChange={handleInputChange}
+                                                required 
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="mb-3">
+                                        <label className="form-label fw-bold small text-muted">Address</label>
+                                        <div className="input-group">
+                                            <span className="input-group-text bg-light"><i className="fas fa-map-marker-alt text-muted"></i></span>
+                                            <input 
+                                                type="text" 
+                                                className="form-control" 
+                                                name="address"
+                                                placeholder="Enter complete address"
+                                                value={formData.address}
+                                                onChange={handleInputChange} 
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="mb-3">
+                                        <label className="form-label fw-bold small text-muted">Contact No <span className="text-danger">*</span></label>
+                                        <div className="input-group">
+                                            <span className="input-group-text bg-light"><i className="fas fa-phone-alt text-muted"></i></span>
+                                            <input 
+                                                type="text" 
+                                                className="form-control" 
+                                                name="contact"
+                                                placeholder="e.g. 09123456789"
+                                                value={formData.contact}
+                                                onChange={handleInputChange}
+                                                required 
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="mb-3">
+                                        <label className="form-label fw-bold small text-muted">Email</label>
+                                        <div className="input-group">
+                                            <span className="input-group-text bg-light"><i className="fas fa-envelope text-muted"></i></span>
+                                            <input 
+                                                type="email" 
+                                                className="form-control" 
+                                                name="email"
+                                                placeholder="e.g. client@example.com"
+                                                value={formData.email}
+                                                onChange={handleInputChange} 
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="modal-footer bg-light px-4 py-3">
+                                    <button 
+                                        type="button" 
+                                        className="btn btn-outline-secondary px-4" 
+                                        onClick={() => setShowAddModal(false)}
+                                        disabled={submitting}
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button 
+                                        type="submit" 
+                                        className="btn btn-primary px-4 shadow-sm"
+                                        disabled={submitting}
+                                    >
+                                        {submitting ? (
+                                            <>
+                                                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                                Saving...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <i className="fas fa-save me-2"></i> Save Client
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
