@@ -167,6 +167,11 @@ const StockManagement = () => {
         return <span className="badge rounded-pill bg-success text-black fw-bold px-2.5 py-1" style={{fontSize: '11px'}}>HEALTHY</span>;
     };
 
+    const formatCurrency = (val) => {
+        if (val === undefined || val === null || isNaN(val)) return '₱0.00';
+        return `₱${Number(val).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    };
+
     const filteredInventory = inventory.filter(item => {
         const query = searchQuery.toLowerCase();
         const itemName = (item.item_name || '').toLowerCase();
@@ -682,20 +687,20 @@ const StockManagement = () => {
 
                                                 <div className="d-flex justify-content-between border-bottom border-secondary pb-1.5">
                                                     <span className="text-secondary" style={{fontSize: '11px'}}>FREIGHT COST:</span>
-                                                    <span className="text-success fw-bold">₱{parseFloat(selectedLedgerEntry.freightCost || selectedLedgerEntry.shipping_cost || 0).toFixed(2)}</span>
+                                                    <span className="text-success fw-bold">{formatCurrency(selectedLedgerEntry.freightCost || selectedLedgerEntry.shipping_cost)}</span>
                                                 </div>
 
                                                 {selectedLedgerEntry.wsPrice !== undefined && (
                                                     <div className="d-flex justify-content-between border-bottom border-secondary pb-1.5">
-                                                        <span className="text-secondary" style={{fontSize: '11px'}}>WHOLESALE PRICE:</span>
-                                                        <span className="text-white fw-bold">₱{parseFloat(selectedLedgerEntry.wsPrice).toFixed(2)}</span>
+                                                        <span className="text-secondary" style={{fontSize: '11px'}}>WHOLESALE PRICE (WS):</span>
+                                                        <span className="text-white fw-bold">{formatCurrency(selectedLedgerEntry.wsPrice)}</span>
                                                     </div>
                                                 )}
 
                                                 {selectedLedgerEntry.SRP !== undefined && (
                                                     <div className="d-flex justify-content-between border-bottom border-secondary pb-1.5">
                                                         <span className="text-secondary" style={{fontSize: '11px'}}>SRP AMOUNT:</span>
-                                                        <span className="text-success fw-bold">₱{parseFloat(selectedLedgerEntry.SRP).toFixed(2)}</span>
+                                                        <span className="text-success fw-bold">{formatCurrency(selectedLedgerEntry.SRP)}</span>
                                                     </div>
                                                 )}
 
@@ -707,10 +712,11 @@ const StockManagement = () => {
                                                 {/* EXTRA DYNAMIC PROPERTIES IF PRESENT */}
                                                 {Object.entries(selectedLedgerEntry).map(([key, val]) => {
                                                     if (['date', 'type', 'qty', 'source', 'address', 'forwardBy', 'courier', 'freightCost', 'shipping_cost', 'wsPrice', 'SRP', 'parentItem'].includes(key)) return null;
+                                                    const isNumericPrice = typeof val === 'number' || (typeof val === 'string' && !isNaN(val) && (key.toLowerCase().includes('price') || key.toLowerCase().includes('cost') || key.toLowerCase().includes('amount')));
                                                     return (
                                                         <div key={key} className="d-flex justify-content-between border-bottom border-secondary pb-1.5">
                                                             <span className="text-secondary" style={{fontSize: '11px'}}>{key.replace(/_/g, ' ').toUpperCase()}:</span>
-                                                            <span className="text-white text-end">{typeof val === 'object' ? JSON.stringify(val) : String(val)}</span>
+                                                            <span className="text-white text-end">{isNumericPrice ? formatCurrency(val) : (typeof val === 'object' ? JSON.stringify(val) : String(val))}</span>
                                                         </div>
                                                     );
                                                 })}
