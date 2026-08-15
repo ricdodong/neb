@@ -5,8 +5,9 @@ const BASE_URL = 'https://dpsapi.ricalgen.eu.org';
 
 const StockManagement = () => {
     const [inventory, setInventory] = useState([]);
-    const [selectedItem, setSelectedItem] = useState(null);
-    const [ledger, setLedger] = useState([]);
+    const [expandedItemId, setExpandedItemId] = useState(null);
+    const [ledgers, setLedgers] = useState({});
+    const [ledgerLoading, setLedgerLoading] = useState(false);
     const [suppliers, setSuppliers] = useState([]);
     const [loading, setLoading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
@@ -55,14 +56,26 @@ const StockManagement = () => {
         }
     };
 
-    const fetchLedger = async (item) => {
-        setSelectedItem(item);
-        try {
-            const res = await axios.get(`${BASE_URL}/api/inventory/${item.id}/ledger`);
-            setLedger(res.data);
-        } catch (err) {
-            console.error("Error fetching ledger", err);
-            setLedger([]);
+    const toggleLedger = async (item) => {
+        if (expandedItemId === item.id) {
+            setExpandedItemId(null);
+            return;
+        }
+
+        setExpandedItemId(item.id);
+        
+        // Fetch only if not already cached
+        if (!ledgers[item.id]) {
+            setLedgerLoading(true);
+            try {
+                const res = await axios.get(`${BASE_URL}/api/inventory/${item.id}/ledger`);
+                setLedgers(prev => ({ ...prev, [item.id]: res.data }));
+            } catch (err) {
+                console.error("Error fetching ledger", err);
+                setLedgers(prev => ({ ...prev, [item.id]: [] }));
+            } finally {
+                setLedgerLoading(false);
+            }
         }
     };
 
@@ -71,7 +84,6 @@ const StockManagement = () => {
         setFormData({ ...formData, [name]: value });
     };
 
-    // Handle Item Selection from existing inventory list
     const handleItemSelectChange = (e) => {
         const selectedId = e.target.value;
         if (!selectedId) {
@@ -91,7 +103,6 @@ const StockManagement = () => {
         }
     };
 
-    // Opens a new tab directly to Google Image Search for the item name
     const openGoogleImageSearch = () => {
         if (!formData.item_name) return;
         const searchUrl = `https://www.google.com/search?tbm=isch&q=${encodeURIComponent(formData.item_name)}`;
@@ -105,7 +116,6 @@ const StockManagement = () => {
         try {
             await axios.post(`${BASE_URL}/api/inventory/add`, formData);
 
-            // Reset Form & Close Modal
             setShowModal(false);
             setFormData({
                 supplier_id: '',
@@ -119,7 +129,6 @@ const StockManagement = () => {
                 image_url: ''
             });
 
-            // Refresh Inventory Grid
             fetchInventory();
         } catch (err) {
             console.error("Error adding stock entry", err);
@@ -182,106 +191,224 @@ const StockManagement = () => {
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                {inventory.map(item => (
-                                                    <tr key={item.id}>
-                                                        <td className="ps-4 text-muted fw-semibold">#{item.id}</td>
-                                                        <td className="fw-semibold">
-                                                            <div className="d-flex align-items-center">
-                                                                {item.image_url ? (
-                                                                    <img 
-                                                                        src={item.image_url} 
-                                                                        alt={item.item_name} 
-                                                                        className="rounded-circle me-3 border bg-light shadow-sm" 
-                                                                        style={{width: '38px', height: '38px', objectFit: 'contain'}} 
-                                                                        onError={(e) => { e.target.style.display = 'none'; }}
-                                                                    />
-                                                                ) : (
-                                                                    <div className="rounded-circle bg-light text-secondary d-flex align-items-center justify-content-center me-3 border shadow-sm" style={{width: '38px', height: '38px', fontSize: '14px'}}>
-                                                                        <i className="fa fa-image"></i>
+                                                {inventory.map(item => {
+                                                    const isExpanded = expandedItemId === item.id;
+                                                    const itemLedger = ledgers[item.id] || [];
+
+                                                    return (
+                                                        <React.Fragment key={item.id}>
+                                                            <tr className={isExpanded ? 'table-active' : ''}>
+                                                                <td className="ps-4 text-muted fw-semibold">#{item.id}</td>
+                                                                <td className="fw-semibold">
+                                                                    <div className="d-flex align-items-center">
+                                                                        {item.image_url ? (
+                                                                            <img 
+                                                                                src={item.image_url} 
+                                                                                alt={item.item_name} 
+                                                                                className="rounded-circle me-3 border bg-light shadow-sm" 
+                                                                                style={{width: '38px', height: '38px', objectFit: 'contain'}} 
+                                                                                onError={(e) => { e.target.style.display = 'none'; }}
+                                                                            />
+                                                                        ) : (
+                                                                            <div className="rounded-circle bg-light text-secondary d-flex align-items-center justify-content-center me-3 border shadow-sm" style={{width: '38px', height: '38px', fontSize: '14px'}}>
+                                                                                <i className="fa fa-image"></i>
+                                                                            </div>
+                                                                        )}
+                                                                        <div>
+                                                                            <span className="text-dark fw-bold d-block">{item.item_name}</span>
+                                                                            {item.item_description && <small className="text-muted text-truncate d-block" style={{maxWidth: '220px'}}>{item.item_description}</small>}
+                                                                        </div>
                                                                     </div>
-                                                                )}
-                                                                <div>
-                                                                    <span className="text-dark fw-bold d-block">{item.item_name}</span>
-                                                                    {item.item_description && <small className="text-muted text-truncate d-block" style={{maxWidth: '220px'}}>{item.item_description}</small>}
-                                                                </div>
-                                                            </div>
-                                                        </td>
-                                                        <td className="text-center">
-                                                            <span className="badge bg-light text-dark border px-3 py-2 fw-bold">{item.total_qty || 0}</span>
-                                                        </td>
-                                                        <td className="text-center">
-                                                            <span className="badge bg-light text-danger border px-3 py-2 fw-bold">{item.soldout_qty || 0}</span>
-                                                        </td>
-                                                        <td className="text-center">
-                                                            <span className={`fw-bold fs-6 ${item.available_qty === 0 ? 'text-danger' : 'text-primary'}`}>
-                                                                {item.available_qty || 0}
-                                                            </span>
-                                                        </td>
-                                                        <td>{renderStatusBadge(item.available_qty)}</td>
-                                                        <td className="text-end pe-4">
-                                                            <button 
-                                                                className="btn btn-sm btn-outline-primary shadow-sm px-3"
-                                                                onClick={() => fetchLedger(item)}
-                                                            >
-                                                                <i className="fa fa-history me-1"></i> Ledger
-                                                            </button>
-                                                        </td>
-                                                    </tr>
-                                                ))}
+                                                                </td>
+                                                                <td className="text-center">
+                                                                    <span className="badge bg-light text-dark border px-3 py-2 fw-bold">{item.total_qty || 0}</span>
+                                                                </td>
+                                                                <td className="text-center">
+                                                                    <span className="badge bg-light text-danger border px-3 py-2 fw-bold">{item.soldout_qty || 0}</span>
+                                                                </td>
+                                                                <td className="text-center">
+                                                                    <span className={`fw-bold fs-6 ${item.available_qty === 0 ? 'text-danger' : 'text-primary'}`}>
+                                                                        {item.available_qty || 0}
+                                                                    </span>
+                                                                </td>
+                                                                <td>{renderStatusBadge(item.available_qty)}</td>
+                                                                <td className="text-end pe-4">
+                                                                    <button 
+                                                                        className={`btn btn-sm shadow-sm px-3 ${isExpanded ? 'btn-primary' : 'btn-outline-primary'}`}
+                                                                        onClick={() => toggleLedger(item)}
+                                                                    >
+                                                                        <i className={`fa ${isExpanded ? 'fa-chevron-up' : 'fa-history'} me-1`}></i> 
+                                                                        {isExpanded ? 'Hide Ledger' : 'View Ledger'}
+                                                                    </button>
+                                                                </td>
+                                                            </tr>
+
+                                                            {/* Inline Ledger Expandable Row */}
+                                                            {isExpanded && (
+                                                                <tr>
+                                                                    <td colSpan="7" className="bg-light p-4 border-bottom shadow-inner">
+                                                                        <div className="card border-0 shadow-sm rounded-3">
+                                                                            <div className="card-header bg-white py-2 px-3 d-flex justify-content-between align-items-center">
+                                                                                <span className="fw-bold text-primary small">
+                                                                                    <i className="fa fa-list-alt me-1"></i> Movement History for {item.item_name}
+                                                                                </span>
+                                                                                <button className="btn btn-sm btn-link text-muted p-0" onClick={() => setExpandedItemId(null)}>
+                                                                                    <i className="fa fa-times"></i>
+                                                                                </button>
+                                                                            </div>
+                                                                            <div className="card-body p-0">
+                                                                                {ledgerLoading ? (
+                                                                                    <div className="text-center py-3 text-muted small">
+                                                                                        <div className="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+                                                                                        Loading movement history...
+                                                                                    </div>
+                                                                                ) : itemLedger.length > 0 ? (
+                                                                                    <div className="table-responsive mb-0">
+                                                                                        <table className="table table-sm table-striped mb-0 align-middle text-nowrap small">
+                                                                                            <thead className="table-dark text-uppercase" style={{fontSize: '11px'}}>
+                                                                                                <tr>
+                                                                                                    <th className="py-2 ps-3">Date & Time</th>
+                                                                                                    <th className="py-2">Type</th>
+                                                                                                    <th className="py-2">Qty Change</th>
+                                                                                                    <th className="py-2">Source/Customer</th>
+                                                                                                    <th className="py-2">Address</th>
+                                                                                                    <th className="py-2">Forward By</th>
+                                                                                                    <th className="py-2 pe-3">Freight Cost</th>
+                                                                                                </tr>
+                                                                                            </thead>
+                                                                                            <tbody>
+                                                                                                {itemLedger.map((entry, idx) => (
+                                                                                                    <tr key={idx}>
+                                                                                                        <td className="ps-3 text-muted">{new Date(entry.date).toLocaleString()}</td>
+                                                                                                        <td>
+                                                                                                            <span className={`badge rounded-pill px-2 py-0.5 ${['in', 'input'].includes(entry.type.toLowerCase()) ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger'}`} style={{fontSize: '10px'}}>
+                                                                                                                {entry.type.toUpperCase()}
+                                                                                                            </span>
+                                                                                                        </td>
+                                                                                                        <td className="fw-bold">
+                                                                                                            <span className={entry.qty > 0 ? 'text-success' : 'text-danger'}>
+                                                                                                                {entry.qty > 0 ? `+${entry.qty}` : entry.qty}
+                                                                                                            </span>
+                                                                                                        </td>
+                                                                                                        <td>
+                                                                                                            <i className={`fa ${entry.qty > 0 ? 'fa-user' : 'fa-shopping-cart'} me-1 opacity-50`}></i>
+                                                                                                            <span className="fw-semibold">{entry.source || 'N/A'}</span>
+                                                                                                        </td>
+                                                                                                        <td className="text-muted fst-italic">{entry.address || 'N/A'}</td>
+                                                                                                        <td>
+                                                                                                            <i className="fa fa-truck me-1 text-muted"></i> {entry.forwardBy || entry.courier || 'N/A'}
+                                                                                                        </td>
+                                                                                                        <td className="pe-3 fw-semibold text-dark">
+                                                                                                            ₱{parseFloat(entry.freightCost || entry.shipping_cost || 0).toFixed(2)}
+                                                                                                        </td>
+                                                                                                    </tr>
+                                                                                                ))}
+                                                                                            </tbody>
+                                                                                        </table>
+                                                                                    </div>
+                                                                                ) : (
+                                                                                    <div className="text-center py-3 text-muted small">No movement history found for this item.</div>
+                                                                                )}
+                                                                            </div>
+                                                                        </div>
+                                                                    </td>
+                                                                </tr>
+                                                            )}
+                                                        </React.Fragment>
+                                                    );
+                                                })}
                                             </tbody>
                                         </table>
                                     </div>
 
                                     {/* Mobile & Tablet Card List View */}
                                     <div className="d-lg-none p-3 d-flex flex-column gap-3">
-                                        {inventory.map(item => (
-                                            <div key={item.id} className="card border shadow-sm rounded-3 p-3 bg-white">
-                                                <div className="d-flex align-items-center justify-content-between mb-2">
-                                                    <div className="d-flex align-items-center gap-2">
-                                                        {item.image_url ? (
-                                                            <img 
-                                                                src={item.image_url} 
-                                                                alt={item.item_name} 
-                                                                className="rounded-circle border bg-light" 
-                                                                style={{width: '36px', height: '36px', objectFit: 'contain'}} 
-                                                                onError={(e) => { e.target.style.display = 'none'; }}
-                                                            />
-                                                        ) : (
-                                                            <div className="rounded-circle bg-light text-secondary d-flex align-items-center justify-content-center border" style={{width: '36px', height: '36px', fontSize: '12px'}}>
-                                                                <i className="fa fa-image"></i>
+                                        {inventory.map(item => {
+                                            const isExpanded = expandedItemId === item.id;
+                                            const itemLedger = ledgers[item.id] || [];
+
+                                            return (
+                                                <div key={item.id} className="card border shadow-sm rounded-3 p-3 bg-white">
+                                                    <div className="d-flex align-items-center justify-content-between mb-2">
+                                                        <div className="d-flex align-items-center gap-2">
+                                                            {item.image_url ? (
+                                                                <img 
+                                                                    src={item.image_url} 
+                                                                    alt={item.item_name} 
+                                                                    className="rounded-circle border bg-light" 
+                                                                    style={{width: '36px', height: '36px', objectFit: 'contain'}} 
+                                                                    onError={(e) => { e.target.style.display = 'none'; }}
+                                                                />
+                                                            ) : (
+                                                                <div className="rounded-circle bg-light text-secondary d-flex align-items-center justify-content-center border" style={{width: '36px', height: '36px', fontSize: '12px'}}>
+                                                                    <i className="fa fa-image"></i>
+                                                                </div>
+                                                            )}
+                                                            <div>
+                                                                <h6 className="mb-0 fw-bold text-dark">{item.item_name}</h6>
+                                                                <small className="text-muted">#{item.id}</small>
                                                             </div>
-                                                        )}
-                                                        <div>
-                                                            <h6 className="mb-0 fw-bold text-dark">{item.item_name}</h6>
-                                                            <small className="text-muted">#{item.id}</small>
+                                                        </div>
+                                                        {renderStatusBadge(item.available_qty)}
+                                                    </div>
+                                                    <div className="row g-2 text-center bg-light rounded-2 p-2 my-2 small">
+                                                        <div className="col-4 border-end">
+                                                            <span className="text-muted d-block" style={{fontSize: '11px'}}>Total</span>
+                                                            <span className="fw-bold">{item.total_qty || 0}</span>
+                                                        </div>
+                                                        <div className="col-4 border-end">
+                                                            <span className="text-muted d-block" style={{fontSize: '11px'}}>Sold</span>
+                                                            <span className="fw-bold text-danger">{item.soldout_qty || 0}</span>
+                                                        </div>
+                                                        <div className="col-4">
+                                                            <span className="text-muted d-block" style={{fontSize: '11px'}}>Available</span>
+                                                            <span className="fw-bold text-primary">{item.available_qty || 0}</span>
                                                         </div>
                                                     </div>
-                                                    {renderStatusBadge(item.available_qty)}
-                                                </div>
-                                                <div className="row g-2 text-center bg-light rounded-2 p-2 my-2 small">
-                                                    <div className="col-4 border-end">
-                                                        <span className="text-muted d-block" style={{fontSize: '11px'}}>Total</span>
-                                                        <span className="fw-bold">{item.total_qty || 0}</span>
+                                                    <div className="d-flex justify-content-end mt-1">
+                                                        <button 
+                                                            className={`btn btn-sm w-100 ${isExpanded ? 'btn-primary' : 'btn-outline-primary'}`}
+                                                            onClick={() => toggleLedger(item)}
+                                                        >
+                                                            <i className={`fa ${isExpanded ? 'fa-chevron-up' : 'fa-history'} me-1`}></i> 
+                                                            {isExpanded ? 'Hide Ledger' : 'View Ledger Movement'}
+                                                        </button>
                                                     </div>
-                                                    <div className="col-4 border-end">
-                                                        <span className="text-muted d-block" style={{fontSize: '11px'}}>Sold</span>
-                                                        <span className="fw-bold text-danger">{item.soldout_qty || 0}</span>
-                                                    </div>
-                                                    <div className="col-4">
-                                                        <span className="text-muted d-block" style={{fontSize: '11px'}}>Available</span>
-                                                        <span className="fw-bold text-primary">{item.available_qty || 0}</span>
-                                                    </div>
+
+                                                    {/* Mobile Expandable Ledger Accordion */}
+                                                    {isExpanded && (
+                                                        <div className="mt-3 pt-3 border-top bg-light p-2 rounded-2 animate-fade-in">
+                                                            <span className="fw-bold text-primary small d-block mb-2">
+                                                                <i className="fa fa-list-alt me-1"></i> Movement History:
+                                                            </span>
+                                                            {ledgerLoading ? (
+                                                                <div className="text-center py-2 text-muted small">Loading history...</div>
+                                                            ) : itemLedger.length > 0 ? (
+                                                                <div className="d-flex flex-column gap-2">
+                                                                    {itemLedger.map((entry, idx) => (
+                                                                        <div key={idx} className="bg-white border rounded p-2 small">
+                                                                            <div className="d-flex justify-content-between text-muted" style={{fontSize: '10px'}}>
+                                                                                <span>{new Date(entry.date).toLocaleString()}</span>
+                                                                                <span className={`badge ${['in', 'input'].includes(entry.type.toLowerCase()) ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger'}`}>
+                                                                                    {entry.type.toUpperCase()}
+                                                                                </span>
+                                                                            </div>
+                                                                            <div className="fw-bold mt-1">
+                                                                                Qty: <span className={entry.qty > 0 ? 'text-success' : 'text-danger'}>{entry.qty > 0 ? `+${entry.qty}` : entry.qty}</span>
+                                                                            </div>
+                                                                            <div className="text-dark small">Source: {entry.source || 'N/A'}</div>
+                                                                            <div className="text-muted fst-italic" style={{fontSize: '11px'}}>{entry.address || 'N/A'}</div>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            ) : (
+                                                                <div className="text-center py-2 text-muted small">No movement history found.</div>
+                                                            )}
+                                                        </div>
+                                                    )}
                                                 </div>
-                                                <div className="d-flex justify-content-end mt-1">
-                                                    <button 
-                                                        className="btn btn-sm btn-outline-primary w-100"
-                                                        onClick={() => fetchLedger(item)}
-                                                    >
-                                                        <i className="fa fa-history me-1"></i> View Ledger Movement
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        ))}
+                                            );
+                                        })}
                                     </div>
                                 </>
                             ) : (
@@ -290,74 +417,6 @@ const StockManagement = () => {
                         </div>
                     </div>
                 </div>
-
-                {/* Detailed Stock Ledger */}
-                {selectedItem && (
-                    <div className="col-12">
-                        <div className="card shadow-sm border-0 rounded-3 border-top border-primary border-4 animate-fade-in">
-                            <div className="card-header bg-white py-3 px-3 px-md-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
-                                <div>
-                                    <h5 className="mb-0 fw-bold">
-                                        Movement History: <span className="text-primary">{selectedItem.item_name}</span>
-                                    </h5>
-                                    <small className="text-muted">Detailed log of input and output transactions for this item.</small>
-                                </div>
-                                <button className="btn btn-sm btn-outline-secondary px-3 align-self-start align-self-md-auto" onClick={() => setSelectedItem(null)}>
-                                    <i className="fa fa-times me-1"></i> Close Ledger
-                                </button>
-                            </div>
-                            <div className="card-body p-0">
-                                <div className="table-responsive">
-                                    <table className="table table-striped table-hover mb-0 align-middle text-nowrap">
-                                        <thead className="table-dark text-uppercase fs-7">
-                                            <tr>
-                                                <th className="py-3 ps-4">Date & Time</th>
-                                                <th className="py-3">Type</th>
-                                                <th className="py-3">Qty Change</th>
-                                                <th className="py-3">Source/Customer</th>
-                                                <th className="py-3">Address</th>
-                                                <th className="py-3">Forward By</th>
-                                                <th className="py-3 pe-4">Freight Cost</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {ledger.length > 0 ? ledger.map((entry, index) => (
-                                                <tr key={index} className="small">
-                                                    <td className="ps-4 text-muted">{new Date(entry.date).toLocaleString()}</td>
-                                                    <td>
-                                                        <span className={`badge rounded-pill px-3 py-1 ${['in', 'input'].includes(entry.type.toLowerCase()) ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger'}`}>
-                                                            {entry.type.toUpperCase()}
-                                                        </span>
-                                                    </td>
-                                                    <td className="fw-bold">
-                                                        <span className={entry.qty > 0 ? 'text-success' : 'text-danger'}>
-                                                            {entry.qty > 0 ? `+${entry.qty}` : entry.qty}
-                                                        </span>
-                                                    </td>
-                                                    <td>
-                                                        <i className={`fa ${entry.qty > 0 ? 'fa-user' : 'fa-shopping-cart'} me-2 opacity-50`}></i>
-                                                        <span className="fw-semibold">{entry.source || 'N/A'}</span>
-                                                    </td>
-                                                    <td className="text-muted fst-italic">{entry.address || 'N/A'}</td>
-                                                    <td>
-                                                        <i className="fa fa-truck me-1 text-muted"></i> {entry.forwardBy || entry.courier || 'N/A'}
-                                                    </td>
-                                                    <td className="pe-4 fw-semibold text-dark">
-                                                        ₱{parseFloat(entry.freightCost || entry.shipping_cost || 0).toFixed(2)}
-                                                    </td>
-                                                </tr>
-                                            )) : (
-                                                <tr>
-                                                    <td colSpan="7" className="text-center py-4 text-muted">No movement history found for this item.</td>
-                                                </tr>
-                                            )}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                )}
             </div>
 
             {/* Add Stock Modal */}
