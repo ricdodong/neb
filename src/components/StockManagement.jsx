@@ -13,6 +13,9 @@ const StockManagement = () => {
     const [submitting, setSubmitting] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
 
+    // Lightbox Modal State
+    const [lightboxItem, setLightboxItem] = useState(null);
+
     const searchInputRef = useRef(null);
 
     // Modal Form State
@@ -178,14 +181,11 @@ const StockManagement = () => {
             {/* INJECT HOVER ZOOM STYLES */}
             <style>{`
                 .zoom-hover-img {
-                    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+                    transition: transform 0.2s ease, border-color 0.2s ease;
                     cursor: pointer;
                 }
                 .zoom-hover-img:hover {
-                    transform: scale(3);
-                    z-index: 1050;
-                    position: relative;
-                    box-shadow: 0 10px 25px rgba(0,0,0,0.8);
+                    transform: scale(1.15);
                     border-color: #198754 !important;
                 }
             `}</style>
@@ -254,7 +254,7 @@ const StockManagement = () => {
                         ) : filteredInventory.length > 0 ? (
                             <>
                                 {/* DESKTOP TABLE VIEW */}
-                                <div className="table-responsive mb-0 d-none d-lg-block overflow-visible">
+                                <div className="table-responsive mb-0 d-none d-lg-block">
                                     <table className="table table-dark table-hover table-striped align-middle mb-0 text-nowrap" style={{fontSize: '13px'}}>
                                         <thead className="table-secondary text-uppercase text-black fw-bold" style={{fontSize: '12px'}}>
                                             <tr>
@@ -284,6 +284,8 @@ const StockManagement = () => {
                                                                             alt={item.item_name} 
                                                                             className="rounded me-3 border border-secondary bg-black zoom-hover-img" 
                                                                             style={{width: '38px', height: '38px', objectFit: 'contain'}} 
+                                                                            onClick={() => setLightboxItem(item)}
+                                                                            title="Click to view details & lightbox"
                                                                             onError={(e) => { e.target.style.display = 'none'; }}
                                                                         />
                                                                     ) : (
@@ -403,6 +405,7 @@ const StockManagement = () => {
                                                                 alt={item.item_name} 
                                                                 className="rounded border border-secondary bg-dark zoom-hover-img" 
                                                                 style={{width: '38px', height: '38px', objectFit: 'contain'}} 
+                                                                onClick={() => setLightboxItem(item)}
                                                                 onError={(e) => { e.target.style.display = 'none'; }}
                                                             />
                                                         ) : (
@@ -488,6 +491,50 @@ const StockManagement = () => {
                 </div>
             </main>
 
+            {/* LIGHTBOX / IMAGE ZOOM MODAL */}
+            {lightboxItem && (
+                <div className="modal d-block bg-black bg-opacity-85 px-3" tabIndex="-1" style={{ zIndex: 1080 }}>
+                    <div className="modal-dialog modal-dialog-centered modal-md">
+                        <div className="modal-content bg-dark border border-success text-white font-monospace shadow-2xl rounded-3">
+                            <div className="modal-header border-secondary py-3 px-4 bg-black bg-opacity-50">
+                                <h6 className="modal-title text-success fw-bold uppercase" style={{fontSize: '13px'}}>
+                                    <i className="fas fa-search-plus me-2"></i>Item Lightbox // #{lightboxItem.id}
+                                </h6>
+                                <button type="button" className="btn-close btn-close-white" onClick={() => setLightboxItem(null)}></button>
+                            </div>
+                            <div className="modal-body p-4 text-center" style={{fontSize: '12px'}}>
+                                <div className="bg-black p-3 rounded border border-secondary mb-3 d-flex align-items-center justify-content-center" style={{minHeight: '220px'}}>
+                                    <img 
+                                        src={lightboxItem.image_url} 
+                                        alt={lightboxItem.item_name} 
+                                        className="img-fluid rounded" 
+                                        style={{ maxHeight: '250px', objectFit: 'contain' }}
+                                    />
+                                </div>
+                                <h5 className="fw-bold text-white mb-2">{lightboxItem.item_name}</h5>
+                                <p className="text-secondary small fst-italic mb-3">{lightboxItem.item_description || "No supplemental hardware specifications provided."}</p>
+                                
+                                <div className="row g-2 text-start bg-black p-3 rounded border border-secondary">
+                                    <div className="col-5 text-secondary">TOTAL STOCK:</div>
+                                    <div className="col-7 text-white fw-bold">{lightboxItem.total_qty || 0}</div>
+                                    <div className="col-5 text-secondary">SOLD OUT:</div>
+                                    <div className="col-7 text-danger fw-bold">{lightboxItem.soldout_qty || 0}</div>
+                                    <div className="col-5 text-secondary">AVAILABLE QTY:</div>
+                                    <div className="col-7 text-success fw-bold">{lightboxItem.available_qty || 0}</div>
+                                    <div className="col-5 text-secondary">STATUS:</div>
+                                    <div className="col-7">{renderStatusBadge(lightboxItem.available_qty)}</div>
+                                </div>
+                            </div>
+                            <div className="modal-footer border-secondary bg-black py-3 px-4">
+                                <button type="button" className="btn btn-success fw-bold text-black w-100 py-2" onClick={() => setLightboxItem(null)} style={{fontSize: '12px'}}>
+                                    CLOSE LIGHTBOX
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* ADD STOCK MODAL */}
             {showModal && (
                 <div className="modal d-block bg-black bg-opacity-75 px-3" tabIndex="-1" style={{ zIndex: 1070 }}>
@@ -563,7 +610,7 @@ const StockManagement = () => {
                                             {formData.image_url && (
                                                 <div className="d-flex align-items-center gap-2.5 p-2 bg-black rounded border border-secondary mt-1.5">
                                                     <span className="text-secondary">Preview:</span>
-                                                    <img src={formData.image_url} alt="" className="zoom-hover-img rounded" style={{width: '32px', height: '32px', objectFit: 'contain'}} onError={(e) => { e.target.style.display = 'none'; }} />
+                                                    <img src={formData.image_url} alt="" className="rounded" style={{width: '32px', height: '32px', objectFit: 'contain'}} onError={(e) => { e.target.style.display = 'none'; }} />
                                                     <span className="text-success"><i className="fas fa-check-circle"></i> Active Link</span>
                                                 </div>
                                             )}
