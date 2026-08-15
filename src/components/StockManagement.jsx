@@ -19,7 +19,7 @@ const StockManagement = () => {
 
     const searchInputRef = useRef(null);
 
-    // Modal Form State
+    // Modal Form State (Added serial_numbers field)
     const [showModal, setShowModal] = useState(false);
     const [formData, setFormData] = useState({
         supplier_id: '',
@@ -30,7 +30,8 @@ const StockManagement = () => {
         srp_amount: '',
         forward_by: '',
         freight_cost: '',
-        image_url: '' 
+        image_url: '',
+        serial_numbers: '' 
     });
 
     useEffect(() => {
@@ -146,7 +147,8 @@ const StockManagement = () => {
                 srp_amount: '',
                 forward_by: '',
                 freight_cost: '',
-                image_url: ''
+                image_url: '',
+                serial_numbers: ''
             });
 
             fetchInventory();
@@ -184,7 +186,6 @@ const StockManagement = () => {
     return (
         <div className="container-fluid min-vh-100 bg-black text-light p-0 d-flex flex-column font-monospace overflow-x-hidden position-relative">
             
-            {/* INJECT HOVER ZOOM STYLES */}
             <style>{`
                 .zoom-hover-img {
                     transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.2s ease;
@@ -606,7 +607,6 @@ const StockManagement = () => {
                     <div className="modal-dialog modal-dialog-centered modal-xl">
                         <div className="modal-content bg-dark border border-success text-white font-monospace shadow-2xl rounded-3 overflow-hidden">
                             
-                            {/* HEADER */}
                             <div className="modal-header border-secondary py-2.5 px-3 bg-black d-flex justify-content-between align-items-center">
                                 <div className="d-flex align-items-center gap-2">
                                     <div className="rounded-circle bg-success" style={{width: '8px', height: '8px'}}></div>
@@ -617,11 +617,9 @@ const StockManagement = () => {
                                 <button type="button" className="btn-close btn-close-white" onClick={() => setSelectedLedgerEntry(null)}></button>
                             </div>
 
-                            {/* BODY (FACEBOOK SPLIT VIEW) */}
                             <div className="modal-body p-0">
                                 <div className="row g-0">
                                     
-                                    {/* LEFT: ITEM IMAGE PREVIEW */}
                                     <div className="col-12 col-lg-7 bg-black d-flex align-items-center justify-content-center p-3 p-md-5" style={{ minHeight: '340px', maxHeight: '75vh' }}>
                                         {selectedLedgerEntry.parentItem?.image_url ? (
                                             <img 
@@ -638,7 +636,6 @@ const StockManagement = () => {
                                         )}
                                     </div>
 
-                                    {/* RIGHT: ALL AVAILABLE COLUMNS DISPLAYED IN DETAILS */}
                                     <div className="col-12 col-lg-5 bg-dark border-start border-secondary d-flex flex-column justify-content-between p-3 p-md-4" style={{ fontSize: '12px' }}>
                                         <div>
                                             <div className="d-flex align-items-center gap-2.5 pb-3 border-bottom border-secondary mb-3">
@@ -651,7 +648,6 @@ const StockManagement = () => {
                                                 </div>
                                             </div>
 
-                                            {/* ALL AVAILABLE COLUMNS DISPLAYED */}
                                             <div className="d-flex flex-column gap-2 bg-black p-3 rounded border border-secondary mb-3" style={{maxHeight: '40vh', overflowY: 'auto'}}>
                                                 
                                                 <div className="d-flex justify-content-between border-bottom border-secondary pb-1.5">
@@ -709,7 +705,6 @@ const StockManagement = () => {
                                                     <span className="text-white">{selectedLedgerEntry.date ? new Date(selectedLedgerEntry.date).toUTCString() : 'N/A'}</span>
                                                 </div>
 
-                                                {/* EXTRA DYNAMIC PROPERTIES IF PRESENT */}
                                                 {Object.entries(selectedLedgerEntry).map(([key, val]) => {
                                                     if (['date', 'type', 'qty', 'source', 'address', 'forwardBy', 'courier', 'freightCost', 'shipping_cost', 'wsPrice', 'SRP', 'parentItem'].includes(key)) return null;
                                                     const isNumericPrice = typeof val === 'number' || (typeof val === 'string' && !isNaN(val) && (key.toLowerCase().includes('price') || key.toLowerCase().includes('cost') || key.toLowerCase().includes('amount')));
@@ -723,7 +718,6 @@ const StockManagement = () => {
                                             </div>
                                         </div>
 
-                                        {/* FOOTER ACTION */}
                                         <div className="pt-2 border-top border-secondary">
                                             <button 
                                                 type="button" 
@@ -854,6 +848,23 @@ const StockManagement = () => {
                                         <div className="col-12 col-md-6">
                                             <label className="text-secondary fw-bold mb-1.5">FREIGHT COST</label>
                                             <input type="number" step="0.01" name="freight_cost" className="form-control bg-black text-white border-secondary py-2" placeholder="0.00" value={formData.freight_cost} onChange={handleInputChange} style={{fontSize: '12px'}} />
+                                        </div>
+
+                                        {/* NEW: SERIAL NUMBERS / BARCODES INPUT */}
+                                        <div className="col-12">
+                                            <label className="text-success fw-bold mb-1.5">SERIAL NUMBERS (Comma or newline separated)</label>
+                                            <textarea 
+                                                name="serial_numbers" 
+                                                className="form-control bg-black text-white border-secondary py-2" 
+                                                rows="3" 
+                                                placeholder="SN-001, SN-002, SN-003..." 
+                                                value={formData.serial_numbers} 
+                                                onChange={handleInputChange} 
+                                                style={{fontSize: '12px'}}
+                                            ></textarea>
+                                            <small className="text-secondary mt-1 d-block" style={{fontSize: '10px'}}>
+                                                If left blank, dummy serial numbers will be generated based on the quantity.
+                                            </small>
                                         </div>
                                     </div>
                                 </div>
