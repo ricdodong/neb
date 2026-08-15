@@ -75,7 +75,7 @@ const StockManagement = () => {
         setFormData({ ...formData, [name]: value });
     };
 
-    // Free web image lookup using Wikimedia Commons API
+    // Free web image lookup using Wikimedia Commons API with robust response parser
     const searchWebImages = async (query) => {
         if (!query) return;
         setIsSearchingImages(true);
@@ -90,9 +90,9 @@ const StockManagement = () => {
             if (pages) {
                 const urls = Object.values(pages)
                     .map(page => page.imageinfo?.[0]?.url)
-                    .filter(url => url && /\.(jpg|jpeg|png)$/i.test(url));
+                    .filter(url => url && /\.(jpg|jpeg|png|svg|webp)$/i.test(url));
                 
-                setImageResults(urls.slice(0, 4));
+                setImageResults(urls.slice(0, 8)); // Display up to 8 matching image choices
             }
         } catch (err) {
             console.error("Image search failed", err);
@@ -180,8 +180,8 @@ const StockManagement = () => {
                                                             <img 
                                                                 src={item.image_url} 
                                                                 alt={item.item_name} 
-                                                                className="rounded-circle me-2 border" 
-                                                                style={{width: '35px', height: '35px', objectFit: 'cover'}} 
+                                                                className="rounded-circle me-2 border bg-white" 
+                                                                style={{width: '35px', height: '35px', objectFit: 'contain'}} 
                                                                 onError={(e) => { e.target.style.display = 'none'; }}
                                                             />
                                                         ) : (
@@ -349,7 +349,7 @@ const StockManagement = () => {
                                             
                                             {/* Web Image Results Grid */}
                                             {imageResults.length > 0 && (
-                                                <div className="row g-2 mt-2 bg-light p-2 rounded border">
+                                                <div className="row g-2 mt-2 bg-light p-2 rounded border" style={{ maxHeight: '220px', overflowY: 'auto' }}>
                                                     <span className="small text-muted mb-1 d-block"><i className="fa fa-info-circle me-1"></i> Click an image to assign it:</span>
                                                     {imageResults.map((url, idx) => (
                                                         <div className="col-3" key={idx}>
@@ -362,7 +362,7 @@ const StockManagement = () => {
                                                                     src={url} 
                                                                     alt={`result-${idx}`} 
                                                                     className="img-fluid rounded" 
-                                                                    style={{ height: '75px', width: '100%', objectFit: 'cover' }} 
+                                                                    style={{ height: '70px', width: '100%', objectFit: 'contain' }} 
                                                                 />
                                                             </div>
                                                         </div>
