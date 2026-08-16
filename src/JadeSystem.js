@@ -311,7 +311,16 @@ const JadeSystem = ({ userRole, onLogout, username }) => {
     const SidebarContent = () => (
         <div className="d-flex flex-column h-100 py-4 px-3 sidebar-scrollable-container">
             <div className="mb-4 px-3 brand-section">
+                {/* Full Brand View */}
                 <h3 className="fw-900 tracking-tighter text-white mb-0 fst-italic sidebar-logo-text">DPS<span className="jade-accent fst-normal">system</span></h3>
+                
+                {/* Compact DPS / System view for Collapsed Mode */}
+                <div className="brand-icon-view text-center fw-900 fst-italic lh-sm">
+                    <div className="text-white fs-5">DPS</div>
+                    <div className="jade-accent tiny-text text-uppercase fst-normal">System</div>
+                </div>
+
+                {/* User Box - Disappears in Icon Only Mode */}
                 <div className="d-flex align-items-center mt-3 p-2 rounded-4 sidebar-user-box border border-white border-opacity-10 profile-wrapper">
                     <img src={`https://ui-avatars.com/api/?name=${username || userRole}&background=00ff88&color=000&bold=true`} className="rounded-circle me-2 profile-img flex-shrink-0" alt="User" />
                     <div className="overflow-hidden profile-details">
@@ -442,21 +451,43 @@ const JadeSystem = ({ userRole, onLogout, username }) => {
                     border-radius: 10px;
                 }
 
-                /* Text clipping when collapsed */
-                .sidebar-desktop.sidebar-collapsed .brand-section h3 span,
-                .sidebar-desktop.sidebar-collapsed .profile-details,
+                /* Default hide the compact icon-only logo stack */
+                .brand-icon-view {
+                    display: none;
+                }
+
+                /* Text & user element clipping/disappearing when collapsed */
+                .sidebar-desktop.sidebar-collapsed .sidebar-logo-text,
+                .sidebar-desktop.sidebar-collapsed .profile-wrapper,
                 .sidebar-desktop.sidebar-collapsed .nav-label,
                 .sidebar-desktop.sidebar-collapsed .terminate-label {
                     opacity: 0;
                     visibility: hidden;
+                    height: 0;
+                    margin: 0;
+                    padding: 0;
+                    overflow: hidden;
                     transition: opacity 0.2s ease;
                 }
-                .sidebar-desktop:hover .brand-section h3 span,
-                .sidebar-desktop:hover .profile-details,
+                
+                /* Show compact brand icon view when collapsed */
+                .sidebar-desktop.sidebar-collapsed .brand-icon-view {
+                    display: block;
+                    opacity: 1;
+                    visibility: visible;
+                }
+
+                /* Reveal all items back smoothly on desktop hover */
+                .sidebar-desktop:hover .sidebar-logo-text,
+                .sidebar-desktop:hover .profile-wrapper,
                 .sidebar-desktop:hover .nav-label,
                 .sidebar-desktop:hover .terminate-label {
                     opacity: 1;
                     visibility: visible;
+                    height: auto;
+                }
+                .sidebar-desktop:hover .brand-icon-view {
+                    display: none;
                 }
 
                 .sidebar-user-box { background: var(--sidebar-bg); box-shadow: inset 4px 4px 10px #000, inset -2px -2px 8px var(--light-shadow); transition: all 0.2s ease; }
