@@ -9,7 +9,7 @@ const SupplierManagement = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedSupplier, setSelectedSupplier] = useState(null);
     const [purchaseHistory, setPurchaseHistory] = useState([]);
-    const [serviceHistory, setServiceHistory] = useState([]);
+    const [returnHistory, setReturnHistory] = useState([]);
     const [expandedRow, setExpandedRow] = useState(null);
     
     // Modal State
@@ -43,12 +43,12 @@ const SupplierManagement = () => {
         setExpandedRow(null); 
         
         try {
-            const [ledgerRes, serviceRes] = await Promise.all([
+            const [ledgerRes, returnRes] = await Promise.all([
                 axios.get(`${BASE_URL}/api/suppliers/${supplier.id}/history`),
                 axios.get(`${BASE_URL}/api/suppliers/${supplier.id}/service-calls`)
             ]);
             setPurchaseHistory(ledgerRes.data);
-            setServiceHistory(serviceRes.data);
+            setReturnHistory(returnRes.data);
         } catch (err) {
             console.error("Error fetching supplier details", err);
         }
@@ -95,10 +95,12 @@ const SupplierManagement = () => {
             case 'fixed':
             case 'resolved':
             case 'paid':
+            case 'refunded':
                 return 'bg-success';
             case 'fixing':
             case 'repairing':
             case 'in progress':
+            case 'processing':
                 return 'bg-warning text-dark';
             case 'pending':
             case 'waiting':
@@ -358,10 +360,10 @@ const SupplierManagement = () => {
                                 </div>
                             </div>
 
-                            {/* Service History */}
+                            {/* Return & Refund Logs */}
                             <div className="card shadow-sm border-0">
                                 <div className="card-header bg-white fw-bold py-3 border-bottom">
-                                    <i className="fas fa-tools me-2 text-warning"></i>Service & Maintenance Logs
+                                    <i className="fas fa-undo-alt me-2 text-warning"></i>Return & Refund Logs
                                 </div>
                                 <div className="table-responsive">
                                     <table className="table table-sm table-hover mb-0">
@@ -373,23 +375,23 @@ const SupplierManagement = () => {
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {serviceHistory.length > 0 ? (
-                                                serviceHistory.map(service => (
-                                                    <tr key={service.id}>
-                                                        <td className="ps-4">{new Date(service.date_logged).toLocaleDateString()}</td>
+                                            {returnHistory.length > 0 ? (
+                                                returnHistory.map(item => (
+                                                    <tr key={item.id}>
+                                                        <td className="ps-4">{new Date(item.date_logged).toLocaleDateString()}</td>
                                                         <td>
-                                                            <div className="fw-bold">{service.item_name || 'Service Item'}</div>
-                                                            <div className="text-muted small">{service.problem || service.description}</div>
+                                                            <div className="fw-bold">{item.item_name || 'Return Item'}</div>
+                                                            <div className="text-muted small">{item.problem || item.description}</div>
                                                         </td>
                                                         <td className="pe-4">
-                                                            <span className={`badge shadow-sm ${getStatusBadgeClass(service.status)}`}>
-                                                                {service.status || 'Pending'}
+                                                            <span className={`badge shadow-sm ${getStatusBadgeClass(item.status)}`}>
+                                                                {item.status || 'Pending'}
                                                             </span>
                                                         </td>
                                                     </tr>
                                                 ))
                                             ) : (
-                                                <tr><td colSpan="3" className="text-center py-5 text-muted">No service records found.</td></tr>
+                                                <tr><td colSpan="3" className="text-center py-5 text-muted">No return & refund records found.</td></tr>
                                             )}
                                         </tbody>
                                     </table>
@@ -402,7 +404,7 @@ const SupplierManagement = () => {
                                 <i className="fas fa-warehouse fa-5x opacity-25 text-primary"></i>
                             </div>
                             <h3>Supplier Manager</h3>
-                            <p className="max-width-400">Please select a supplier from the directory to view their procurement history, maintenance records, and account details.</p>
+                            <p className="max-width-400">Please select a supplier from the directory to view their procurement history, return & refund logs, and account details.</p>
                         </div>
                     )}
                 </div>
