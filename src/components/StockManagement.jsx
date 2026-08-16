@@ -45,14 +45,22 @@ const StockManagement = () => {
         fetchInventory();
         fetchSuppliers();
 
-        // Check URL params for remote scanner mode (?scanner=SESSION_ID)
-        const urlParams = new URLSearchParams(window.location.search);
-        const remoteSession = urlParams.get('scanner');
-        if (remoteSession) {
-            setIsRemoteMode(true);
-            setScannerSessionId(remoteSession);
-            setShowScanner(true);
-        }
+        // Check URL hash for remote scanner mode (#scanner=SESSION_ID)
+        const checkHashForScanner = () => {
+            const hash = window.location.hash;
+            if (hash.includes('scanner=')) {
+                const parts = hash.split('scanner=');
+                if (parts[1]) {
+                    const sessionId = parts[1].split('&')[0];
+                    setIsRemoteMode(true);
+                    setScannerSessionId(sessionId);
+                    setShowScanner(true);
+                }
+            }
+        };
+
+        checkHashForScanner();
+        window.addEventListener('hashchange', checkHashForScanner);
 
         const handleKeyDown = (e) => {
             if (e.key === 'F1') {
@@ -80,6 +88,7 @@ const StockManagement = () => {
         return () => {
             window.removeEventListener('keydown', handleKeyDown);
             window.removeEventListener('storage', handleStorageEvent);
+            window.removeEventListener('hashchange', checkHashForScanner);
         };
     }, []);
 
@@ -156,7 +165,6 @@ const StockManagement = () => {
         if (isRemoteMode && scannerSessionId) {
             // Broadcast scan code to desktop via localStorage channel
             localStorage.setItem(`jadestock_scan_${scannerSessionId}`, code + '_' + Date.now());
-            // Optional subtle visual indicator instead of blocking alert loop
             console.log(`Scanned & Sent to Desktop: ${code}`);
             return;
         }
@@ -340,7 +348,7 @@ const StockManagement = () => {
 
     const startRemoteScannerSession = () => {
         const sessionId = Math.random().toString(36).substring(2, 9);
-        const remoteUrl = `${window.location.origin}${window.location.pathname}?scanner=${sessionId}`;
+        const remoteUrl = `${window.location.origin}${window.location.pathname}#scanner=${sessionId}`;
         
         const checkInterval = setInterval(() => {
             const val = localStorage.getItem(`jadestock_scan_${sessionId}`);
@@ -772,7 +780,7 @@ const StockManagement = () => {
                                 <button type="button" className="btn-close btn-close-white" onClick={() => { 
                                     setShowScanner(false); 
                                     if (isRemoteMode) {
-                                        window.history.replaceState({}, document.title, window.location.pathname);
+                                        window.location.hash = '';
                                         setIsRemoteMode(false);
                                     }
                                 }}></button>
@@ -792,7 +800,7 @@ const StockManagement = () => {
                                 <button type="button" className="btn btn-danger w-100 fw-bold py-2" onClick={() => { 
                                     setShowScanner(false); 
                                     if (isRemoteMode) {
-                                        window.history.replaceState({}, document.title, window.location.pathname);
+                                        window.location.hash = '';
                                         setIsRemoteMode(false);
                                     }
                                 }} style={{ fontSize: '12px' }}>
