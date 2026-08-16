@@ -96,6 +96,7 @@ const SupplierManagement = () => {
             case 'resolved':
             case 'paid':
             case 'refunded':
+            case 'input':
                 return 'bg-success';
             case 'fixing':
             case 'repairing':
@@ -107,6 +108,7 @@ const SupplierManagement = () => {
                 return 'bg-danger';
             case 'cancelled':
             case 'returned':
+            case 'output':
                 return 'bg-secondary';
             default:
                 return 'bg-secondary';
@@ -145,7 +147,7 @@ const SupplierManagement = () => {
     const groupedHistory = useMemo(() => {
         const groups = {};
         purchaseHistory.forEach((item, index) => {
-            const rawName = item.item_name || "Unknown Item";
+            const rawName = item.item_name || `Item #${item.item_id || 'Unknown'}`;
             const normalizedKey = rawName.trim().toLowerCase(); 
             if (!groups[normalizedKey]) {
                 groups[normalizedKey] = {
@@ -155,15 +157,16 @@ const SupplierManagement = () => {
                     transactions: [] 
                 };
             }
-            groups[normalizedKey].qty += 1;
+            groups[normalizedKey].qty += Number(item.qty_change || 1);
             groups[normalizedKey].transactions.push({
                 id: item.id || `row-${index}`, 
-                purchase_date: item.purchase_date,
-                serial_number: item.serial_number,
+                purchase_date: item.date_recorded || item.purchase_date,
+                serial_number: item.serial_number || 'N/A',
                 srp_amount: item.srp_amount,
-                or_number: item.or_number,
-                payment_status: item.payment_status,
-                warranty_period: item.warranty_period
+                ws_price: item.ws_price,
+                or_number: item.or_number || item.courier || 'N/A',
+                payment_status: item.type || item.payment_status || 'Pending',
+                warranty_period: item.warranty_period || '1 Year'
             });
         });
         return Object.values(groups);
@@ -321,27 +324,23 @@ const SupplierManagement = () => {
                                                                         <table className="table table-sm table-bordered bg-white mb-0 shadow-sm rounded">
                                                                             <thead className="table-secondary tiny text-uppercase">
                                                                                 <tr>
-                                                                                    <th className="ps-2">Date</th>
-                                                                                    <th>OR Number</th>
-                                                                                    <th>Serial Number</th>
+                                                                                    <th className="ps-2">Date Recorded</th>
+                                                                                    <th>Courier / Ref</th>
                                                                                     <th>Unit Price</th>
-                                                                                    <th>Status</th>
-                                                                                    <th>Warranty</th>
+                                                                                    <th>Type / Status</th>
                                                                                 </tr>
                                                                             </thead>
                                                                             <tbody>
                                                                                 {group.transactions.map((t) => (
                                                                                     <tr key={t.id}>
-                                                                                        <td className="fw-bold ps-2">{t.purchase_date ? new Date(t.purchase_date).toLocaleDateString() : 'N/A'}</td>
+                                                                                        <td className="fw-bold ps-2">{t.purchase_date ? new Date(t.purchase_date).toLocaleString() : 'N/A'}</td>
                                                                                         <td><span className="badge bg-light text-dark border">{t.or_number || 'N/A'}</span></td>
-                                                                                        <td><code className="text-dark fw-bold">{t.serial_number || 'N/A'}</code></td>
-                                                                                        <td>₱{Number(t.srp_amount || 0).toLocaleString()}</td>
+                                                                                        <td>₱{Number(t.srp_amount || t.ws_price || 0).toLocaleString()}</td>
                                                                                         <td>
                                                                                             <span className={`badge ${getStatusBadgeClass(t.payment_status)}`}>
                                                                                                 {t.payment_status}
                                                                                             </span>
                                                                                         </td>
-                                                                                        <td className="text-muted small">{t.warranty_period || '1 Year'}</td>
                                                                                     </tr>
                                                                                 ))}
                                                                             </tbody>
@@ -370,22 +369,22 @@ const SupplierManagement = () => {
                                         <thead className="table-light">
                                             <tr>
                                                 <th className="ps-4">Date</th>
-                                                <th>Description</th>
-                                                <th className="pe-4">Status</th>
+                                                <th>Description / Courier</th>
+                                                <th className="pe-4">Status / Type</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             {returnHistory.length > 0 ? (
                                                 returnHistory.map(item => (
                                                     <tr key={item.id}>
-                                                        <td className="ps-4">{new Date(item.date_logged).toLocaleDateString()}</td>
+                                                        <td className="ps-4">{item.date_recorded ? new Date(item.date_recorded).toLocaleString() : (item.date_logged ? new Date(item.date_logged).toLocaleDateString() : 'N/A')}</td>
                                                         <td>
-                                                            <div className="fw-bold">{item.item_name || 'Return Item'}</div>
-                                                            <div className="text-muted small">{item.problem || item.description}</div>
+                                                            <div className="fw-bold">{item.item_name || `Item #${item.item_id || 'Return Item'}`}</div>
+                                                            <div className="text-muted small">{item.problem || item.description || `Courier: ${item.courier || 'N/A'}`}</div>
                                                         </td>
                                                         <td className="pe-4">
-                                                            <span className={`badge shadow-sm ${getStatusBadgeClass(item.status)}`}>
-                                                                {item.status || 'Pending'}
+                                                            <span className={`badge shadow-sm ${getStatusBadgeClass(item.status || item.type)}`}>
+                                                                {item.status || item.type || 'Pending'}
                                                             </span>
                                                         </td>
                                                     </tr>
