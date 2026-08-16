@@ -25,6 +25,7 @@ const StockManagement = () => {
     const videoRef = useRef(null);
     const scannerIntervalRef = useRef(null);
     const searchInputRef = useRef(null);
+    const lastScannedCodeRef = useRef({ code: '', time: 0 }); // Anti-flood cooldown lock
 
     // Modal Form State
     const [showModal, setShowModal] = useState(false);
@@ -57,7 +58,7 @@ const StockManagement = () => {
 
         window.addEventListener('keydown', handleKeyDown);
 
-        // DESKTOP CLOUD POLLING: Checks backend every 800ms for incoming mobile scans
+        // DESKTOP CLOUD POLLING WITH ANTI-FLOOD CHECK
         const pollInterval = setInterval(async () => {
             const currentSession = localStorage.getItem('jadestock_active_session');
             if (currentSession && showModal) {
@@ -69,11 +70,19 @@ const StockManagement = () => {
                         
                         if (timestamp !== lastProcessed) {
                             localStorage.setItem(`jadestock_last_processed_${currentSession}`, timestamp);
+                            
+                            // Check if this code was already processed globally or within a short window
+                            const now = Date.now();
+                            if (lastScannedCodeRef.current.code === scannedCode && (now - lastScannedCodeRef.current.time < 2500)) {
+                                return; // Ignore duplicate flood
+                            }
+                            lastScannedCodeRef.current = { code: scannedCode, time: now };
+
                             handleDesktopReceiveScan(scannedCode);
                         }
                     }
                 } catch (err) {
-                    // Ignore polling network dropouts silently
+                    // Ignore background polling errors silently
                 }
             }
         }, 800);
@@ -84,11 +93,17 @@ const StockManagement = () => {
         };
     }, [showModal]);
 
-    // Desktop receives scan from paired phone
+    // Desktop receives unique scan from paired phone
     const handleDesktopReceiveScan = (code) => {
         if (navigator.vibrate) navigator.vibrate(150);
 
         setFormData(prev => {
+            // Prevent adding if it already exists in the current serial inputs list
+            if (prev.serial_array.includes(code)) {
+                console.log("Duplicate barcode ignored:", code);
+                return prev;
+            }
+
             const updatedSerials = [...prev.serial_array];
             const emptyIndex = updatedSerials.findIndex(s => !s || s.trim() === '');
 
@@ -168,29 +183,37 @@ const StockManagement = () => {
                     // Scanning frame error fallback
                 }
             }
-        }, 300);
+        }, 400); // Slower loop interval to prevent rapid camera spam
     };
 
     const handleSuccessfulScan = async (code) => {
+        const now = Date.now();
+        // Cooldown check on scanner device side (2.5 seconds block for the same barcode)
+        if (lastScannedCodeRef.current.code === code && (now - lastScannedCodeRef.current.time < 2500)) {
+            return; 
+        }
+        lastScannedCodeRef.current = { code, time: now };
+
         if (navigator.vibrate) navigator.vibrate(150);
 
         if (isRemoteScannerUI && activePairSession) {
-            // Phone pushes scan directly to cloud API
             try {
                 await axios.post(`${BASE_URL}/api/scanner/push`, {
                     session: activePairSession,
                     scannedCode: code,
-                    timestamp: Date.now()
+                    timestamp: now
                 });
-                alert(`Successfully Scanned & Sent to Desktop: ${code}`);
+                console.log(`Scanned & Pushed: ${code}`);
             } catch (err) {
-                alert(`Failed to send scan to server: ${err.message}`);
+                console.error("Failed to push scan", err);
             }
             return;
         }
 
         // Normal local device scan
         setFormData(prev => {
+            if (prev.serial_array.includes(code)) return prev;
+
             const updatedSerials = [...prev.serial_array];
             const emptyIndex = updatedSerials.findIndex(s => !s || s.trim() === '');
 
@@ -850,7 +873,7 @@ const StockManagement = () => {
                                 </div>
                                 <p className="text-secondary small mt-3 mb-0" style={{ fontSize: '11px' }}>
                                     {isRemoteScannerUI 
-                                        ? `Paired with Code: [${activePairSession}]. Every barcode scanned here will instantly populate your desktop's open serial input fields!`
+                                        ? `Paired with Code: [${activePairSession}]. Each unique barcode is sent instantly without flooding.`
                                         : "Align barcode or QR code inside the frame."}
                                 </p>
                             </div>
