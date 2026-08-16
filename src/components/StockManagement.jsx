@@ -335,13 +335,6 @@ const StockManagement = () => {
                     <div className="d-flex align-items-center text-nowrap flex-shrink-0">
                         <div className="rounded-circle me-2 bg-success pulse-dot" style={{ width: '10px', height: '10px' }}></div>
                         <h4 className="mb-0 fw-bold tracking-tighter me-3 fs-5">JADE<span className="text-success">STOCK</span></h4>
-
-                        <div className="d-none d-md-flex align-items-center bg-black border border-secondary rounded px-2.5 py-1.5">
-                            <div className="rounded-circle me-2 bg-success" style={{ width: '6px', height: '6px' }}></div>
-                            <span className="text-secondary fw-bold" style={{ fontSize: '11px' }}>
-                                NODE: <span className="text-white">ACTIVE</span>
-                            </span>
-                        </div>
                     </div>
 
                     <div className="d-flex gap-2.5 align-items-center justify-content-end flex-wrap flex-md-nowrap w-100">
