@@ -69,8 +69,8 @@ const StockManagement = () => {
 
     const startCamera = async () => {
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({ 
-                video: { facingMode: 'environment' } 
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: 'environment' }
             });
             if (videoRef.current) {
                 videoRef.current.srcObject = stream;
@@ -103,8 +103,8 @@ const StockManagement = () => {
             return;
         }
 
-        const barcodeDetector = new WindowBarcodeDetector({ 
-            formats: ['code_128', 'code_39', 'ean_13', 'qr_code', 'upc_a', 'data_matrix'] 
+        const barcodeDetector = new WindowBarcodeDetector({
+            formats: ['code_128', 'code_39', 'ean_13', 'qr_code', 'upc_a', 'data_matrix']
         });
 
         scannerIntervalRef.current = setInterval(async () => {
@@ -131,7 +131,7 @@ const StockManagement = () => {
             const updatedSerials = [...prev.serial_array];
             // Find the first empty input field to fill, or append if all are filled
             const emptyIndex = updatedSerials.findIndex(s => !s || s.trim() === '');
-            
+
             if (emptyIndex !== -1) {
                 updatedSerials[emptyIndex] = code;
             } else {
@@ -178,7 +178,7 @@ const StockManagement = () => {
         }
 
         setExpandedItemId(item.id);
-        
+
         if (!ledgers[item.id]) {
             setLedgerLoading(true);
             try {
@@ -195,7 +195,7 @@ const StockManagement = () => {
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
-        
+
         if (name === 'quantity') {
             const qty = Math.max(1, parseInt(value) || 1);
             setFormData(prev => {
@@ -287,11 +287,11 @@ const StockManagement = () => {
 
     const renderStatusBadge = (qty) => {
         if (qty <= 0) {
-            return <span className="badge rounded-pill bg-danger text-black fw-bold px-2.5 py-1" style={{fontSize: '11px'}}>OUT OF STOCK</span>;
+            return <span className="badge rounded-pill bg-danger text-black fw-bold px-2.5 py-1" style={{ fontSize: '11px' }}>OUT OF STOCK</span>;
         } else if (qty <= 2) {
-            return <span className="badge rounded-pill bg-warning text-black fw-bold px-2.5 py-1" style={{fontSize: '11px'}}>LOW STOCK</span>;
+            return <span className="badge rounded-pill bg-warning text-black fw-bold px-2.5 py-1" style={{ fontSize: '11px' }}>LOW STOCK</span>;
         }
-        return <span className="badge rounded-pill bg-success text-black fw-bold px-2.5 py-1" style={{fontSize: '11px'}}>HEALTHY</span>;
+        return <span className="badge rounded-pill bg-success text-black fw-bold px-2.5 py-1" style={{ fontSize: '11px' }}>HEALTHY</span>;
     };
 
     const formatCurrency = (val) => {
@@ -304,13 +304,13 @@ const StockManagement = () => {
         const itemName = (item.item_name || '').toLowerCase();
         const itemDesc = (item.item_description || '').toLowerCase();
         const itemId = item.id.toString();
-        
+
         return itemName.includes(query) || itemDesc.includes(query) || itemId.includes(query);
     });
 
     return (
         <div className="container-fluid min-vh-100 bg-black text-light p-0 d-flex flex-column font-monospace overflow-x-hidden position-relative">
-            
+
             <style>{`
                 .zoom-hover-img {
                     transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.2s ease;
@@ -330,29 +330,29 @@ const StockManagement = () => {
             `}</style>
 
             {/* HEADER */}
-            <header className="navbar navbar-dark bg-dark border-bottom border-secondary px-3 py-3 sticky-top shadow-sm" style={{zIndex: 1020}}>
+            <header className="navbar navbar-dark bg-dark border-bottom border-secondary px-3 py-3 sticky-top shadow-sm" style={{ zIndex: 1020 }}>
                 <div className="d-flex align-items-center justify-content-between w-100 flex-wrap gap-3">
                     <div className="d-flex align-items-center">
-                        <div className="rounded-circle me-2 bg-success pulse-dot" style={{width: '10px', height: '10px'}}></div>
+                        <div className="rounded-circle me-2 bg-success pulse-dot" style={{ width: '10px', height: '10px' }}></div>
                         <h4 className="mb-0 fw-bold tracking-tighter me-3 fs-5">JADE<span className="text-success">STOCK</span></h4>
-                        
+
                         <div className="d-none d-md-flex align-items-center bg-black border border-secondary rounded px-2.5 py-1.5">
-                            <div className="rounded-circle me-2 bg-success" style={{width: '6px', height: '6px'}}></div>
-                            <span className="text-secondary fw-bold" style={{fontSize: '11px'}}>
+                            <div className="rounded-circle me-2 bg-success" style={{ width: '6px', height: '6px' }}></div>
+                            <span className="text-secondary fw-bold" style={{ fontSize: '11px' }}>
                                 NODE: <span className="text-white">ACTIVE</span>
                             </span>
                         </div>
                     </div>
-                    
+
                     <div className="d-flex gap-2.5 align-items-center w-100 w-md-auto justify-content-between justify-content-md-end">
                         <div className="position-relative flex-grow-1 flex-md-grow-0" style={{ maxWidth: '320px' }}>
-                            <i className="fas fa-search position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary" style={{fontSize: '13px'}}></i>
-                            <input 
+                            <i className="fas fa-search position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary" style={{ fontSize: '13px' }}></i>
+                            <input
                                 ref={searchInputRef}
-                                type="text" 
-                                className="form-control bg-black border-secondary text-white ps-5 w-100" 
-                                placeholder="Search inventory... (Press F1)" 
-                                style={{borderRadius: '20px', fontSize: '13px', padding: '8px 12px 8px 36px'}}
+                                type="text"
+                                className="form-control bg-black border-secondary text-white ps-5 w-100"
+                                placeholder="Search inventory... (Press F1)"
+                                style={{ borderRadius: '20px', fontSize: '13px', padding: '8px 12px 8px 36px' }}
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                             />
@@ -363,10 +363,10 @@ const StockManagement = () => {
                             </button>
                         )}
 
-                        <button 
+                        <button
                             className="btn btn-success fw-bold px-3 py-2 text-black text-nowrap shadow-sm"
                             onClick={() => setShowModal(true)}
-                            style={{fontSize: '13px'}}
+                            style={{ fontSize: '13px' }}
                         >
                             <i className="fas fa-plus-circle me-1.5"></i>ADD STOCK
                         </button>
@@ -378,10 +378,10 @@ const StockManagement = () => {
             <main className="flex-grow-1 p-3 p-md-4 bg-dark bg-opacity-10">
                 <div className="card bg-dark border border-secondary shadow-lg rounded-3">
                     <div className="card-header bg-black bg-opacity-50 border-bottom border-secondary py-3 px-4 d-flex justify-content-between align-items-center">
-                        <span className="fw-bold text-success uppercase" style={{fontSize: '13px'}}>
+                        <span className="fw-bold text-success uppercase" style={{ fontSize: '13px' }}>
                             <i className="fas fa-boxes me-2"></i>INVENTORY LEDGER & STOCK LEVELS
                         </span>
-                        <span className="badge bg-secondary text-white px-2.5 py-1.5" style={{fontSize: '11px'}}>
+                        <span className="badge bg-secondary text-white px-2.5 py-1.5" style={{ fontSize: '11px' }}>
                             TOTAL ITEMS: {filteredInventory.length}
                         </span>
                     </div>
@@ -393,8 +393,8 @@ const StockManagement = () => {
                         ) : filteredInventory.length > 0 ? (
                             <>
                                 <div className="table-responsive mb-0 d-none d-lg-block">
-                                    <table className="table table-dark table-hover table-striped align-middle mb-0 text-nowrap" style={{fontSize: '13px'}}>
-                                        <thead className="table-secondary text-uppercase text-black fw-bold" style={{fontSize: '12px'}}>
+                                    <table className="table table-dark table-hover table-striped align-middle mb-0 text-nowrap" style={{ fontSize: '13px' }}>
+                                        <thead className="table-secondary text-uppercase text-black fw-bold" style={{ fontSize: '12px' }}>
                                             <tr>
                                                 <th className="py-3 ps-4">Item #</th>
                                                 <th className="py-3">Item Name & Description</th>
@@ -417,43 +417,43 @@ const StockManagement = () => {
                                                             <td className="fw-semibold py-3">
                                                                 <div className="d-flex align-items-center">
                                                                     {item.image_url ? (
-                                                                        <img 
-                                                                            src={item.image_url} 
-                                                                            alt={item.item_name} 
-                                                                            className="rounded me-3 border border-secondary bg-black zoom-hover-img" 
-                                                                            style={{width: '38px', height: '38px', objectFit: 'contain'}} 
+                                                                        <img
+                                                                            src={item.image_url}
+                                                                            alt={item.item_name}
+                                                                            className="rounded me-3 border border-secondary bg-black zoom-hover-img"
+                                                                            style={{ width: '38px', height: '38px', objectFit: 'contain' }}
                                                                             onClick={() => setLightboxItem(item)}
                                                                             title="Click to view Lightbox"
                                                                             onError={(e) => { e.target.style.display = 'none'; }}
                                                                         />
                                                                     ) : (
-                                                                        <div className="rounded bg-black text-secondary d-flex align-items-center justify-content-center me-3 border border-secondary" style={{width: '38px', height: '38px', fontSize: '12px'}}>
+                                                                        <div className="rounded bg-black text-secondary d-flex align-items-center justify-content-center me-3 border border-secondary" style={{ width: '38px', height: '38px', fontSize: '12px' }}>
                                                                             <i className="fas fa-image"></i>
                                                                         </div>
                                                                     )}
                                                                     <div>
                                                                         <span className="text-white fw-bold d-block fs-6">{item.item_name}</span>
-                                                                        {item.item_description && <small className="text-secondary text-truncate d-block mt-0.5" style={{maxWidth: '300px', fontSize: '11px'}}>{item.item_description}</small>}
+                                                                        {item.item_description && <small className="text-secondary text-truncate d-block mt-0.5" style={{ maxWidth: '300px', fontSize: '11px' }}>{item.item_description}</small>}
                                                                     </div>
                                                                 </div>
                                                             </td>
                                                             <td className="text-center">
-                                                                <span className="badge bg-black text-white border border-secondary px-2.5 py-1.5" style={{fontSize: '12px'}}>{item.total_qty || 0}</span>
+                                                                <span className="badge bg-black text-white border border-secondary px-2.5 py-1.5" style={{ fontSize: '12px' }}>{item.total_qty || 0}</span>
                                                             </td>
                                                             <td className="text-center">
-                                                                <span className="badge bg-black text-danger border border-secondary px-2.5 py-1.5" style={{fontSize: '12px'}}>{item.soldout_qty || 0}</span>
+                                                                <span className="badge bg-black text-danger border border-secondary px-2.5 py-1.5" style={{ fontSize: '12px' }}>{item.soldout_qty || 0}</span>
                                                             </td>
                                                             <td className="text-center fw-bold text-success fs-6">
                                                                 {item.available_qty || 0}
                                                             </td>
                                                             <td>{renderStatusBadge(item.available_qty)}</td>
                                                             <td className="text-end pe-4">
-                                                                <button 
+                                                                <button
                                                                     className={`btn px-3 py-1.5 fw-bold ${isExpanded ? 'btn-success text-black' : 'btn-outline-success text-success'}`}
-                                                                    style={{fontSize: '12px'}}
+                                                                    style={{ fontSize: '12px' }}
                                                                     onClick={() => toggleLedger(item)}
                                                                 >
-                                                                    <i className={`fas ${isExpanded ? 'fa-chevron-up' : 'fa-history'} me-1.5`}></i> 
+                                                                    <i className={`fas ${isExpanded ? 'fa-chevron-up' : 'fa-history'} me-1.5`}></i>
                                                                     {isExpanded ? 'HIDE' : 'LEDGER'}
                                                                 </button>
                                                             </td>
@@ -464,7 +464,7 @@ const StockManagement = () => {
                                                                 <td colSpan="7" className="bg-black p-4 border-bottom border-secondary">
                                                                     <div className="card bg-dark border border-secondary rounded-3 shadow-inner">
                                                                         <div className="card-header bg-black py-2.5 px-4 d-flex justify-content-between align-items-center border-bottom border-secondary">
-                                                                            <span className="fw-bold text-success uppercase" style={{fontSize: '12px'}}>
+                                                                            <span className="fw-bold text-success uppercase" style={{ fontSize: '12px' }}>
                                                                                 <i className="fas fa-list-alt me-2"></i> Movement History // {item.item_name} (Click row to inspect details)
                                                                             </span>
                                                                             <button className="btn btn-sm btn-link text-secondary p-0" onClick={() => setExpandedItemId(null)}>
@@ -476,8 +476,8 @@ const StockManagement = () => {
                                                                                 <div className="text-center py-4 text-secondary">Loading ledger transactions...</div>
                                                                             ) : itemLedger.length > 0 ? (
                                                                                 <div className="table-responsive mb-0">
-                                                                                    <table className="table table-dark table-striped mb-0 align-middle text-nowrap" style={{fontSize: '12px'}}>
-                                                                                        <thead className="text-secondary uppercase" style={{fontSize: '11px'}}>
+                                                                                    <table className="table table-dark table-striped mb-0 align-middle text-nowrap" style={{ fontSize: '12px' }}>
+                                                                                        <thead className="text-secondary uppercase" style={{ fontSize: '11px' }}>
                                                                                             <tr>
                                                                                                 <th className="py-2.5 ps-4">Date & Time</th>
                                                                                                 <th className="py-2.5">Type</th>
@@ -490,15 +490,15 @@ const StockManagement = () => {
                                                                                         </thead>
                                                                                         <tbody>
                                                                                             {itemLedger.map((entry, idx) => (
-                                                                                                <tr 
-                                                                                                    key={idx} 
+                                                                                                <tr
+                                                                                                    key={idx}
                                                                                                     className="ledger-clickable-row"
                                                                                                     onClick={() => setSelectedLedgerEntry({ ...entry, parentItem: item })}
                                                                                                     title="Click to view full transaction details"
                                                                                                 >
                                                                                                     <td className="ps-4 text-secondary">{new Date(entry.date).toLocaleString()}</td>
                                                                                                     <td>
-                                                                                                        <span className={`badge px-2.5 py-1 ${['in', 'input'].includes(entry.type.toLowerCase()) ? 'bg-success text-black' : 'bg-danger text-white'}`} style={{fontSize: '10px'}}>
+                                                                                                        <span className={`badge px-2.5 py-1 ${['in', 'input'].includes(entry.type.toLowerCase()) ? 'bg-success text-black' : 'bg-danger text-white'}`} style={{ fontSize: '10px' }}>
                                                                                                             {entry.type.toUpperCase()}
                                                                                                         </span>
                                                                                                     </td>
@@ -537,58 +537,58 @@ const StockManagement = () => {
                                         const itemLedger = ledgers[item.id] || [];
 
                                         return (
-                                            <div key={item.id} className="card bg-black border border-secondary rounded-3 p-3 text-light" style={{fontSize: '12px'}}>
+                                            <div key={item.id} className="card bg-black border border-secondary rounded-3 p-3 text-light" style={{ fontSize: '12px' }}>
                                                 <div className="d-flex align-items-center justify-content-between mb-2.5">
                                                     <div className="d-flex align-items-center gap-2.5">
                                                         {item.image_url ? (
-                                                            <img 
-                                                                src={item.image_url} 
-                                                                alt={item.item_name} 
-                                                                className="rounded border border-secondary bg-dark zoom-hover-img" 
-                                                                style={{width: '38px', height: '38px', objectFit: 'contain'}} 
+                                                            <img
+                                                                src={item.image_url}
+                                                                alt={item.item_name}
+                                                                className="rounded border border-secondary bg-dark zoom-hover-img"
+                                                                style={{ width: '38px', height: '38px', objectFit: 'contain' }}
                                                                 onClick={() => setLightboxItem(item)}
                                                                 onError={(e) => { e.target.style.display = 'none'; }}
                                                             />
                                                         ) : (
-                                                            <div className="rounded bg-dark text-secondary d-flex align-items-center justify-content-center border border-secondary" style={{width: '38px', height: '38px', fontSize: '12px'}}>
+                                                            <div className="rounded bg-dark text-secondary d-flex align-items-center justify-content-center border border-secondary" style={{ width: '38px', height: '38px', fontSize: '12px' }}>
                                                                 <i className="fas fa-image"></i>
                                                             </div>
                                                         )}
                                                         <div>
-                                                            <h6 className="mb-0 fw-bold text-white text-truncate" style={{fontSize: '13px', maxWidth: '190px'}}>{item.item_name}</h6>
-                                                            <small className="text-secondary" style={{fontSize: '10px'}}>ID: #{item.id}</small>
+                                                            <h6 className="mb-0 fw-bold text-white text-truncate" style={{ fontSize: '13px', maxWidth: '190px' }}>{item.item_name}</h6>
+                                                            <small className="text-secondary" style={{ fontSize: '10px' }}>ID: #{item.id}</small>
                                                         </div>
                                                     </div>
                                                     {renderStatusBadge(item.available_qty)}
                                                 </div>
 
-                                                <div className="row g-2 text-center bg-dark rounded-2 p-2 my-2" style={{fontSize: '11px'}}>
+                                                <div className="row g-2 text-center bg-dark rounded-2 p-2 my-2" style={{ fontSize: '11px' }}>
                                                     <div className="col-4 border-end border-secondary">
-                                                        <span className="text-secondary d-block" style={{fontSize: '10px'}}>TOTAL</span>
+                                                        <span className="text-secondary d-block" style={{ fontSize: '10px' }}>TOTAL</span>
                                                         <span className="fw-bold text-white fs-6">{item.total_qty || 0}</span>
                                                     </div>
                                                     <div className="col-4 border-end border-secondary">
-                                                        <span className="text-secondary d-block" style={{fontSize: '10px'}}>SOLD</span>
+                                                        <span className="text-secondary d-block" style={{ fontSize: '10px' }}>SOLD</span>
                                                         <span className="fw-bold text-danger fs-6">{item.soldout_qty || 0}</span>
                                                     </div>
                                                     <div className="col-4">
-                                                        <span className="text-secondary d-block" style={{fontSize: '10px'}}>AVAILABLE</span>
+                                                        <span className="text-secondary d-block" style={{ fontSize: '10px' }}>AVAILABLE</span>
                                                         <span className="fw-bold text-success fs-6">{item.available_qty || 0}</span>
                                                     </div>
                                                 </div>
 
-                                                <button 
+                                                <button
                                                     className={`btn w-100 py-2 fw-bold ${isExpanded ? 'btn-success text-black' : 'btn-outline-success text-success'}`}
-                                                    style={{fontSize: '11px'}}
+                                                    style={{ fontSize: '11px' }}
                                                     onClick={() => toggleLedger(item)}
                                                 >
-                                                    <i className={`fas ${isExpanded ? 'fa-chevron-up' : 'fa-history'} me-1.5`}></i> 
+                                                    <i className={`fas ${isExpanded ? 'fa-chevron-up' : 'fa-history'} me-1.5`}></i>
                                                     {isExpanded ? 'HIDE LEDGER' : 'VIEW LEDGER MOVEMENT'}
                                                 </button>
 
                                                 {isExpanded && (
                                                     <div className="mt-3 pt-3 border-top border-secondary bg-dark p-2.5 rounded-2 animate-fade-in">
-                                                        <span className="fw-bold text-success d-block mb-2" style={{fontSize: '11px'}}>
+                                                        <span className="fw-bold text-success d-block mb-2" style={{ fontSize: '11px' }}>
                                                             <i className="fas fa-list-alt me-1.5"></i> LEDGER HISTORY (Tap entry for details):
                                                         </span>
                                                         {ledgerLoading ? (
@@ -596,15 +596,15 @@ const StockManagement = () => {
                                                         ) : itemLedger.length > 0 ? (
                                                             <div className="d-flex flex-column gap-2">
                                                                 {itemLedger.map((entry, idx) => (
-                                                                    <div 
-                                                                        key={idx} 
-                                                                        className="bg-black border border-secondary rounded-2 p-2.5 text-light ledger-clickable-row" 
-                                                                        style={{fontSize: '11px'}}
+                                                                    <div
+                                                                        key={idx}
+                                                                        className="bg-black border border-secondary rounded-2 p-2.5 text-light ledger-clickable-row"
+                                                                        style={{ fontSize: '11px' }}
                                                                         onClick={() => setSelectedLedgerEntry({ ...entry, parentItem: item })}
                                                                     >
-                                                                        <div className="d-flex justify-content-between text-secondary mb-1" style={{fontSize: '10px'}}>
+                                                                        <div className="d-flex justify-content-between text-secondary mb-1" style={{ fontSize: '10px' }}>
                                                                             <span>{new Date(entry.date).toLocaleString()}</span>
-                                                                            <span className={`badge ${['in', 'input'].includes(entry.type.toLowerCase()) ? 'bg-success text-black' : 'bg-danger text-white'}`} style={{fontSize: '9px'}}>
+                                                                            <span className={`badge ${['in', 'input'].includes(entry.type.toLowerCase()) ? 'bg-success text-black' : 'bg-danger text-white'}`} style={{ fontSize: '9px' }}>
                                                                                 {entry.type.toUpperCase()}
                                                                             </span>
                                                                         </div>
@@ -612,7 +612,7 @@ const StockManagement = () => {
                                                                             Qty: <span className={entry.qty > 0 ? 'text-success' : 'text-danger'}>{entry.qty > 0 ? `+${entry.qty}` : entry.qty}</span>
                                                                         </div>
                                                                         <div className="text-secondary mb-0.5">Source: <span className="text-white">{entry.source || 'N/A'}</span></div>
-                                                                        <div className="text-secondary fst-italic" style={{fontSize: '10px'}}>{entry.address || 'N/A'}</div>
+                                                                        <div className="text-secondary fst-italic" style={{ fontSize: '10px' }}>{entry.address || 'N/A'}</div>
                                                                     </div>
                                                                 ))}
                                                             </div>
@@ -642,7 +642,7 @@ const StockManagement = () => {
                     <div className="modal-dialog modal-dialog-centered modal-xl">
                         <div className="modal-content bg-dark border border-secondary text-white font-monospace shadow-2xl rounded-3 overflow-hidden">
                             <div className="modal-header border-secondary py-2.5 px-3 bg-black d-flex justify-content-between align-items-center">
-                                <span className="text-success fw-bold" style={{fontSize: '12px'}}>MEDIA LIGHTBOX // #{lightboxItem.id} - {lightboxItem.item_name}</span>
+                                <span className="text-success fw-bold" style={{ fontSize: '12px' }}>MEDIA LIGHTBOX // #{lightboxItem.id} - {lightboxItem.item_name}</span>
                                 <button type="button" className="btn-close btn-close-white" onClick={() => setLightboxItem(null)}></button>
                             </div>
                             <div className="modal-body p-0">
@@ -670,7 +670,7 @@ const StockManagement = () => {
                     <div className="modal-dialog modal-dialog-centered modal-xl">
                         <div className="modal-content bg-dark border border-success text-white font-monospace shadow-2xl rounded-3 overflow-hidden">
                             <div className="modal-header border-secondary py-2.5 px-3 bg-black d-flex justify-content-between align-items-center">
-                                <span className="text-success fw-bold" style={{fontSize: '12px'}}>TRANSACTION DETAILS // #{selectedLedgerEntry.parentItem?.id}</span>
+                                <span className="text-success fw-bold" style={{ fontSize: '12px' }}>TRANSACTION DETAILS // #{selectedLedgerEntry.parentItem?.id} {selectedLedgerEntry.parentItem?.item_name}</span>
                                 <button type="button" className="btn-close btn-close-white" onClick={() => setSelectedLedgerEntry(null)}></button>
                             </div>
                             <div className="modal-body p-0">
@@ -693,7 +693,7 @@ const StockManagement = () => {
                                                 <span className="text-success">{formatCurrency(selectedLedgerEntry.freightCost || selectedLedgerEntry.shipping_cost)}</span>
                                             </div>
 
-<div className="d-flex justify-content-between border-bottom border-secondary pb-1.5">
+                                            <div className="d-flex justify-content-between border-bottom border-secondary pb-1.5">
                                                 <span className="text-secondary">SRP:</span>
                                                 <span className="text-success">{formatCurrency(selectedLedgerEntry.SRP || selectedLedgerEntry.srp_amount)}</span>
                                             </div>
@@ -713,7 +713,7 @@ const StockManagement = () => {
                     <div className="modal-dialog modal-dialog-centered modal-md">
                         <div className="modal-content bg-dark border border-success text-white font-monospace shadow-2xl rounded-3">
                             <div className="modal-header border-secondary py-3 px-4 bg-black">
-                                <h6 className="modal-title text-success fw-bold" style={{fontSize: '13px'}}>
+                                <h6 className="modal-title text-success fw-bold" style={{ fontSize: '13px' }}>
                                     <i className="fas fa-camera me-2"></i>SCAN BARCODE / QR CODE
                                 </h6>
                                 <button type="button" className="btn-close btn-close-white" onClick={() => setShowScanner(false)}></button>
@@ -723,12 +723,12 @@ const StockManagement = () => {
                                     <video ref={videoRef} className="w-100 h-100" style={{ objectFit: 'cover', maxHeight: '350px' }} muted playsInline></video>
                                     <div className="position-absolute top-50 start-50 translate-middle border border-success border-2 rounded opacity-50 pointer-event-none" style={{ width: '80%', height: '120px' }}></div>
                                 </div>
-                                <p className="text-secondary small mt-3 mb-0" style={{fontSize: '11px'}}>
+                                <p className="text-secondary small mt-3 mb-0" style={{ fontSize: '11px' }}>
                                     Align barcode or QR code inside the frame. Scanned numbers will automatically fill up the serial slots sequentially.
                                 </p>
                             </div>
                             <div className="modal-footer border-secondary bg-black py-3 px-4">
-                                <button type="button" className="btn btn-danger w-100 fw-bold py-2" onClick={() => setShowScanner(false)} style={{fontSize: '12px'}}>
+                                <button type="button" className="btn btn-danger w-100 fw-bold py-2" onClick={() => setShowScanner(false)} style={{ fontSize: '12px' }}>
                                     DONE / CLOSE SCANNER
                                 </button>
                             </div>
@@ -743,41 +743,41 @@ const StockManagement = () => {
                     <div className="modal-dialog modal-dialog-centered modal-lg">
                         <div className="modal-content bg-dark border border-secondary text-white font-monospace shadow-2xl rounded-3">
                             <div className="modal-header border-secondary py-3 px-4 bg-black bg-opacity-50">
-                                <h6 className="modal-title text-success fw-bold uppercase" style={{fontSize: '13px'}}>
+                                <h6 className="modal-title text-success fw-bold uppercase" style={{ fontSize: '13px' }}>
                                     <i className="fas fa-plus-circle me-2"></i>Stock Entry / Inbound Terminal
                                 </h6>
                                 <button type="button" className="btn-close btn-close-white" onClick={() => setShowModal(false)}></button>
                             </div>
                             <form onSubmit={handleSubmitStock}>
-                                <div className="modal-body p-4" style={{fontSize: '12px'}}>
+                                <div className="modal-body p-4" style={{ fontSize: '12px' }}>
                                     <div className="row g-3">
                                         <div className="col-12 col-md-6">
                                             <label className="text-secondary fw-bold mb-1.5">SUPPLIER</label>
-                                            <select name="supplier_id" className="form-select bg-black text-white border-secondary py-2" value={formData.supplier_id} onChange={handleInputChange} required style={{fontSize: '12px'}}>
+                                            <select name="supplier_id" className="form-select bg-black text-white border-secondary py-2" value={formData.supplier_id} onChange={handleInputChange} required style={{ fontSize: '12px' }}>
                                                 <option value="">Select Supplier</option>
                                                 {suppliers.map(sup => (
                                                     <option key={sup.id} value={sup.id}>{sup.name}</option>
                                                 ))}
                                             </select>
                                         </div>
-                                        
+
                                         <div className="col-12 col-md-6">
                                             <label className="text-secondary fw-bold mb-1.5">ITEM NAME</label>
-                                            <select className="form-select bg-black text-white border-secondary mb-2 py-2" onChange={handleItemSelectChange} defaultValue="" style={{fontSize: '12px'}}>
+                                            <select className="form-select bg-black text-white border-secondary mb-2 py-2" onChange={handleItemSelectChange} defaultValue="" style={{ fontSize: '12px' }}>
                                                 <option value="">-- Select Existing or Type New --</option>
                                                 {inventory.map(inv => (
                                                     <option key={inv.id} value={inv.id}>{inv.item_name}</option>
                                                 ))}
                                             </select>
-                                            <input type="text" name="item_name" className="form-control bg-black text-white border-secondary py-2" placeholder="Or type new item name" value={formData.item_name} onChange={handleInputChange} style={{fontSize: '12px'}} required />
+                                            <input type="text" name="item_name" className="form-control bg-black text-white border-secondary py-2" placeholder="Or type new item name" value={formData.item_name} onChange={handleInputChange} style={{ fontSize: '12px' }} required />
                                         </div>
 
                                         <div className="col-12">
                                             <label className="text-success fw-bold mb-1.5">PICTURE (IMAGE URL)</label>
                                             <div className="input-group mb-2">
                                                 <span className="input-group-text bg-black border-secondary text-secondary"><i className="fas fa-link"></i></span>
-                                                <input type="text" name="image_url" className="form-control bg-black text-white border-secondary py-2" placeholder="Paste image address URL" value={formData.image_url} onChange={handleInputChange} style={{fontSize: '12px'}} />
-                                                <button type="button" className="btn btn-outline-success px-3" onClick={openGoogleImageSearch} disabled={!formData.item_name} style={{fontSize: '12px'}}>
+                                                <input type="text" name="image_url" className="form-control bg-black text-white border-secondary py-2" placeholder="Paste image address URL" value={formData.image_url} onChange={handleInputChange} style={{ fontSize: '12px' }} />
+                                                <button type="button" className="btn btn-outline-success px-3" onClick={openGoogleImageSearch} disabled={!formData.item_name} style={{ fontSize: '12px' }}>
                                                     <i className="fas fa-external-link-alt me-1.5"></i>Google Images
                                                 </button>
                                             </div>
@@ -785,32 +785,32 @@ const StockManagement = () => {
 
                                         <div className="col-12">
                                             <label className="text-secondary fw-bold mb-1.5">DESCRIPTION</label>
-                                            <textarea name="description" className="form-control bg-black text-white border-secondary py-2" rows="2" placeholder="Hardware specifications..." value={formData.description} onChange={handleInputChange} style={{fontSize: '12px'}}></textarea>
+                                            <textarea name="description" className="form-control bg-black text-white border-secondary py-2" rows="2" placeholder="Hardware specifications..." value={formData.description} onChange={handleInputChange} style={{ fontSize: '12px' }}></textarea>
                                         </div>
-                                        
+
                                         <div className="col-12 col-md-4">
                                             <label className="text-secondary fw-bold mb-1.5">QUANTITY</label>
-                                            <input type="number" name="quantity" className="form-control bg-black text-white border-secondary py-2" placeholder="1" min="1" value={formData.quantity} onChange={handleInputChange} style={{fontSize: '12px'}} required />
+                                            <input type="number" name="quantity" className="form-control bg-black text-white border-secondary py-2" placeholder="1" min="1" value={formData.quantity} onChange={handleInputChange} style={{ fontSize: '12px' }} required />
                                         </div>
-                                        
+
                                         <div className="col-12 col-md-4">
                                             <label className="text-secondary fw-bold mb-1.5">W/S PRICE</label>
-                                            <input type="number" step="0.01" name="ws_price" className="form-control bg-black text-white border-secondary py-2" placeholder="0.00" value={formData.ws_price} onChange={handleInputChange} style={{fontSize: '12px'}} required />
+                                            <input type="number" step="0.01" name="ws_price" className="form-control bg-black text-white border-secondary py-2" placeholder="0.00" value={formData.ws_price} onChange={handleInputChange} style={{ fontSize: '12px' }} required />
                                         </div>
-                                        
+
                                         <div className="col-12 col-md-4">
                                             <label className="text-secondary fw-bold mb-1.5">SRP AMOUNT</label>
-                                            <input type="number" step="0.01" name="srp_amount" className="form-control bg-black text-white border-secondary py-2" placeholder="0.00" value={formData.srp_amount} onChange={handleInputChange} style={{fontSize: '12px'}} required />
+                                            <input type="number" step="0.01" name="srp_amount" className="form-control bg-black text-white border-secondary py-2" placeholder="0.00" value={formData.srp_amount} onChange={handleInputChange} style={{ fontSize: '12px' }} required />
                                         </div>
-                                        
+
                                         <div className="col-12 col-md-6">
                                             <label className="text-secondary fw-bold mb-1.5">FORWARD BY</label>
-                                            <input type="text" name="forward_by" className="form-control bg-black text-white border-secondary py-2" placeholder="Courier / Handler" value={formData.forward_by} onChange={handleInputChange} style={{fontSize: '12px'}} />
+                                            <input type="text" name="forward_by" className="form-control bg-black text-white border-secondary py-2" placeholder="Courier / Handler" value={formData.forward_by} onChange={handleInputChange} style={{ fontSize: '12px' }} />
                                         </div>
-                                        
+
                                         <div className="col-12 col-md-6">
                                             <label className="text-secondary fw-bold mb-1.5">FREIGHT COST</label>
-                                            <input type="number" step="0.01" name="freight_cost" className="form-control bg-black text-white border-secondary py-2" placeholder="0.00" value={formData.freight_cost} onChange={handleInputChange} style={{fontSize: '12px'}} />
+                                            <input type="number" step="0.01" name="freight_cost" className="form-control bg-black text-white border-secondary py-2" placeholder="0.00" value={formData.freight_cost} onChange={handleInputChange} style={{ fontSize: '12px' }} />
                                         </div>
 
                                         {/* DYNAMIC INDIVIDUAL SERIAL INPUT FIELDS */}
@@ -819,42 +819,42 @@ const StockManagement = () => {
                                                 <label className="text-success fw-bold mb-0">
                                                     SERIAL NUMBERS ({formData.serial_array.length} Required)
                                                 </label>
-                                                <button 
-                                                    type="button" 
+                                                <button
+                                                    type="button"
                                                     className="btn btn-sm btn-outline-success py-1 px-2.5 fw-bold"
                                                     onClick={() => setShowScanner(true)}
-                                                    style={{fontSize: '11px'}}
+                                                    style={{ fontSize: '11px' }}
                                                 >
                                                     <i className="fas fa-camera me-1.5"></i>SCAN WITH PHONE CAMERA
                                                 </button>
                                             </div>
-                                            
-                                            <div className="d-flex flex-column gap-2 p-2.5 bg-black rounded border border-secondary" style={{maxHeight: '200px', overflowY: 'auto'}}>
+
+                                            <div className="d-flex flex-column gap-2 p-2.5 bg-black rounded border border-secondary" style={{ maxHeight: '200px', overflowY: 'auto' }}>
                                                 {formData.serial_array.map((serialVal, index) => (
                                                     <div key={index} className="input-group input-group-sm">
-                                                        <span className="input-group-text bg-dark text-secondary border-secondary" style={{width: '42px', fontSize: '11px'}}>
+                                                        <span className="input-group-text bg-dark text-secondary border-secondary" style={{ width: '42px', fontSize: '11px' }}>
                                                             #{index + 1}
                                                         </span>
-                                                        <input 
-                                                            type="text" 
-                                                            className="form-control bg-black text-white border-secondary" 
-                                                            placeholder={`Enter serial number for item #${index + 1}`} 
-                                                            value={serialVal} 
-                                                            onChange={(e) => handleSerialChange(index, e.target.value)} 
-                                                            style={{fontSize: '12px'}}
+                                                        <input
+                                                            type="text"
+                                                            className="form-control bg-black text-white border-secondary"
+                                                            placeholder={`Enter serial number for item #${index + 1}`}
+                                                            value={serialVal}
+                                                            onChange={(e) => handleSerialChange(index, e.target.value)}
+                                                            style={{ fontSize: '12px' }}
                                                         />
                                                     </div>
                                                 ))}
                                             </div>
-                                            <small className="text-secondary mt-1.5 d-block" style={{fontSize: '10px'}}>
+                                            <small className="text-secondary mt-1.5 d-block" style={{ fontSize: '10px' }}>
                                                 Changing the quantity above will automatically add or remove individual serial input slots.
                                             </small>
                                         </div>
                                     </div>
                                 </div>
                                 <div className="modal-footer border-secondary bg-black py-3 px-4">
-                                    <button type="button" className="btn btn-dark border-secondary text-secondary px-4 py-2" onClick={() => setShowModal(false)} style={{fontSize: '12px'}}>CANCEL</button>
-                                    <button type="submit" className="btn btn-success fw-bold text-black px-4 py-2" disabled={submitting} style={{fontSize: '12px'}}>
+                                    <button type="button" className="btn btn-dark border-secondary text-secondary px-4 py-2" onClick={() => setShowModal(false)} style={{ fontSize: '12px' }}>CANCEL</button>
+                                    <button type="submit" className="btn btn-success fw-bold text-black px-4 py-2" disabled={submitting} style={{ fontSize: '12px' }}>
                                         {submitting ? 'COMMITTING...' : 'COMMIT STOCK ENTRY'}
                                     </button>
                                 </div>
