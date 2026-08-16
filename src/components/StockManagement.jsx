@@ -670,7 +670,7 @@ const StockManagement = () => {
                     <div className="modal-dialog modal-dialog-centered modal-xl">
                         <div className="modal-content bg-dark border border-success text-white font-monospace shadow-2xl rounded-3 overflow-hidden">
                             <div className="modal-header border-secondary py-2.5 px-3 bg-black d-flex justify-content-between align-items-center">
-                                <span className="text-success fw-bold" style={{ fontSize: '12px' }}>{selectedLedgerEntry.parentItem?.type} DETAILS // #{selectedLedgerEntry.parentItem?.id} {selectedLedgerEntry.parentItem?.item_name}</span>
+                                <span className="text-success fw-bold" style={{ fontSize: '12px' }}>{selectedLedgerEntry.type} DETAILS // #{selectedLedgerEntry.parentItem?.id} {selectedLedgerEntry.parentItem?.item_name}</span>
                                 <button type="button" className="btn-close btn-close-white" onClick={() => setSelectedLedgerEntry(null)}></button>
                             </div>
                             <div className="modal-body p-0">
