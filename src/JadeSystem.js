@@ -314,8 +314,8 @@ const JadeSystem = ({ userRole, onLogout, username }) => {
                 {/* Full Brand View */}
                 <h3 className="fw-900 tracking-tighter text-white mb-0 fst-italic sidebar-logo-text">DPS<span className="jade-accent fst-normal">system</span></h3>
                 
-                {/* Compact DPS / System view for Collapsed Mode */}
-                <div className="brand-icon-view text-center fw-900 fst-italic lh-sm">
+                {/* Compact Centered DPS / System view for Collapsed Mode */}
+                <div className="brand-icon-view text-center fw-900 fst-italic lh-sm w-100">
                     <div className="text-white fs-5">DPS</div>
                     <div className="jade-accent tiny-text text-uppercase fst-normal">System</div>
                 </div>
@@ -451,7 +451,7 @@ const JadeSystem = ({ userRole, onLogout, username }) => {
                     border-radius: 10px;
                 }
 
-                /* Default hide the compact icon-only logo stack */
+                /* Default hide the compact centered icon-only logo stack */
                 .brand-icon-view {
                     display: none;
                 }
@@ -470,11 +470,15 @@ const JadeSystem = ({ userRole, onLogout, username }) => {
                     transition: opacity 0.2s ease;
                 }
                 
-                /* Show compact brand icon view when collapsed */
+                /* Show and center compact brand icon view when collapsed */
                 .sidebar-desktop.sidebar-collapsed .brand-icon-view {
-                    display: block;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
                     opacity: 1;
                     visibility: visible;
+                    width: 100%;
                 }
 
                 /* Reveal all items back smoothly on desktop hover */
