@@ -57,31 +57,32 @@ const StockManagement = () => {
 
         window.addEventListener('keydown', handleKeyDown);
 
-        // DESKTOP POLLING INTERVAL: Check localStorage every 300ms for incoming mobile scans
-        const pollInterval = setInterval(() => {
+        // DESKTOP CLOUD POLLING: Checks backend every 800ms for incoming mobile scans
+        const pollInterval = setInterval(async () => {
             const currentSession = localStorage.getItem('jadestock_active_session');
-            if (currentSession) {
-                const scanKey = `jadestock_scan_data_${currentSession}`;
-                const scannedData = localStorage.getItem(scanKey);
-                if (scannedData) {
-                    const cleanCode = scannedData.split('_')[0];
-                    const timestamp = scannedData.split('_')[1];
-                    
-                    // Prevent processing the exact same scan twice
-                    const lastProcessed = localStorage.getItem(`jadestock_last_processed_${currentSession}`);
-                    if (timestamp !== lastProcessed) {
-                        localStorage.setItem(`jadestock_last_processed_${currentSession}`, timestamp);
-                        handleDesktopReceiveScan(cleanCode);
+            if (currentSession && showModal) {
+                try {
+                    const res = await axios.get(`${BASE_URL}/api/scanner/poll?session=${currentSession}`);
+                    if (res.data && res.data.scannedCode) {
+                        const { scannedCode, timestamp } = res.data;
+                        const lastProcessed = localStorage.getItem(`jadestock_last_processed_${currentSession}`);
+                        
+                        if (timestamp !== lastProcessed) {
+                            localStorage.setItem(`jadestock_last_processed_${currentSession}`, timestamp);
+                            handleDesktopReceiveScan(scannedCode);
+                        }
                     }
+                } catch (err) {
+                    // Ignore polling network dropouts silently
                 }
             }
-        }, 300);
+        }, 800);
 
         return () => {
             window.removeEventListener('keydown', handleKeyDown);
             clearInterval(pollInterval);
         };
-    }, []);
+    }, [showModal]);
 
     // Desktop receives scan from paired phone
     const handleDesktopReceiveScan = (code) => {
@@ -170,13 +171,21 @@ const StockManagement = () => {
         }, 300);
     };
 
-    const handleSuccessfulScan = (code) => {
+    const handleSuccessfulScan = async (code) => {
         if (navigator.vibrate) navigator.vibrate(150);
 
         if (isRemoteScannerUI && activePairSession) {
-            // Phone broadcasts scan to localStorage for desktop polling to pick up
-            localStorage.setItem(`jadestock_scan_data_${activePairSession}`, code + '_' + Date.now());
-            alert(`Successfully Scanned & Sent: ${code}`);
+            // Phone pushes scan directly to cloud API
+            try {
+                await axios.post(`${BASE_URL}/api/scanner/push`, {
+                    session: activePairSession,
+                    scannedCode: code,
+                    timestamp: Date.now()
+                });
+                alert(`Successfully Scanned & Sent to Desktop: ${code}`);
+            } catch (err) {
+                alert(`Failed to send scan to server: ${err.message}`);
+            }
             return;
         }
 
@@ -362,7 +371,7 @@ const StockManagement = () => {
         const code = Math.floor(100000 + Math.random() * 900000).toString();
         setActivePairSession(code);
         localStorage.setItem('jadestock_active_session', code);
-        alert(`Pairing Code Generated: ${code}\n\nOpen https://dps.ricalgen.eu.org on your mobile phone, click "Pair as Mobile Scanner", and enter code: ${code}`);
+        alert(`Pairing Code Generated: ${code}\n\nOpen https://dps.ricalgen.eu.org on your mobile phone, click "PAIR THIS PHONE AS SCANNER", and enter code: ${code}`);
     };
 
     return (
