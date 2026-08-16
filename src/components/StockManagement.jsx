@@ -685,7 +685,7 @@ const StockManagement = () => {
                                                 <span className="text-success fw-bold">{selectedLedgerEntry.qty}</span>
                                             </div>
                                             <div className="d-flex justify-content-between border-bottom border-secondary pb-1.5">
-                                                <span className="text-secondary">SOURCE:</span>
+                                                <span className="text-secondary">{(selectedLedgerEntry.type || '').toLowerCase() === 'output' ? 'CUSTOMER:' : 'SUPPLIER:'}</span>
                                                 <span className="text-white">{selectedLedgerEntry.source}</span>
                                             </div>
                                             <div className="d-flex justify-content-between border-bottom border-secondary pb-1.5">
