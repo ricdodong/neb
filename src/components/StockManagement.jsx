@@ -362,7 +362,7 @@ const StockManagement = () => {
                                 <i className="fas fa-times"></i>
                             </button>
                         )}
-
+<div style={{ width: '10px' }}></div>
                         <button
                             className="btn btn-success fw-bold px-3 py-2 text-black text-nowrap shadow-sm"
                             onClick={() => setShowModal(true)}
