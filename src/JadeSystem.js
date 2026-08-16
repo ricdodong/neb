@@ -3,6 +3,7 @@ import axios from 'axios';
 import { Toast, ToastContainer, Offcanvas, Modal } from 'react-bootstrap';
 // Components
 import CustomerManagement from './components/CustomerManagement';
+import SupplierManagement from './components/SupplierManagement';
 import StockManagement from './components/StockManagement';
 import CallLogs from './components/CallLogs';
 import PointOfSale from './components/PointOfSale';
@@ -147,6 +148,7 @@ const DashboardHome = ({ userRole, setActivePage, activities, dashboardStats, us
                         {[
                             { title: 'New Transaction', desc: 'Launch POS Terminal', icon: 'fa-cart-plus', target: 'pos' },
                             { title: 'Inventory Log', desc: 'Add/Update Hardware', icon: 'fa-boxes-stacked', target: 'stocks' },
+                            { title: 'Suppliers File', desc: 'Supplier Directory & Ledger', icon: 'fa-truck', target: 'suppliers' },
                             { title: 'Call Logs', desc: 'Broken Unit Service', icon: 'fa-headset', target: 'call logs' },
                             { title: 'Customer File', desc: 'CRM & History', icon: 'fa-address-card', target: 'customers' },
                             { title: 'PO Receives', desc: 'Log Inbound Logistics', icon: 'fa-file-import', target: 'po receives' }
@@ -297,6 +299,7 @@ const JadeSystem = ({ userRole, onLogout, username }) => {
         { id: 'dashboard', label: 'Mainframe', icon: 'fa-microchip', roles: ['admin', 'sales', 'technical'] },
         { id: 'pos', label: 'Point of Sale', icon: 'fa-cash-register', roles: ['admin', 'sales'] },
         { id: 'stocks', label: 'Inventory', icon: 'fa-laptop-code', roles: ['admin', 'technical', 'sales'] },
+        { id: 'suppliers', label: 'Suppliers', icon: 'fa-truck', roles: ['admin', 'technical', 'sales'] },
         { id: 'customers', label: 'Clients', icon: 'fa-users-gear', roles: ['admin', 'sales'] },
         { id: 'services', label: 'Repair Lab', icon: 'fa-screwdriver-wrench', roles: ['admin', 'technical'] },
         { id: 'call logs', label: 'Call Logs', icon: 'fa-headset', roles: ['admin', 'technical', 'sales'] },
@@ -373,7 +376,7 @@ const JadeSystem = ({ userRole, onLogout, username }) => {
                 <section className="page-container mt-0 p-2 p-md-3 animate-fade-in">
                     <div className="d-flex justify-content-between align-items-center mb-2">
                         <h2 className="fw-900 text-white text-uppercase tracking-widest m-0 h4">
-                            {activePage === 'po receives' ? 'PO Receives' : activePage.replace('call logs', 'Call Logs')}
+                            {activePage === 'po receives' ? 'PO Receives' : activePage === 'suppliers' ? 'Suppliers' : activePage.replace('call logs', 'Call Logs')}
                         </h2>
                         <div className="status-badge px-3 py-1 rounded-pill d-none d-md-block border border-white border-opacity-10">
                             <span className="jade-accent tiny-text">Simple System For a Simple Company</span>
@@ -391,6 +394,7 @@ const JadeSystem = ({ userRole, onLogout, username }) => {
                             />
                         )}
                         {activePage === 'stocks' && <StockManagement triggerToast={triggerToast} userRole={userRole} />}
+                        {activePage === 'suppliers' && <SupplierManagement triggerToast={triggerToast} userRole={userRole} />}
                         {activePage === 'customers' && <CustomerManagement triggerToast={triggerToast} userRole={userRole} />}
                         {activePage === 'call logs' && <CallLogs triggerToast={triggerToast} userRole={userRole} />}
                         {activePage === 'pos' && <PointOfSale triggerToast={triggerToast} userRole={userRole} />}
