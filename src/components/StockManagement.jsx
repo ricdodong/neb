@@ -27,11 +27,12 @@ const StockManagement = () => {
     const searchInputRef = useRef(null);
     const lastScannedCodeRef = useRef({ code: '', time: 0 }); // Anti-flood cooldown lock
 
-    // Modal Form State
+    // Modal Form State (Added item type: repairable or consumable)
     const [showModal, setShowModal] = useState(false);
     const [formData, setFormData] = useState({
         supplier_id: '',
         item_name: '',
+        type: 'repairable', // Default item type option
         description: '',
         quantity: '1',
         ws_price: '',
@@ -71,7 +72,6 @@ const StockManagement = () => {
                         if (timestamp !== lastProcessed) {
                             localStorage.setItem(`jadestock_last_processed_${currentSession}`, timestamp);
                             
-                            // Check if this code was already processed globally or within a short window
                             const now = Date.now();
                             if (lastScannedCodeRef.current.code === scannedCode && (now - lastScannedCodeRef.current.time < 2500)) {
                                 return; // Ignore duplicate flood
@@ -98,9 +98,7 @@ const StockManagement = () => {
         if (navigator.vibrate) navigator.vibrate(150);
 
         setFormData(prev => {
-            // Prevent adding if it already exists in the current serial inputs list
             if (prev.serial_array.includes(code)) {
-                console.log("Duplicate barcode ignored:", code);
                 return prev;
             }
 
@@ -183,12 +181,11 @@ const StockManagement = () => {
                     // Scanning frame error fallback
                 }
             }
-        }, 400); // Slower loop interval to prevent rapid camera spam
+        }, 400);
     };
 
     const handleSuccessfulScan = async (code) => {
         const now = Date.now();
-        // Cooldown check on scanner device side (2.5 seconds block for the same barcode)
         if (lastScannedCodeRef.current.code === code && (now - lastScannedCodeRef.current.time < 2500)) {
             return; 
         }
@@ -203,14 +200,12 @@ const StockManagement = () => {
                     scannedCode: code,
                     timestamp: now
                 });
-                console.log(`Scanned & Pushed: ${code}`);
             } catch (err) {
                 console.error("Failed to push scan", err);
             }
             return;
         }
 
-        // Normal local device scan
         setFormData(prev => {
             if (prev.serial_array.includes(code)) return prev;
 
@@ -310,7 +305,7 @@ const StockManagement = () => {
     const handleItemSelectChange = (e) => {
         const selectedId = e.target.value;
         if (!selectedId) {
-            setFormData(prev => ({ ...prev, item_name: '', description: '', srp_amount: '', image_url: '' }));
+            setFormData(prev => ({ ...prev, item_name: '', description: '', srp_amount: '', image_url: '', type: 'repairable' }));
             return;
         }
 
@@ -321,7 +316,8 @@ const StockManagement = () => {
                 item_name: found.item_name || '',
                 description: found.item_description || '',
                 srp_amount: found.srp_amount || '',
-                image_url: found.image_url || ''
+                image_url: found.image_url || '',
+                type: found.type || 'repairable'
             }));
         }
     };
@@ -348,6 +344,7 @@ const StockManagement = () => {
             setFormData({
                 supplier_id: '',
                 item_name: '',
+                type: 'repairable',
                 description: '',
                 quantity: '1',
                 ws_price: '',
@@ -532,6 +529,7 @@ const StockManagement = () => {
                                                 <tr>
                                                     <th className="py-3 ps-4">Item #</th>
                                                     <th className="py-3">Item Name & Description</th>
+                                                    <th className="py-3 text-center">Type</th>
                                                     <th className="py-3 text-center">Total Stock</th>
                                                     <th className="py-3 text-center">Sold</th>
                                                     <th className="py-3 text-center">Available</th>
@@ -572,6 +570,11 @@ const StockManagement = () => {
                                                                     </div>
                                                                 </td>
                                                                 <td className="text-center">
+                                                                    <span className={`badge ${item.type === 'consumable' ? 'bg-info text-black' : 'bg-warning text-black'} fw-bold px-2 py-1`} style={{ fontSize: '10px' }}>
+                                                                        {(item.type || 'repairable').toUpperCase()}
+                                                                    </span>
+                                                                </td>
+                                                                <td className="text-center">
                                                                     <span className="badge bg-black text-white border border-secondary px-2.5 py-1.5" style={{ fontSize: '12px' }}>{item.total_qty || 0}</span>
                                                                 </td>
                                                                 <td className="text-center">
@@ -595,7 +598,7 @@ const StockManagement = () => {
 
                                                             {isExpanded && (
                                                                 <tr>
-                                                                    <td colSpan="7" className="bg-black p-4 border-bottom border-secondary">
+                                                                    <td colSpan="8" className="bg-black p-4 border-bottom border-secondary">
                                                                         <div className="card bg-dark border border-secondary rounded-3 shadow-inner">
                                                                             <div className="card-header bg-black py-2.5 px-4 d-flex justify-content-between align-items-center border-bottom border-secondary">
                                                                                 <span className="fw-bold text-success uppercase" style={{ fontSize: '12px' }}>
@@ -689,8 +692,13 @@ const StockManagement = () => {
                                                                 </div>
                                                             )}
                                                             <div>
-                                                                <h6 className="mb-0 fw-bold text-white text-truncate" style={{ fontSize: '13px', maxWidth: '190px' }}>{item.item_name}</h6>
-                                                                <small className="text-secondary" style={{ fontSize: '10px' }}>ID: #{item.id}</small>
+                                                                <h6 className="mb-0 fw-bold text-white text-truncate" style={{ fontSize: '13px', maxWidth: '170px' }}>{item.item_name}</h6>
+                                                                <div className="d-flex gap-2 align-items-center mt-0.5">
+                                                                    <small className="text-secondary" style={{ fontSize: '10px' }}>ID: #{item.id}</small>
+                                                                    <span className={`badge ${item.type === 'consumable' ? 'bg-info text-black' : 'bg-warning text-black'} px-1.5 py-0.5`} style={{ fontSize: '9px' }}>
+                                                                        {(item.type || 'repairable').toUpperCase()}
+                                                                    </span>
+                                                                </div>
                                                             </div>
                                                         </div>
                                                         {renderStatusBadge(item.available_qty)}
@@ -829,7 +837,7 @@ const StockManagement = () => {
                                             </div>
                                             <div className="d-flex justify-content-between border-bottom border-secondary pb-1.5">
                                                 <span className="text-secondary">FORWARD BY:</span>
-                                                <span className="text-success fw-bold">{selectedLedgerEntry.forwardBy}</span>
+                                                <span className="text-success fw-bold">{selectedLedgerEntry.forwardedBy}</span>
                                             </div>
                                             <div className="d-flex justify-content-between border-bottom border-secondary pb-1.5">
                                                 <span className="text-secondary">FREIGHT COST:</span>
@@ -920,6 +928,15 @@ const StockManagement = () => {
                                                 ))}
                                             </select>
                                             <input type="text" name="item_name" className="form-control bg-black text-white border-secondary py-2" placeholder="Or type new item name" value={formData.item_name} onChange={handleInputChange} style={{ fontSize: '12px' }} required />
+                                        </div>
+
+                                        {/* ITEM TYPE OPTION (REPAIRABLE OR CONSUMABLE) */}
+                                        <div className="col-12">
+                                            <label className="text-secondary fw-bold mb-1.5">ITEM TYPE / CLASSIFICATION</label>
+                                            <select name="type" className="form-select bg-black text-white border-secondary py-2" value={formData.type} onChange={handleInputChange} style={{ fontSize: '12px' }}>
+                                                <option value="repairable">Repairable (Warranty / Tracked)</option>
+                                                <option value="consumable">Consumable (Non-repairable / General Stock)</option>
+                                            </select>
                                         </div>
 
                                         <div className="col-12">
