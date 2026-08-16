@@ -17,8 +17,10 @@ const StockManagement = () => {
     const [lightboxItem, setLightboxItem] = useState(null);
     const [selectedLedgerEntry, setSelectedLedgerEntry] = useState(null);
 
-    // Camera Scanner State
+    // Camera & Remote Scanner States
     const [showScanner, setShowScanner] = useState(false);
+    const [isRemoteMode, setIsRemoteMode] = useState(false);
+    const [scannerSessionId, setScannerSessionId] = useState('');
     const videoRef = useRef(null);
     const scannerIntervalRef = useRef(null);
 
@@ -43,6 +45,15 @@ const StockManagement = () => {
         fetchInventory();
         fetchSuppliers();
 
+        // Check URL params for remote scanner mode (?scanner=SESSION_ID)
+        const urlParams = new URLSearchParams(window.location.search);
+        const remoteSession = urlParams.get('scanner');
+        if (remoteSession) {
+            setIsRemoteMode(true);
+            setScannerSessionId(remoteSession);
+            setShowScanner(true);
+        }
+
         const handleKeyDown = (e) => {
             if (e.key === 'F1') {
                 e.preventDefault();
@@ -54,7 +65,22 @@ const StockManagement = () => {
         };
 
         window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
+
+        // Listen for cross-tab storage events if using remote mobile scanner sync
+        const handleStorageEvent = (e) => {
+            if (e.key && e.key.startsWith('jadestock_scan_')) {
+                const scannedCode = e.newValue;
+                if (scannedCode) {
+                    handleSuccessfulScan(scannedCode);
+                }
+            }
+        };
+        window.addEventListener('storage', handleStorageEvent);
+
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+            window.removeEventListener('storage', handleStorageEvent);
+        };
     }, []);
 
     // HANDLE CAMERA BARCODE / QR SCANNING
@@ -127,9 +153,15 @@ const StockManagement = () => {
             navigator.vibrate(150);
         }
 
+        if (isRemoteMode && scannerSessionId) {
+            // Broadcast scan code to desktop via localStorage channel
+            localStorage.setItem(`jadestock_scan_${scannerSessionId}`, code + '_' + Date.now());
+            alert(`Scanned & Sent to Desktop: ${code}`);
+            return;
+        }
+
         setFormData(prev => {
             const updatedSerials = [...prev.serial_array];
-            // Find the first empty input field to fill, or append if all are filled
             const emptyIndex = updatedSerials.findIndex(s => !s || s.trim() === '');
 
             if (emptyIndex !== -1) {
@@ -201,12 +233,10 @@ const StockManagement = () => {
             setFormData(prev => {
                 const newArray = [...prev.serial_array];
                 if (qty > newArray.length) {
-                    // Add empty slots
                     while (newArray.length < qty) {
                         newArray.push('');
                     }
                 } else {
-                    // Trim slots
                     newArray.length = qty;
                 }
                 return { ...prev, quantity: qty.toString(), serial_array: newArray };
@@ -254,7 +284,6 @@ const StockManagement = () => {
         setSubmitting(true);
 
         try {
-            // Map serial_array into newline-separated string for backend compatibility
             const payload = {
                 ...formData,
                 serial_numbers: formData.serial_array.join('\n')
@@ -307,6 +336,25 @@ const StockManagement = () => {
 
         return itemName.includes(query) || itemDesc.includes(query) || itemId.includes(query);
     });
+
+    const startRemoteScannerSession = () => {
+        const sessionId = Math.random().toString(36).substring(2, 9);
+        const remoteUrl = `${window.location.origin}${window.location.pathname}?scanner=${sessionId}`;
+        
+        // Listen to this specific session storage key
+        const checkInterval = setInterval(() => {
+            const val = localStorage.getItem(`jadestock_scan_${sessionId}`);
+            if (val) {
+                const cleanCode = val.split('_')[0];
+                handleSuccessfulScan(cleanCode);
+                localStorage.removeItem(`jadestock_scan_${sessionId}`);
+            }
+        }, 500);
+
+        // Store cleanup reference
+        window.activeScannerInterval = checkInterval;
+        return remoteUrl;
+    };
 
     return (
         <div className="container-fluid min-vh-100 bg-black text-light p-0 d-flex flex-column font-monospace overflow-x-hidden position-relative">
@@ -673,7 +721,6 @@ const StockManagement = () => {
                                     </div>
                                     <div className="col-12 col-lg-5 bg-dark border-start border-secondary p-4 d-flex flex-column justify-content-between" style={{ fontSize: '12px' }}>
                                         <div className="d-flex flex-column gap-2 bg-black p-3 rounded border border-secondary">
-
                                             <div className="d-flex justify-content-between border-bottom border-secondary pb-1.5">
                                                 <span className="text-secondary">DESCRIPTION:</span>
                                                 <span className="text-success fw-bold">{selectedLedgerEntry.parentItem?.item_description}</span>
@@ -721,9 +768,9 @@ const StockManagement = () => {
                         <div className="modal-content bg-dark border border-success text-white font-monospace shadow-2xl rounded-3">
                             <div className="modal-header border-secondary py-3 px-4 bg-black">
                                 <h6 className="modal-title text-success fw-bold" style={{ fontSize: '13px' }}>
-                                    <i className="fas fa-camera me-2"></i>SCAN BARCODE / QR CODE
+                                    <i className="fas fa-camera me-2"></i>{isRemoteMode ? 'MOBILE COMPANION SCANNER' : 'SCAN BARCODE / QR CODE'}
                                 </h6>
-                                <button type="button" className="btn-close btn-close-white" onClick={() => setShowScanner(false)}></button>
+                                <button type="button" className="btn-close btn-close-white" onClick={() => { setShowScanner(false); if (isRemoteMode) { window.location.href = window.location.pathname; } }}></button>
                             </div>
                             <div className="modal-body p-3 text-center">
                                 <div className="position-relative bg-black rounded border border-success overflow-hidden" style={{ minHeight: '280px' }}>
@@ -731,11 +778,13 @@ const StockManagement = () => {
                                     <div className="position-absolute top-50 start-50 translate-middle border border-success border-2 rounded opacity-50 pointer-event-none" style={{ width: '80%', height: '120px' }}></div>
                                 </div>
                                 <p className="text-secondary small mt-3 mb-0" style={{ fontSize: '11px' }}>
-                                    Align barcode or QR code inside the frame. Scanned numbers will automatically fill up the serial slots sequentially.
+                                    {isRemoteMode 
+                                        ? "Remote Scanner Active! Scanned barcodes will be instantly sent to your desktop session."
+                                        : "Align barcode or QR code inside the frame. Scanned numbers will automatically fill up the serial slots sequentially."}
                                 </p>
                             </div>
                             <div className="modal-footer border-secondary bg-black py-3 px-4">
-                                <button type="button" className="btn btn-danger w-100 fw-bold py-2" onClick={() => setShowScanner(false)} style={{ fontSize: '12px' }}>
+                                <button type="button" className="btn btn-danger w-100 fw-bold py-2" onClick={() => { setShowScanner(false); if (isRemoteMode) { window.location.href = window.location.pathname; } }} style={{ fontSize: '12px' }}>
                                     DONE / CLOSE SCANNER
                                 </button>
                             </div>
@@ -820,20 +869,33 @@ const StockManagement = () => {
                                             <input type="number" step="0.01" name="freight_cost" className="form-control bg-black text-white border-secondary py-2" placeholder="0.00" value={formData.freight_cost} onChange={handleInputChange} style={{ fontSize: '12px' }} />
                                         </div>
 
-                                        {/* DYNAMIC INDIVIDUAL SERIAL INPUT FIELDS */}
+                                        {/* DYNAMIC INDIVIDUAL SERIAL INPUT FIELDS & PHONE SCANNER BRIDGE */}
                                         <div className="col-12">
-                                            <div className="d-flex justify-content-between align-items-center mb-1.5">
+                                            <div className="d-flex justify-content-between align-items-center mb-1.5 flex-wrap gap-2">
                                                 <label className="text-success fw-bold mb-0">
                                                     SERIAL NUMBERS ({formData.serial_array.length} Required)
                                                 </label>
-                                                <button
-                                                    type="button"
-                                                    className="btn btn-sm btn-outline-success py-1 px-2.5 fw-bold"
-                                                    onClick={() => setShowScanner(true)}
-                                                    style={{ fontSize: '11px' }}
-                                                >
-                                                    <i className="fas fa-camera me-1.5"></i>SCAN WITH PHONE CAMERA
-                                                </button>
+                                                <div className="d-flex gap-2">
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn-sm btn-outline-success py-1 px-2.5 fw-bold"
+                                                        onClick={() => setShowScanner(true)}
+                                                        style={{ fontSize: '11px' }}
+                                                    >
+                                                        <i className="fas fa-camera me-1.5"></i>USE THIS DEVICE CAMERA
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn-sm btn-success text-black py-1 px-2.5 fw-bold"
+                                                        onClick={() => {
+                                                            const url = startRemoteScannerSession();
+                                                            prompt("Copy or open this URL on your mobile phone browser to use it as a remote barcode/QR scanner:", url);
+                                                        }}
+                                                        style={{ fontSize: '11px' }}
+                                                    >
+                                                        <i className="fas fa-mobile-alt me-1.5"></i>CONNECT PHONE AS SCANNER
+                                                    </button>
+                                                </div>
                                             </div>
 
                                             <div className="d-flex flex-column gap-2 p-2.5 bg-black rounded border border-secondary" style={{ maxHeight: '200px', overflowY: 'auto' }}>
