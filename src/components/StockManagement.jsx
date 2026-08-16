@@ -701,10 +701,12 @@ const StockManagement = () => {
                                                 <span className="text-secondary">FREIGHT COST:</span>
                                                 <span className="text-success">{formatCurrency(selectedLedgerEntry.freightCost || selectedLedgerEntry.shipping_cost)}</span>
                                             </div>
-                                            <div className="d-flex justify-content-between border-bottom border-secondary pb-1.5">
-                                                <span className="text-secondary">W/S PRICE:</span>
-                                                <span className="text-success">{formatCurrency(selectedLedgerEntry.wsPrice || selectedLedgerEntry.ws_price)}</span>
-                                            </div>
+                                            {(selectedLedgerEntry.type || '').toLowerCase() === 'input' && (
+                                                <div className="d-flex justify-content-between border-bottom border-secondary pb-1.5">
+                                                    <span className="text-secondary">W/S PRICE:</span>
+                                                    <span className="text-success">{formatCurrency(selectedLedgerEntry.wsPrice || selectedLedgerEntry.ws_price)}</span>
+                                                </div>
+                                            )}
                                             <div className="d-flex justify-content-between border-bottom border-secondary pb-1.5">
                                                 <span className="text-secondary">SRP:</span>
                                                 <span className="text-success">{formatCurrency(selectedLedgerEntry.SRP || selectedLedgerEntry.srp_amount)}</span>
