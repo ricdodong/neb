@@ -329,46 +329,45 @@ const StockManagement = () => {
                 }
             `}</style>
 
-            {/* HEADER */}
-            <header className="navbar navbar-dark bg-dark border-bottom border-secondary px-3 py-3 sticky-top shadow-sm" style={{ zIndex: 1020 }}>
-                <div className="d-flex align-items-center justify-content-between w-100 flex-wrap gap-3">
+ {/* HEADER */}
+            <header className="navbar navbar-dark bg-dark border-bottom border-secondary px-3 py-1.5 sticky-top shadow-sm" style={{ zIndex: 1020 }}>
+                <div className="d-flex align-items-center justify-content-between w-100 flex-wrap gap-2">
                     <div className="d-flex align-items-center">
-                        <div className="rounded-circle me-2 bg-success pulse-dot" style={{ width: '10px', height: '10px' }}></div>
-                        <h4 className="mb-0 fw-bold tracking-tighter me-3 fs-5">JADE<span className="text-success">STOCK</span></h4>
+                        <div className="rounded-circle me-2 bg-success pulse-dot" style={{ width: '8px', height: '8px' }}></div>
+                        <h4 className="mb-0 fw-bold tracking-tighter me-3 fs-6">JADE<span className="text-success">STOCK</span></h4>
 
-                        <div className="d-none d-md-flex align-items-center bg-black border border-secondary rounded px-2.5 py-1.5">
-                            <div className="rounded-circle me-2 bg-success" style={{ width: '6px', height: '6px' }}></div>
-                            <span className="text-secondary fw-bold" style={{ fontSize: '11px' }}>
+                        <div className="d-none d-md-flex align-items-center bg-black border border-secondary rounded px-2 py-1">
+                            <div className="rounded-circle me-1.5 bg-success" style={{ width: '5px', height: '5px' }}></div>
+                            <span className="text-secondary fw-bold" style={{ fontSize: '10px' }}>
                                 NODE: <span className="text-white">ACTIVE</span>
                             </span>
                         </div>
                     </div>
 
-                    <div className="d-flex gap-2.5 align-items-center w-100 w-md-auto justify-content-between justify-content-md-end">
-                        <div className="position-relative flex-grow-1 flex-md-grow-0" style={{ maxWidth: '320px' }}>
-                            <i className="fas fa-search position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary" style={{ fontSize: '13px' }}></i>
+                    <div className="d-flex gap-2 align-items-center w-100 w-md-auto justify-content-between justify-content-md-end">
+                        <div className="position-relative flex-grow-1 flex-md-grow-0" style={{ maxWidth: '280px' }}>
+                            <i className="fas fa-search position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary" style={{ fontSize: '12px' }}></i>
                             <input
                                 ref={searchInputRef}
                                 type="text"
-                                className="form-control bg-black border-secondary text-white ps-5 w-100"
+                                className="form-control form-control-sm bg-black border-secondary text-white ps-5 w-100"
                                 placeholder="Search inventory... (Press F1)"
-                                style={{ borderRadius: '20px', fontSize: '13px', padding: '8px 12px 8px 36px' }}
+                                style={{ borderRadius: '20px', fontSize: '12px', padding: '5px 10px 5px 32px' }}
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                             />
                         </div>
                         {searchQuery && (
-                            <button className="btn btn-dark border-secondary text-secondary px-2.5 py-2" onClick={() => setSearchQuery('')}>
-                                <i className="fas fa-times"></i>
+                            <button className="btn btn-sm btn-dark border-secondary text-secondary px-2 py-1" onClick={() => setSearchQuery('')}>
+                                <i className="fas fa-times" style={{ fontSize: '11px' }}></i>
                             </button>
                         )}
-<div style={{ width: '10px' }}></div>
                         <button
-                            className="btn btn-success fw-bold px-3 py-2 text-black text-nowrap shadow-sm"
+                            className="btn btn-sm btn-success fw-bold px-2.5 py-1 text-black text-nowrap shadow-sm"
                             onClick={() => setShowModal(true)}
-                            style={{ fontSize: '13px' }}
+                            style={{ fontSize: '12px' }}
                         >
-                            <i className="fas fa-plus-circle me-1.5"></i>ADD STOCK
+                            <i className="fas fa-plus-circle me-1"></i>ADD STOCK
                         </button>
                     </div>
                 </div>
