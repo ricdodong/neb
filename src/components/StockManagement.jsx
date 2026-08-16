@@ -25,14 +25,14 @@ const StockManagement = () => {
     const videoRef = useRef(null);
     const scannerIntervalRef = useRef(null);
     const searchInputRef = useRef(null);
-    const lastScannedCodeRef = useRef({ code: '', time: 0 }); // Anti-flood cooldown lock
+    const lastScannedCodeRef = useRef({ code: '', time: 0 });
 
-    // Modal Form State (Added item type: repairable or consumable)
+    // Modal Form State
     const [showModal, setShowModal] = useState(false);
     const [formData, setFormData] = useState({
         supplier_id: '',
         item_name: '',
-        type: 'repairable', // Default item type option
+        type: 'repairable',
         description: '',
         quantity: '1',
         ws_price: '',
@@ -74,7 +74,7 @@ const StockManagement = () => {
                             
                             const now = Date.now();
                             if (lastScannedCodeRef.current.code === scannedCode && (now - lastScannedCodeRef.current.time < 2500)) {
-                                return; // Ignore duplicate flood
+                                return; 
                             }
                             lastScannedCodeRef.current = { code: scannedCode, time: now };
 
@@ -95,20 +95,25 @@ const StockManagement = () => {
 
     // Desktop receives unique scan from paired phone
     const handleDesktopReceiveScan = (code) => {
+        const trimmedCode = code.trim();
+        if (!trimmedCode) return;
+
+        // Check if already typed in another row
+        if (formData.serial_array.map(s => s.trim()).includes(trimmedCode)) {
+            alert(`Duplicate Serial Ignored: "${trimmedCode}" is already in the list.`);
+            return;
+        }
+
         if (navigator.vibrate) navigator.vibrate(150);
 
         setFormData(prev => {
-            if (prev.serial_array.includes(code)) {
-                return prev;
-            }
-
             const updatedSerials = [...prev.serial_array];
             const emptyIndex = updatedSerials.findIndex(s => !s || s.trim() === '');
 
             if (emptyIndex !== -1) {
-                updatedSerials[emptyIndex] = code;
+                updatedSerials[emptyIndex] = trimmedCode;
             } else {
-                updatedSerials.push(code);
+                updatedSerials.push(trimmedCode);
             }
 
             return {
@@ -185,11 +190,12 @@ const StockManagement = () => {
     };
 
     const handleSuccessfulScan = async (code) => {
+        const trimmedCode = code.trim();
         const now = Date.now();
-        if (lastScannedCodeRef.current.code === code && (now - lastScannedCodeRef.current.time < 2500)) {
+        if (lastScannedCodeRef.current.code === trimmedCode && (now - lastScannedCodeRef.current.time < 2500)) {
             return; 
         }
-        lastScannedCodeRef.current = { code, time: now };
+        lastScannedCodeRef.current = { code: trimmedCode, time: now };
 
         if (navigator.vibrate) navigator.vibrate(150);
 
@@ -197,7 +203,7 @@ const StockManagement = () => {
             try {
                 await axios.post(`${BASE_URL}/api/scanner/push`, {
                     session: activePairSession,
-                    scannedCode: code,
+                    scannedCode: trimmedCode,
                     timestamp: now
                 });
             } catch (err) {
@@ -207,15 +213,15 @@ const StockManagement = () => {
         }
 
         setFormData(prev => {
-            if (prev.serial_array.includes(code)) return prev;
+            if (prev.serial_array.map(s => s.trim()).includes(trimmedCode)) return prev;
 
             const updatedSerials = [...prev.serial_array];
             const emptyIndex = updatedSerials.findIndex(s => !s || s.trim() === '');
 
             if (emptyIndex !== -1) {
-                updatedSerials[emptyIndex] = code;
+                updatedSerials[emptyIndex] = trimmedCode;
             } else {
-                updatedSerials.push(code);
+                updatedSerials.push(trimmedCode);
             }
 
             return {
@@ -302,6 +308,26 @@ const StockManagement = () => {
         });
     };
 
+    // Check if any serial number is duplicated in the current inputs
+    const getDuplicateSerialsSet = () => {
+        const seen = new Set();
+        const duplicates = new Set();
+        formData.serial_array.forEach(s => {
+            const val = s.trim();
+            if (val) {
+                if (seen.has(val)) {
+                    duplicates.add(val);
+                } else {
+                    seen.add(val);
+                }
+            }
+        });
+        return duplicates;
+    };
+
+    const duplicateSet = getDuplicateSerialsSet();
+    const hasDuplicates = duplicateSet.size > 0;
+
     const handleItemSelectChange = (e) => {
         const selectedId = e.target.value;
         if (!selectedId) {
@@ -330,6 +356,12 @@ const StockManagement = () => {
 
     const handleSubmitStock = async (e) => {
         e.preventDefault();
+
+        if (hasDuplicates) {
+            alert("Cannot submit: Please fix duplicate serial numbers before committing stock entry.");
+            return;
+        }
+
         setSubmitting(true);
 
         try {
@@ -881,7 +913,7 @@ const StockManagement = () => {
                                 </div>
                                 <p className="text-secondary small mt-3 mb-0" style={{ fontSize: '11px' }}>
                                     {isRemoteScannerUI 
-                                        ? `Paired with Code: [${activePairSession}]. Each unique barcode is sent instantly without flooding.`
+                                        ? `Paired with Code: [${activePairSession}]. Duplicate serials are blocked automatically.`
                                         : "Align barcode or QR code inside the frame."}
                                 </p>
                             </div>
@@ -930,7 +962,6 @@ const StockManagement = () => {
                                             <input type="text" name="item_name" className="form-control bg-black text-white border-secondary py-2" placeholder="Or type new item name" value={formData.item_name} onChange={handleInputChange} style={{ fontSize: '12px' }} required />
                                         </div>
 
-                                        {/* ITEM TYPE OPTION (REPAIRABLE OR CONSUMABLE) */}
                                         <div className="col-12">
                                             <label className="text-secondary fw-bold mb-1.5">ITEM TYPE / CLASSIFICATION</label>
                                             <select name="type" className="form-select bg-black text-white border-secondary py-2" value={formData.type} onChange={handleInputChange} style={{ fontSize: '12px' }}>
@@ -980,7 +1011,7 @@ const StockManagement = () => {
                                             <input type="number" step="0.01" name="freight_cost" className="form-control bg-black text-white border-secondary py-2" placeholder="0.00" value={formData.freight_cost} onChange={handleInputChange} style={{ fontSize: '12px' }} />
                                         </div>
 
-                                        {/* DYNAMIC INDIVIDUAL SERIAL INPUT FIELDS & PAIRING BUTTON */}
+                                        {/* SERIAL INPUT FIELDS WITH REAL-TIME DUPLICATE ERROR DISPLAY */}
                                         <div className="col-12">
                                             <div className="d-flex justify-content-between align-items-center mb-1.5 flex-wrap gap-2">
                                                 <label className="text-success fw-bold mb-0">
@@ -1006,22 +1037,39 @@ const StockManagement = () => {
                                                 </div>
                                             </div>
 
+                                            {hasDuplicates && (
+                                                <div className="alert alert-danger py-2 mb-2 text-center fw-bold text-black" style={{ fontSize: '11px' }}>
+                                                    ⚠️ DUPLICATE SERIAL NUMBER DETECTED! Please resolve duplicate values before submission.
+                                                </div>
+                                            )}
+
                                             <div className="d-flex flex-column gap-2 p-2.5 bg-black rounded border border-secondary" style={{ maxHeight: '200px', overflowY: 'auto' }}>
-                                                {formData.serial_array.map((serialVal, index) => (
-                                                    <div key={index} className="input-group input-group-sm">
-                                                        <span className="input-group-text bg-dark text-secondary border-secondary" style={{ width: '42px', fontSize: '11px' }}>
-                                                            #{index + 1}
-                                                        </span>
-                                                        <input
-                                                            type="text"
-                                                            className="form-control bg-black text-white border-secondary"
-                                                            placeholder={`Enter serial number for item #${index + 1}`}
-                                                            value={serialVal}
-                                                            onChange={(e) => handleSerialChange(index, e.target.value)}
-                                                            style={{ fontSize: '12px' }}
-                                                        />
-                                                    </div>
-                                                ))}
+                                                {formData.serial_array.map((serialVal, index) => {
+                                                    const isDuplicated = serialVal.trim() && duplicateSet.has(serialVal.trim());
+
+                                                    return (
+                                                        <div key={index} className="d-flex flex-column">
+                                                            <div className="input-group input-group-sm">
+                                                                <span className="input-group-text bg-dark text-secondary border-secondary" style={{ width: '42px', fontSize: '11px' }}>
+                                                                    #{index + 1}
+                                                                </span>
+                                                                <input
+                                                                    type="text"
+                                                                    className={`form-control bg-black text-white ${isDuplicated ? 'border-danger border-2 text-danger' : 'border-secondary'}`}
+                                                                    placeholder={`Enter serial number for item #${index + 1}`}
+                                                                    value={serialVal}
+                                                                    onChange={(e) => handleSerialChange(index, e.target.value)}
+                                                                    style={{ fontSize: '12px' }}
+                                                                />
+                                                            </div>
+                                                            {isDuplicated && (
+                                                                <small className="text-danger fw-bold mt-0.5 ms-1" style={{ fontSize: '10px' }}>
+                                                                    ❌ Duplicate serial: "{serialVal.trim()}"
+                                                                </small>
+                                                            )}
+                                                        </div>
+                                                    );
+                                                })}
                                             </div>
                                             <small className="text-secondary mt-1.5 d-block" style={{ fontSize: '10px' }}>
                                                 {activePairSession ? `Active Pair Session Code: ${activePairSession}` : "Click 'Connect Phone as Scanner' to generate a pair code for your mobile device."}
@@ -1031,8 +1079,8 @@ const StockManagement = () => {
                                 </div>
                                 <div className="modal-footer border-secondary bg-black py-3 px-4">
                                     <button type="button" className="btn btn-dark border-secondary text-secondary px-4 py-2" onClick={() => setShowModal(false)} style={{ fontSize: '12px' }}>CANCEL</button>
-                                    <button type="submit" className="btn btn-success fw-bold text-black px-4 py-2" disabled={submitting} style={{ fontSize: '12px' }}>
-                                        {submitting ? 'COMMITTING...' : 'COMMIT STOCK ENTRY'}
+                                    <button type="submit" className={`btn fw-bold px-4 py-2 ${hasDuplicates ? 'btn-secondary text-muted' : 'btn-success text-black'}`} disabled={submitting || hasDuplicates} style={{ fontSize: '12px' }}>
+                                        {hasDuplicates ? 'FIX DUPLICATES TO COMMIT' : (submitting ? 'COMMITTING...' : 'COMMIT STOCK ENTRY')}
                                     </button>
                                 </div>
                             </form>
