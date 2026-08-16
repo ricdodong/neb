@@ -156,7 +156,8 @@ const StockManagement = () => {
         if (isRemoteMode && scannerSessionId) {
             // Broadcast scan code to desktop via localStorage channel
             localStorage.setItem(`jadestock_scan_${scannerSessionId}`, code + '_' + Date.now());
-            alert(`Scanned & Sent to Desktop: ${code}`);
+            // Optional subtle visual indicator instead of blocking alert loop
+            console.log(`Scanned & Sent to Desktop: ${code}`);
             return;
         }
 
@@ -341,7 +342,6 @@ const StockManagement = () => {
         const sessionId = Math.random().toString(36).substring(2, 9);
         const remoteUrl = `${window.location.origin}${window.location.pathname}?scanner=${sessionId}`;
         
-        // Listen to this specific session storage key
         const checkInterval = setInterval(() => {
             const val = localStorage.getItem(`jadestock_scan_${sessionId}`);
             if (val) {
@@ -351,7 +351,6 @@ const StockManagement = () => {
             }
         }, 500);
 
-        // Store cleanup reference
         window.activeScannerInterval = checkInterval;
         return remoteUrl;
     };
@@ -770,7 +769,13 @@ const StockManagement = () => {
                                 <h6 className="modal-title text-success fw-bold" style={{ fontSize: '13px' }}>
                                     <i className="fas fa-camera me-2"></i>{isRemoteMode ? 'MOBILE COMPANION SCANNER' : 'SCAN BARCODE / QR CODE'}
                                 </h6>
-                                <button type="button" className="btn-close btn-close-white" onClick={() => { setShowScanner(false); if (isRemoteMode) { window.location.href = window.location.pathname; } }}></button>
+                                <button type="button" className="btn-close btn-close-white" onClick={() => { 
+                                    setShowScanner(false); 
+                                    if (isRemoteMode) {
+                                        window.history.replaceState({}, document.title, window.location.pathname);
+                                        setIsRemoteMode(false);
+                                    }
+                                }}></button>
                             </div>
                             <div className="modal-body p-3 text-center">
                                 <div className="position-relative bg-black rounded border border-success overflow-hidden" style={{ minHeight: '280px' }}>
@@ -779,12 +784,18 @@ const StockManagement = () => {
                                 </div>
                                 <p className="text-secondary small mt-3 mb-0" style={{ fontSize: '11px' }}>
                                     {isRemoteMode 
-                                        ? "Remote Scanner Active! Scanned barcodes will be instantly sent to your desktop session."
+                                        ? "Remote Scanner Active! Each scanned barcode is instantly sent to your desktop input slots."
                                         : "Align barcode or QR code inside the frame. Scanned numbers will automatically fill up the serial slots sequentially."}
                                 </p>
                             </div>
                             <div className="modal-footer border-secondary bg-black py-3 px-4">
-                                <button type="button" className="btn btn-danger w-100 fw-bold py-2" onClick={() => { setShowScanner(false); if (isRemoteMode) { window.location.href = window.location.pathname; } }} style={{ fontSize: '12px' }}>
+                                <button type="button" className="btn btn-danger w-100 fw-bold py-2" onClick={() => { 
+                                    setShowScanner(false); 
+                                    if (isRemoteMode) {
+                                        window.history.replaceState({}, document.title, window.location.pathname);
+                                        setIsRemoteMode(false);
+                                    }
+                                }} style={{ fontSize: '12px' }}>
                                     DONE / CLOSE SCANNER
                                 </button>
                             </div>
