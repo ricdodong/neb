@@ -258,6 +258,7 @@ const JadeSystem = ({ userRole, onLogout, username }) => {
     const [activities, setActivities] = useState([]);
     const [dashboardStats, setDashboardStats] = useState(null);
     const [inventoryData, setInventoryData] = useState([]);
+    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
     // FETCH LIVE ACTIVITY & DASHBOARD STATS
     useEffect(() => {
@@ -302,13 +303,18 @@ const JadeSystem = ({ userRole, onLogout, username }) => {
         { id: 'po receives', label: 'PO Receives', icon: 'fa-file-import', roles: ['admin', 'technical', 'sales'] },
     ];
 
+    const handleNavClick = (id) => {
+        setActivePage(id);
+        setIsSidebarCollapsed(true); // Collapse on click
+    };
+
     const SidebarContent = () => (
-        <div className="d-flex flex-column h-100 py-4 px-3">
-            <div className="mb-5 px-3">
-                <h3 className="fw-900 tracking-tighter text-white mb-0 fst-italic">DPS<span className="jade-accent fst-normal">system</span></h3>
-                <div className="d-flex align-items-center mt-4 p-2 rounded-4 sidebar-user-box border border-white border-opacity-10">
-                    <img src={`https://ui-avatars.com/api/?name=${username || userRole}&background=00ff88&color=000&bold=true`} className="rounded-circle me-2 profile-img" alt="User" />
-                    <div className="overflow-hidden">
+        <div className="d-flex flex-column h-100 py-4 px-3 sidebar-scrollable-container">
+            <div className="mb-4 px-3 brand-section">
+                <h3 className="fw-900 tracking-tighter text-white mb-0 fst-italic sidebar-logo-text">DPS<span className="jade-accent fst-normal">system</span></h3>
+                <div className="d-flex align-items-center mt-3 p-2 rounded-4 sidebar-user-box border border-white border-opacity-10 profile-wrapper">
+                    <img src={`https://ui-avatars.com/api/?name=${username || userRole}&background=00ff88&color=000&bold=true`} className="rounded-circle me-2 profile-img flex-shrink-0" alt="User" />
+                    <div className="overflow-hidden profile-details">
                         <div className="fw-900 text-white small text-truncate">{username || 'OPERATOR'}</div>
                         <span className="jade-accent tiny-text">{userRole.toUpperCase()}</span>
                     </div>
@@ -318,17 +324,17 @@ const JadeSystem = ({ userRole, onLogout, username }) => {
                 <ul className="nav flex-column gap-2">
                     {menuItems.map(item => item.roles.includes(userRole) && (
                         <li className="nav-item" key={item.id}>
-                            <button onClick={() => setActivePage(item.id)} className={`nav-link w-100 text-start border-0 sidebar-btn ${activePage === item.id ? 'active' : ''}`}>
+                            <button onClick={() => handleNavClick(item.id)} className={`nav-link w-100 text-start border-0 sidebar-btn ${activePage === item.id ? 'active' : ''}`} title={item.label}>
                                 <i className={`fa-solid ${item.icon} me-3 fs-6`}></i>
-                                <span className="small fw-bold">{item.label}</span>
+                                <span className="small fw-bold nav-label">{item.label}</span>
                             </button>
                         </li>
                     ))}
                 </ul>
             </nav>
-            <div className="mt-auto pt-4 border-top border-secondary border-opacity-10">
-                <button onClick={onLogout} className="btn terminate-btn w-100 py-3 fw-bold tiny-text">
-                    <i className="fa-solid fa-power-off me-2"></i> TERMINATE SESSION
+            <div className="mt-auto pt-4 border-top border-secondary border-opacity-10 logout-wrapper">
+                <button onClick={onLogout} className="btn terminate-btn w-100 py-3 fw-bold tiny-text" title="Terminate Session">
+                    <i className="fa-solid fa-power-off me-2"></i> <span className="terminate-label">TERMINATE SESSION</span>
                 </button>
             </div>
         </div>
@@ -336,7 +342,7 @@ const JadeSystem = ({ userRole, onLogout, username }) => {
 
     return (
         <div className="obsidian-wrapper">
-            <aside className="sidebar-desktop d-none d-lg-block">
+            <aside className={`sidebar-desktop d-none d-lg-block ${isSidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
                 <SidebarContent />
             </aside>
 
@@ -348,10 +354,13 @@ const JadeSystem = ({ userRole, onLogout, username }) => {
             </header>
 
             <Offcanvas show={showMobileMenu} onHide={() => setShowMobileMenu(false)} className="obsidian-drawer text-white bg-dark">
-                <SidebarContent />
+                <Offcanvas.Header closeButton closeVariant="white" />
+                <Offcanvas.Body className="p-0">
+                    <SidebarContent />
+                </Offcanvas.Body>
             </Offcanvas>
 
-            <main className="main-content container-fluid">
+            <main className="main-content container-fluid" onClick={() => {}}>
                 <section className="page-container mt-0 p-2 p-md-3 animate-fade-in">
                     <div className="d-flex justify-content-between align-items-center mb-2">
                         <h2 className="fw-900 text-white text-uppercase tracking-widest m-0 h4">
@@ -397,16 +406,68 @@ const JadeSystem = ({ userRole, onLogout, username }) => {
                 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
                 .obsidian-wrapper { background-color: var(--base-bg); min-height: 100vh; display: flex; flex-direction: column; color: #e0e0e0; font-family: 'Inter', sans-serif; }
                 @media (min-width: 992px) { .obsidian-wrapper { flex-direction: row; } }
-                .sidebar-desktop { width: 280px; background: var(--sidebar-bg); border-right: 1px solid rgba(255,255,255,0.03); position: sticky; top: 0; height: 100vh; }
+                
+                /* Desktop Sidebar Styling & Scroll/Collapse Behaviors */
+                .sidebar-desktop { 
+                    width: 280px; 
+                    background: var(--sidebar-bg); 
+                    border-right: 1px solid rgba(255,255,255,0.03); 
+                    position: sticky; 
+                    top: 0; 
+                    height: 100vh; 
+                    transition: width 0.3s ease; 
+                    overflow: hidden;
+                    z-index: 1000;
+                }
+                .sidebar-desktop.sidebar-collapsed {
+                    width: 80px;
+                }
+                .sidebar-desktop:hover {
+                    width: 280px !important;
+                }
+                
+                /* Make Sidebar scrollable to the bottom */
+                .sidebar-scrollable-container {
+                    height: 100vh;
+                    overflow-y: auto;
+                    overflow-x: hidden;
+                    scrollbar-width: thin;
+                    scrollbar-color: rgba(255,255,255,0.1) transparent;
+                }
+                .sidebar-scrollable-container::-webkit-scrollbar {
+                    width: 5px;
+                }
+                .sidebar-scrollable-container::-webkit-scrollbar-thumb {
+                    background: rgba(255,255,255,0.1);
+                    border-radius: 10px;
+                }
+
+                /* Text clipping when collapsed */
+                .sidebar-desktop.sidebar-collapsed .brand-section h3 span,
+                .sidebar-desktop.sidebar-collapsed .profile-details,
+                .sidebar-desktop.sidebar-collapsed .nav-label,
+                .sidebar-desktop.sidebar-collapsed .terminate-label {
+                    opacity: 0;
+                    visibility: hidden;
+                    transition: opacity 0.2s ease;
+                }
+                .sidebar-desktop:hover .brand-section h3 span,
+                .sidebar-desktop:hover .profile-details,
+                .sidebar-desktop:hover .nav-label,
+                .sidebar-desktop:hover .terminate-label {
+                    opacity: 1;
+                    visibility: visible;
+                }
+
                 .sidebar-user-box { background: var(--sidebar-bg); box-shadow: inset 4px 4px 10px #000, inset -2px -2px 8px var(--light-shadow); transition: all 0.2s ease; }
-                .sidebar-btn { background: transparent; color: #666 !important; border-radius: 12px; transition: all 0.2s ease; border: 1px solid transparent; padding: 12px 15px; }
+                .sidebar-btn { background: transparent; color: #666 !important; border-radius: 12px; transition: all 0.2s ease; border: 1px solid transparent; padding: 12px 15px; white-space: nowrap; }
                 .sidebar-btn:hover { color: #fff !important; background: rgba(255,255,255,0.03); }
                 .sidebar-btn.active { color: var(--jade) !important; background: rgba(0, 255, 136, 0.03); border: 1px solid rgba(0, 255, 136, 0.1); }
                 .jade-accent { color: var(--jade); text-shadow: 0 0 10px rgba(0, 255, 136, 0.3); }
                 .tiny-text { font-size: 0.65rem; font-weight: 800; letter-spacing: 1.5px; }
                 .profile-img { width: 34px; height: 34px; border: 2px solid var(--jade); padding: 2px; }
                 .status-dot { width: 8px; height: 8px; border-radius: 50%; box-shadow: 0 0 10px currentColor; }
-                .terminate-btn { background: var(--sidebar-bg); color: #ff4d4d; border-radius: 14px; border: 1px solid rgba(255, 77, 77, 0.1); }
+                .terminate-btn { background: var(--sidebar-bg); color: #ff4d4d; border-radius: 14px; border: 1px solid rgba(255, 77, 77, 0.1); white-space: nowrap; }
                 .main-content { flex-grow: 1; height: 100vh; overflow-y: auto; background: var(--base-bg); }
                 .page-container { background: var(--base-bg); box-shadow: 20px 20px 60px #000; border-radius: 30px; min-height: 90vh; border: 1px solid rgba(255,255,255,0.02); }
             `}</style>
