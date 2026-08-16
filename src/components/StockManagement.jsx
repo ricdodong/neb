@@ -680,6 +680,11 @@ const StockManagement = () => {
                                     </div>
                                     <div className="col-12 col-lg-5 bg-dark border-start border-secondary p-4 d-flex flex-column justify-content-between" style={{ fontSize: '12px' }}>
                                         <div className="d-flex flex-column gap-2 bg-black p-3 rounded border border-secondary">
+                                            
+                                            <div className="d-flex justify-content-between border-bottom border-secondary pb-1.5">
+                                                <span className="text-secondary">DESCRIPTION:</span>
+                                                <span className="text-success fw-bold">{selectedLedgerEntry.parentItem?.item_description}</span>
+                                            </div>
                                             <div className="d-flex justify-content-between border-bottom border-secondary pb-1.5">
                                                 <span className="text-secondary">QTY:</span>
                                                 <span className="text-success fw-bold">{selectedLedgerEntry.qty}</span>
