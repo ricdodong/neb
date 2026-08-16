@@ -329,7 +329,7 @@ const StockManagement = () => {
                 }
             `}</style>
 
-{/* HEADER */}
+            {/* HEADER */}
             <header className="navbar navbar-dark bg-dark border-bottom border-secondary px-3 py-2 sticky-top shadow-sm" style={{ zIndex: 1020 }}>
                 <div className="d-flex align-items-center justify-content-between w-100 flex-nowrap gap-3">
                     <div className="d-flex align-items-center text-nowrap flex-shrink-0">
@@ -362,6 +362,7 @@ const StockManagement = () => {
                                 <i className="fas fa-times"></i>
                             </button>
                         )}
+                        <div className="ms-2"></div>
                         <button
                             className="btn btn-success fw-bold px-3 py-2 text-black text-nowrap shadow-sm"
                             onClick={() => setShowModal(true)}
