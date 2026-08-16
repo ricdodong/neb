@@ -692,6 +692,11 @@ const StockManagement = () => {
                                                 <span className="text-secondary">FREIGHT:</span>
                                                 <span className="text-success">{formatCurrency(selectedLedgerEntry.freightCost || selectedLedgerEntry.shipping_cost)}</span>
                                             </div>
+
+<div className="d-flex justify-content-between border-bottom border-secondary pb-1.5">
+                                                <span className="text-secondary">SRP:</span>
+                                                <span className="text-success">{formatCurrency(selectedLedgerEntry.SRP || selectedLedgerEntry.srp_amount)}</span>
+                                            </div>
                                         </div>
                                         <button type="button" className="btn btn-success fw-bold text-black w-100 py-2 mt-3" onClick={() => setSelectedLedgerEntry(null)}>CLOSE</button>
                                     </div>
