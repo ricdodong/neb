@@ -19,9 +19,8 @@ const StockManagement = () => {
 
     // Camera & Remote Pair Scanner States
     const [showScanner, setShowScanner] = useState(false);
-    const [isRemoteScannerUI, setIsRemoteScannerUI] = useState(false); // Phone running as dedicated scanner
+    const [isRemoteScannerUI, setIsRemoteScannerUI] = useState(false);
     const [activePairSession, setActivePairSession] = useState(localStorage.getItem('jadestock_active_session') || '');
-    const [inputPairCode, setInputPairCode] = useState('');
     
     const videoRef = useRef(null);
     const scannerIntervalRef = useRef(null);
@@ -58,22 +57,29 @@ const StockManagement = () => {
 
         window.addEventListener('keydown', handleKeyDown);
 
-        // Listen for cross-tab or cross-device storage sync events
-        const handleStorageEvent = (e) => {
-            // Desktop listening for scans sent from phone
-            if (e.key && e.key.startsWith('jadestock_scan_data_')) {
-                const scannedCode = e.newValue;
-                if (scannedCode) {
-                    const cleanCode = scannedCode.split('_')[0];
-                    handleDesktopReceiveScan(cleanCode);
+        // DESKTOP POLLING INTERVAL: Check localStorage every 300ms for incoming mobile scans
+        const pollInterval = setInterval(() => {
+            const currentSession = localStorage.getItem('jadestock_active_session');
+            if (currentSession) {
+                const scanKey = `jadestock_scan_data_${currentSession}`;
+                const scannedData = localStorage.getItem(scanKey);
+                if (scannedData) {
+                    const cleanCode = scannedData.split('_')[0];
+                    const timestamp = scannedData.split('_')[1];
+                    
+                    // Prevent processing the exact same scan twice
+                    const lastProcessed = localStorage.getItem(`jadestock_last_processed_${currentSession}`);
+                    if (timestamp !== lastProcessed) {
+                        localStorage.setItem(`jadestock_last_processed_${currentSession}`, timestamp);
+                        handleDesktopReceiveScan(cleanCode);
+                    }
                 }
             }
-        };
-        window.addEventListener('storage', handleStorageEvent);
+        }, 300);
 
         return () => {
             window.removeEventListener('keydown', handleKeyDown);
-            window.removeEventListener('storage', handleStorageEvent);
+            clearInterval(pollInterval);
         };
     }, []);
 
@@ -168,7 +174,7 @@ const StockManagement = () => {
         if (navigator.vibrate) navigator.vibrate(150);
 
         if (isRemoteScannerUI && activePairSession) {
-            // Phone broadcasts scan to localStorage for desktop to pick up
+            // Phone broadcasts scan to localStorage for desktop polling to pick up
             localStorage.setItem(`jadestock_scan_data_${activePairSession}`, code + '_' + Date.now());
             alert(`Successfully Scanned & Sent: ${code}`);
             return;
@@ -421,7 +427,6 @@ const StockManagement = () => {
             {/* MAIN CONTENT GRID */}
             <main className="flex-grow-1 p-3 p-md-4 bg-dark bg-opacity-10">
                 
-                {/* BANNER FOR MOBILE USERS TO ACTIVATE SCANNER MODE */}
                 {!isRemoteScannerUI && (
                     <div className="alert bg-dark border border-success text-white mb-4 d-flex justify-content-between align-items-center flex-wrap gap-2 p-3 rounded-3 shadow">
                         <div>
@@ -434,7 +439,6 @@ const StockManagement = () => {
                     </div>
                 )}
 
-                {/* DEDICATED MOBILE SCANNER INTERFACE IF TOGGLED */}
                 {isRemoteScannerUI ? (
                     <div className="card bg-dark border border-success text-white p-4 max-w-md mx-auto rounded-3 shadow-lg text-center font-monospace">
                         <h5 className="text-success fw-bold mb-3"><i className="fas fa-camera me-2"></i>MOBILE BARCODE SCANNER</h5>
