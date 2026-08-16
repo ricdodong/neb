@@ -147,7 +147,7 @@ const SupplierManagement = () => {
     const groupedHistory = useMemo(() => {
         const groups = {};
         purchaseHistory.forEach((item, index) => {
-            const rawName = item.item_name || `Item #${item.item_id || 'Unknown'}`;
+            const rawName = item.item_name || item.inventory_item_name || item.name || `Item #${item.item_id || 'Unknown'}`;
             const normalizedKey = rawName.trim().toLowerCase(); 
             if (!groups[normalizedKey]) {
                 groups[normalizedKey] = {
@@ -379,7 +379,7 @@ const SupplierManagement = () => {
                                                     <tr key={item.id}>
                                                         <td className="ps-4">{item.date_recorded ? new Date(item.date_recorded).toLocaleString() : (item.date_logged ? new Date(item.date_logged).toLocaleDateString() : 'N/A')}</td>
                                                         <td>
-                                                            <div className="fw-bold">{item.item_name || `Item #${item.item_id || 'Return Item'}`}</div>
+                                                            <div className="fw-bold">{item.item_name || item.inventory_item_name || `Item #${item.item_id || 'Return Item'}`}</div>
                                                             <div className="text-muted small">{item.problem || item.description || `Courier: ${item.courier || 'N/A'}`}</div>
                                                         </td>
                                                         <td className="pe-4">
