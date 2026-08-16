@@ -829,7 +829,7 @@ const StockManagement = () => {
                                             </div>
                                             <div className="d-flex justify-content-between border-bottom border-secondary pb-1.5">
                                                 <span className="text-secondary">FORWARD BY:</span>
-                                                <span className="text-success fw-bold">{selectedLedgerEntry.forwardedBy}</span>
+                                                <span className="text-success fw-bold">{selectedLedgerEntry.forwardBy}</span>
                                             </div>
                                             <div className="d-flex justify-content-between border-bottom border-secondary pb-1.5">
                                                 <span className="text-secondary">FREIGHT COST:</span>
