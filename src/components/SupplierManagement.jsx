@@ -326,8 +326,8 @@ const SupplierManagement = () => {
                                                                             <thead className="table-secondary tiny text-uppercase">
                                                                                 <tr>
                                                                                     <th className="ps-2">Date Recorded</th>
-                                                                                    <th>Forwarder</th>
-                                                                                    <th>Unit Price</th>
+                                                                                    <th>Forward By</th>
+                                                                                    <th>W/S Price</th>
                                                                                     <th>Type & Status</th>
                                                                                     <th>QTY</th>
                                                                                 </tr>
@@ -337,7 +337,7 @@ const SupplierManagement = () => {
                                                                                     <tr key={t.id}>
                                                                                         <td className="fw-bold ps-2">{t.purchase_date ? new Date(t.purchase_date).toLocaleString() : 'N/A'}</td>
                                                                                         <td><span className="badge bg-light text-dark border">{t.or_number || 'N/A'}</span></td>
-                                                                                        <td>₱{Number(t.srp_amount || t.ws_price || 0).toLocaleString()}</td>
+                                                                                        <td>₱{Number(t.ws_price || 0).toLocaleString()}</td>
                                                                                         <td>
                                                                                             <span className={`badge ${getStatusBadgeClass(t.payment_status)}`}>
                                                                                                 {t.payment_status}
