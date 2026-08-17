@@ -319,8 +319,10 @@ const JadeSystem = ({ userRole, onLogout, username }) => {
                 
                 {/* Compact Centered DPS / System view for Collapsed Mode */}
                 <div className="brand-icon-view text-center fw-900 fst-italic lh-sm w-100">
-                    <div className="text-white fs-5">DPS</div>
-                    <div className="jade-accent tiny-text text-uppercase fst-normal">System</div>
+                    <a href="/" className="text-decoration-none text-white d-block mb-1">
+                        <div className="text-white fs-5">DPS</div>
+                        <div className="jade-accent tiny-text text-uppercase fst-normal">System</div>
+                    </a>
                 </div>
 
                 {/* User Box - Disappears in Icon Only Mode */}
