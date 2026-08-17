@@ -325,9 +325,10 @@ const SupplierManagement = () => {
                                                                             <thead className="table-secondary tiny text-uppercase">
                                                                                 <tr>
                                                                                     <th className="ps-2">Date Recorded</th>
-                                                                                    <th>Courier / Ref</th>
+                                                                                    <th>Forwarder</th>
                                                                                     <th>Unit Price</th>
-                                                                                    <th>Type / Status</th>
+                                                                                    <th>Type & Status</th>
+                                                                                    <th>QTY</th>
                                                                                 </tr>
                                                                             </thead>
                                                                             <tbody>
@@ -341,6 +342,7 @@ const SupplierManagement = () => {
                                                                                                 {t.payment_status}
                                                                                             </span>
                                                                                         </td>
+                                                                                        <td>{t.qty_change || 'N/A'}</td>
                                                                                     </tr>
                                                                                 ))}
                                                                             </tbody>
@@ -369,7 +371,7 @@ const SupplierManagement = () => {
                                         <thead className="table-light">
                                             <tr>
                                                 <th className="ps-4">Date</th>
-                                                <th>Description / Courier</th>
+                                                <th>Description / Forwarder</th>
                                                 <th className="pe-4">Status / Type</th>
                                             </tr>
                                         </thead>
