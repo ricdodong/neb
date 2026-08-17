@@ -166,7 +166,8 @@ const SupplierManagement = () => {
                 ws_price: item.ws_price,
                 or_number: item.or_number || item.courier || 'N/A',
                 payment_status: item.type || item.payment_status || 'Pending',
-                warranty_period: item.warranty_period || '1 Year'
+                warranty_period: item.warranty_period || '1 Year',
+                qty_change: item.qty_change || item.qty || 1
             });
         });
         return Object.values(groups);
