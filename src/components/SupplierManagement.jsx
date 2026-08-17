@@ -342,7 +342,7 @@ const SupplierManagement = () => {
                                                                                                 {t.payment_status}
                                                                                             </span>
                                                                                         </td>
-                                                                                        <td>{t.qty_change || 'N/A'}</td>
+                                                                                        <td>{t.qty || 'N/A'}</td>
                                                                                     </tr>
                                                                                 ))}
                                                                             </tbody>
