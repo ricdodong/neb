@@ -457,6 +457,15 @@ const JadeSystem = ({ userRole, onLogout, username }) => {
                     border-radius: 10px;
                 }
 
+                /* HIDE SCROLLBAR IN COLLAPSED / ICON MODE */
+                .sidebar-desktop.sidebar-collapsed .sidebar-scrollable-container {
+                    scrollbar-width: none; /* Firefox */
+                    -ms-overflow-style: none; /* IE and Edge */
+                }
+                .sidebar-desktop.sidebar-collapsed .sidebar-scrollable-container::-webkit-scrollbar {
+                    display: none; /* Chrome, Safari, Opera */
+                }
+
                 /* Default hide the compact centered icon-only logo stack */
                 .brand-icon-view {
                     display: none;
