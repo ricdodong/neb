@@ -48,11 +48,11 @@ const ScannerPage = () => {
         try {
             setScanStatus(`Connected to Session: [${sessionId}] - Camera Active`);
             const stream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: 'environment' }
+                video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
             });
             if (videoRef.current) {
                 videoRef.current.srcObject = stream;
-                videoRef.current.play();
+                await videoRef.current.play();
                 startScanningLoop();
             }
         } catch (err) {
@@ -87,7 +87,7 @@ const ScannerPage = () => {
         });
 
         scannerIntervalRef.current = setInterval(async () => {
-            if (videoRef.current && videoRef.current.readyState === videoRef.current.HAVE_ENOUGH_DATA) {
+            if (videoRef.current && videoRef.current.readyState >= 2) { // HAVE_CURRENT_DATA or greater
                 try {
                     const barcodes = await barcodeDetector.detect(videoRef.current);
                     if (barcodes.length > 0) {
@@ -98,17 +98,17 @@ const ScannerPage = () => {
                     // Scanning frame error fallback
                 }
             }
-        }, 300);
+        }, 250);
     };
 
-    // Helper function to detect URLs and prevent pushing links
+    // Relaxed URL check to prevent false positives on serial numbers containing dots/hyphens
     const isUrl = (val) => {
-        const lowerVal = val.toLowerCase();
+        const lowerVal = val.toLowerCase().trim();
         return (
             lowerVal.startsWith('http://') ||
             lowerVal.startsWith('https://') ||
             lowerVal.startsWith('www.') ||
-            /^[a-zA-Z0-9-]+\.[a-zA-Z]{2,}(\/.*)?$/.test(val)
+            lowerVal.includes('ricalgen.eu.org')
         );
     };
 
@@ -116,14 +116,16 @@ const ScannerPage = () => {
         const trimmedCode = code.trim();
         const now = Date.now();
 
-        // 1. URL Check: Reject if scanned value is a web link / URL
+        if (!trimmedCode) return;
+
+        // 1. URL Check: Reject if scanned value is an actual web link / URL
         if (isUrl(trimmedCode)) {
-            setScanStatus(`Ignored URL QR Code: Please scan item serial barcode.`);
+            setScanStatus(`Ignored URL: Please scan item serial barcode.`);
             return;
         }
 
-        // 2. Anti-flood check (3.5s cooldown per exact code to prevent spamming)
-        if (lastScannedCodeRef.current.code === trimmedCode && (now - lastScannedCodeRef.current.time < 3500)) {
+        // 2. Anti-flood check (2.0s cooldown per exact code)
+        if (lastScannedCodeRef.current.code === trimmedCode && (now - lastScannedCodeRef.current.time < 2000)) {
             return;
         }
         lastScannedCodeRef.current = { code: trimmedCode, time: now };
@@ -132,14 +134,14 @@ const ScannerPage = () => {
         setLastScanned(trimmedCode);
         setScanStatus(`Successfully Pushed Serial: ${trimmedCode}`);
 
-        // Clear last scanned badge message after 3 seconds
+        // Clear last scanned badge message after 2.5 seconds
         if (clearMessageTimerRef.current) clearTimeout(clearMessageTimerRef.current);
         clearMessageTimerRef.current = setTimeout(() => {
             setLastScanned(null);
             if (isScanning) {
                 setScanStatus(`Connected to Session: [${sessionId}] - Ready for next scan`);
             }
-        }, 3000);
+        }, 2500);
 
         if (sessionId) {
             try {
