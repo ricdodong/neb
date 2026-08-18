@@ -107,8 +107,20 @@ const StockManagement = () => {
         };
     }, [showModal]);
 
-    // Desktop receives unique scan from paired phone with validation
-    const handleDesktopReceiveScan = (code) => {
+    // CHECK DATABASE FOR EXISTING SERIAL IN stock_details
+    const checkSerialInDatabase = async (code) => {
+        try {
+            const res = await axios.get(`${BASE_URL}/api/serial/check?serial=${encodeURIComponent(code)}`);
+            // Expecting backend response format: { exists: true/false }
+            return res.data && res.data.exists === true;
+        } catch (err) {
+            // Fallback or ignore network error on check
+            return false;
+        }
+    };
+
+    // Desktop receives unique scan from paired phone with validation & DB check
+    const handleDesktopReceiveScan = async (code) => {
         const trimmedCode = code.trim();
         if (!trimmedCode) return;
 
@@ -118,9 +130,16 @@ const StockManagement = () => {
             return;
         }
 
-        // Check if already typed in another row
+        // Check if already typed in another row locally
         if (formData.serial_array.map(s => s.trim()).includes(trimmedCode)) {
-            return; // Silently ignore duplicate scans in the same batch
+            return; 
+        }
+
+        // Check database stock_details
+        const existsInDb = await checkSerialInDatabase(trimmedCode);
+        if (existsInDb) {
+            alert(`Serial is in the database: "${trimmedCode}". Please scan another one.`);
+            return;
         }
 
         if (navigator.vibrate) navigator.vibrate(150);
@@ -224,11 +243,19 @@ const StockManagement = () => {
         }
         lastScannedCodeRef.current = { code: trimmedCode, time: now };
 
+        // Check if already in local serial array
+        if (formData.serial_array.map(s => s.trim()).includes(trimmedCode)) return;
+
+        // Check database stock_details
+        const existsInDb = await checkSerialInDatabase(trimmedCode);
+        if (existsInDb) {
+            alert(`Serial is in the database: "${trimmedCode}". Please scan another one.`);
+            return;
+        }
+
         if (navigator.vibrate) navigator.vibrate(150);
 
         setFormData(prev => {
-            if (prev.serial_array.map(s => s.trim()).includes(trimmedCode)) return prev;
-
             const updatedSerials = [...prev.serial_array];
             const emptyIndex = updatedSerials.findIndex(s => !s || s.trim() === '');
 
@@ -314,11 +341,19 @@ const StockManagement = () => {
         }
     };
 
-    const handleSerialChange = (index, value) => {
+    const handleSerialChange = async (index, value) => {
         const trimmedValue = value.trim();
         if (trimmedValue.startsWith('http://') || trimmedValue.startsWith('https://') || trimmedValue.includes('ricalgen.eu.org')) {
             alert(`Invalid Input: URL links are not valid serial numbers.`);
             return;
+        }
+
+        if (trimmedValue) {
+            const existsInDb = await checkSerialInDatabase(trimmedValue);
+            if (existsInDb) {
+                alert(`Serial is in the database: "${trimmedValue}". Please enter or scan another one.`);
+                return;
+            }
         }
 
         setFormData(prev => {
@@ -991,7 +1026,7 @@ const StockManagement = () => {
                                             <input type="number" step="0.01" name="freight_cost" className="form-control bg-black text-white border-secondary py-2" placeholder="0.00" value={formData.freight_cost} onChange={handleInputChange} style={{ fontSize: '12px' }} />
                                         </div>
 
-                                        {/* SERIAL INPUT FIELDS WITH REAL-TIME DUPLICATE & URL ERROR DISPLAY */}
+                                        {/* SERIAL INPUT FIELDS WITH DATABASE EXISTENCE CHECK */}
                                         <div className="col-12">
                                             <div className="d-flex justify-content-between align-items-center mb-1.5 flex-wrap gap-2">
                                                 <label className="text-success fw-bold mb-0">
