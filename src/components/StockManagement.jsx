@@ -61,8 +61,17 @@ const StockManagement = () => {
 
         window.addEventListener('keydown', handleKeyDown);
 
-        // DESKTOP CLOUD POLLING WITH ANTI-FLOOD CHECK
-        const pollInterval = setInterval(async () => {
+        // IMMEDIATE LOCAL STORAGE SYNC LISTENER FOR INSTANT SCAN CATCHING
+        const handleStorageSync = (e) => {
+            const currentSession = localStorage.getItem('jadestock_active_session');
+            if (currentSession && showModal && e.key === `jadestock_last_processed_${currentSession}`) {
+                pollCloudScanner();
+            }
+        };
+        window.addEventListener('storage', handleStorageSync);
+
+        // FASTER CLOUD POLLING (400ms) WITH ANTI-FLOOD CHECK
+        const pollCloudScanner = async () => {
             const currentSession = localStorage.getItem('jadestock_active_session');
             if (currentSession && showModal) {
                 try {
@@ -75,7 +84,7 @@ const StockManagement = () => {
                             localStorage.setItem(`jadestock_last_processed_${currentSession}`, timestamp);
                             
                             const now = Date.now();
-                            if (lastScannedCodeRef.current.code === scannedCode && (now - lastScannedCodeRef.current.time < 2500)) {
+                            if (lastScannedCodeRef.current.code === scannedCode && (now - lastScannedCodeRef.current.time < 1500)) {
                                 return; 
                             }
                             lastScannedCodeRef.current = { code: scannedCode, time: now };
@@ -87,10 +96,13 @@ const StockManagement = () => {
                     // Ignore background polling errors silently
                 }
             }
-        }, 800);
+        };
+
+        const pollInterval = setInterval(pollCloudScanner, 400);
 
         return () => {
             window.removeEventListener('keydown', handleKeyDown);
+            window.removeEventListener('storage', handleStorageSync);
             clearInterval(pollInterval);
         };
     }, [showModal]);
@@ -108,8 +120,7 @@ const StockManagement = () => {
 
         // Check if already typed in another row
         if (formData.serial_array.map(s => s.trim()).includes(trimmedCode)) {
-            alert(`Duplicate Serial Ignored: "${trimmedCode}" is already in the list.`);
-            return;
+            return; // Silently ignore duplicate scans in the same batch
         }
 
         if (navigator.vibrate) navigator.vibrate(150);
@@ -194,7 +205,7 @@ const StockManagement = () => {
                     // Scanning frame error fallback
                 }
             }
-        }, 400);
+        }, 300);
     };
 
     const handleSuccessfulScan = async (code) => {
@@ -208,7 +219,7 @@ const StockManagement = () => {
         }
 
         const now = Date.now();
-        if (lastScannedCodeRef.current.code === trimmedCode && (now - lastScannedCodeRef.current.time < 2500)) {
+        if (lastScannedCodeRef.current.code === trimmedCode && (now - lastScannedCodeRef.current.time < 1500)) {
             return; 
         }
         lastScannedCodeRef.current = { code: trimmedCode, time: now };
@@ -305,7 +316,6 @@ const StockManagement = () => {
 
     const handleSerialChange = (index, value) => {
         const trimmedValue = value.trim();
-        // Prevent typing or pasting URLs into individual serial inputs
         if (trimmedValue.startsWith('http://') || trimmedValue.startsWith('https://') || trimmedValue.includes('ricalgen.eu.org')) {
             alert(`Invalid Input: URL links are not valid serial numbers.`);
             return;
@@ -318,7 +328,6 @@ const StockManagement = () => {
         });
     };
 
-    // Check if any serial number is duplicated in the current inputs
     const getDuplicateSerialsSet = () => {
         const seen = new Set();
         const duplicates = new Set();
