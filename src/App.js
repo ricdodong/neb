@@ -4,6 +4,7 @@ import Login from './Login';
 import JadeSystem from './JadeSystem';
 import MobileUpload2 from './components/MobileUpload2'; 
 import MobileUpload from './components/MobileUpload'; 
+import ScannerPage from './components/ScannerPage'; // Adjust path if located elsewhere
 
 export default function App() {
     const [user, setUser] = useState(null);
@@ -28,9 +29,11 @@ export default function App() {
     return (
         <HashRouter>
             <Routes>
-                {/* Public Route: Bypasses the login screen using standard hash parsing */}
+                {/* Public Routes: Bypass login screen */}
+                <Route path="/scanner/:sessionId" element={<ScannerPage />} />
                 <Route path="/mobile-upload2/:batchRef" element={<MobileUpload2 />} />
                 <Route path="/mobile-upload/:batchRef" element={<MobileUpload />} />
+
                 {/* Main System Routes */}
                 <Route path="/" element={
                     !user ? (
