@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { QRCodeSVG } from 'qrcode.react'; 
 
 /**
  * JADE POS - Point of Sale Component
- * Optimized with direct Scan Receipt redirection logic.
+ * Optimized with direct Scan Receipt redirection & Wireless Scanner Pairing logic.
  */
 const BASE_URL = 'https://dpsapi.ricalgen.eu.org';
 const FRONT_URL = 'https://dps.ricalgen.eu.org';
@@ -25,6 +25,11 @@ const PointOfSale = ({ triggerToast }) => {
     const [selectedProduct, setSelectedProduct] = useState(null);
     
     const [showMobileCart, setShowMobileCart] = useState(false);
+
+    // --- SCANNER PAIRING MODAL STATES ---
+    const [showScannerModal, setShowScannerModal] = useState(false);
+    const [posActiveSession, setPosActiveSession] = useState(localStorage.getItem('jadestock_pos_session') || '');
+    const lastScannedCodeRef = useRef({ code: '', time: 0 });
 
     // --- TERMS & INSTALLMENT STATE ---
     const [termType, setTermType] = useState('months'); 
@@ -84,6 +89,79 @@ const PointOfSale = ({ triggerToast }) => {
         fetchCustomers();
         fetchServerInfo();
     }, []);
+
+    // --- WIRELESS SCANNER CLOUD POLLING & AUTO-ADD TO CART ---
+    useEffect(() => {
+        const pollInterval = setInterval(async () => {
+            const currentSession = localStorage.getItem('jadestock_pos_session');
+            if (currentSession) {
+                try {
+                    const res = await axios.get(`${BASE_URL}/api/scanner/poll?session=${currentSession}`);
+                    if (res.data && res.data.scannedCode) {
+                        const { scannedCode, timestamp } = res.data;
+                        const lastProcessed = localStorage.getItem(`jadestock_pos_last_${currentSession}`);
+                        
+                        if (timestamp !== lastProcessed) {
+                            localStorage.setItem(`jadestock_pos_last_${currentSession}`, timestamp);
+                            
+                            const now = Date.now();
+                            if (lastScannedCodeRef.current.code === scannedCode && (now - lastScannedCodeRef.current.time < 2000)) {
+                                return; 
+                            }
+                            lastScannedCodeRef.current = { code: scannedCode, time: now };
+
+                            handleScannedSerialNumber(scannedCode.trim());
+                        }
+                    }
+                } catch (err) {
+                    // Silent background poll error handling
+                }
+            }
+        }, 800);
+
+        return () => clearInterval(pollInterval);
+    }, [stock, cart]);
+
+    // Match scanned serial number to stock and auto-add to cart
+    const handleScannedSerialNumber = (serial) => {
+        if (!serial) return;
+
+        // Check if serial is already in the cart
+        const alreadyInCart = cart.some(c => c.selectedSN === serial);
+        if (alreadyInCart) {
+            triggerToast(`Serial "${serial}" is already in the cart!`, "warning");
+            return;
+        }
+
+        // Find product containing this serial number in stock
+        let matchedProduct = null;
+        let foundSN = null;
+
+        for (const p of stock) {
+            const usedInCart = cart.filter(c => c.id === p.id).map(c => c.selectedSN);
+            const availableSNs = p.sns ? p.sns.filter(sn => !usedInCart.includes(sn)) : [];
+            
+            if (availableSNs.includes(serial)) {
+                matchedProduct = p;
+                foundSN = serial;
+                break;
+            }
+        }
+
+        if (matchedProduct && foundSN) {
+            setCart(prevCart => [...prevCart, { ...matchedProduct, cartId: Math.random(), selectedSN: foundSN }]);
+            triggerToast(`Scanned & Added: ${matchedProduct.name} (${foundSN})`, "success");
+        } else {
+            triggerToast(`Serial "${serial}" not found or already sold out in inventory.`, "error");
+        }
+    };
+
+    const generateNewSessionCode = () => {
+        const code = Math.floor(100000 + Math.random() * 900000).toString();
+        setPosActiveSession(code);
+        localStorage.setItem('jadestock_pos_session', code);
+        setShowScannerModal(true);
+    };
 
     // --- Helpers ---
     const filteredStock = stock.filter(p => 
@@ -167,12 +245,10 @@ const PointOfSale = ({ triggerToast }) => {
     const handleScanRedirect = () => {
         if (!lastTransactionId) return;
         
-        // Build destination target parameter path dynamically
         const targetUrl = useLocalIp 
             ? `${FRONT_URL}/mobile-uploads/${lastTransactionId}` 
             : `${FRONT_URL}/mobile-uploads/${lastTransactionId}`;
             
-        // Open the native browser portal window wrapper directly
         window.open(targetUrl, '_blank');
     };
 
@@ -202,7 +278,22 @@ const PointOfSale = ({ triggerToast }) => {
                     </div>
                     
                     <div className="d-flex gap-2 align-items-center mt-2 mt-md-0 flex-grow-1 justify-content-end">
-                        <div className="position-relative flex-grow-1 flex-md-grow-0" style={{ maxWidth: '300px' }}>
+                        {/* CONNECT SCANNER BUTTON */}
+                        <button 
+                            className="btn btn-sm btn-outline-success fw-bold text-nowrap"
+                            onClick={() => {
+                                if (!posActiveSession) {
+                                    generateNewSessionCode();
+                                } else {
+                                    setShowScannerModal(true);
+                                }
+                            }}
+                            style={{ fontSize: '12px' }}
+                        >
+                            <i className="fas fa-barcode me-1.5"></i>CONNECT SCANNER
+                        </button>
+
+                        <div className="position-relative flex-grow-1 flex-md-grow-0" style={{ maxWidth: '240px' }}>
                             <i className="fas fa-search position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
                             <input 
                                 type="text" 
@@ -324,7 +415,6 @@ const PointOfSale = ({ triggerToast }) => {
                                 />
                             </div>
 
-                            {/* UPDATED SWITCH WINDOW PORTAL BLOCK */}
                             <div className="mt-auto border-top border-secondary pt-3 bg-dark">
                                 <p className="tiny-text text-secondary mb-3 text-center uppercase fw-bold">System Attachment Routing</p>
                                 
@@ -508,7 +598,7 @@ const PointOfSale = ({ triggerToast }) => {
                 </aside>
             </div>
 
-            {/* PRODUCT SPECT DETAIL MODAL */}
+            {/* PRODUCT SPEC DETAIL MODAL */}
             {selectedProduct && (
                 <div className="modal d-block bg-black bg-opacity-75" tabIndex="-1" style={{ zIndex: 1070 }}>
                     <div className="modal-dialog modal-dialog-centered">
@@ -529,6 +619,44 @@ const PointOfSale = ({ triggerToast }) => {
                                     <div className="col-4 text-secondary">DESCRIPTION:</div>
                                     <div className="col-8 text-muted small">{selectedProduct.description || "No supplemental hardware metrics declared."}</div>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* CONNECT SCANNER QR MODAL */}
+            {showScannerModal && (
+                <div className="modal d-block bg-black bg-opacity-80 px-3" tabIndex="-1" style={{ zIndex: 1150 }}>
+                    <div className="modal-dialog modal-dialog-centered modal-sm">
+                        <div className="modal-content bg-dark border border-success text-white font-monospace shadow-2xl rounded-3 text-center p-3">
+                            <div className="modal-header border-secondary pb-2 bg-black justify-content-between">
+                                <h6 className="modal-title text-success fw-bold" style={{ fontSize: '13px' }}>
+                                    <i className="fas fa-barcode me-1.5"></i>SCANNER PAIRING
+                                </h6>
+                                <button type="button" className="btn-close btn-close-white" onClick={() => setShowScannerModal(false)}></button>
+                            </div>
+                            <div className="modal-body py-3">
+                                <p className="text-secondary small mb-3" style={{ fontSize: '11px' }}>
+                                    Scan this QR code with your mobile phone camera to connect it as a wireless barcode scanner:
+                                </p>
+                                <div className="bg-white p-3 d-flex justify-content-center rounded mx-auto shadow border border-success" style={{ maxWidth: '190px' }}>
+                                    <QRCodeSVG 
+                                        value={`${FRONT_URL}/#/scanner/${posActiveSession}`} 
+                                        size={150}
+                                        level={"H"}
+                                        includeMargin={true}
+                                    />
+                                </div>
+                                <div className="mt-3 bg-black border border-secondary p-2 rounded">
+                                    <span className="text-secondary d-block" style={{ fontSize: '10px' }}>SESSION CODE</span>
+                                    <span className="text-success fw-bold fs-5">{posActiveSession}</span>
+                                </div>
+                            </div>
+                            <div className="modal-footer border-secondary pt-2 bg-black justify-content-center">
+                                <button type="button" className="btn btn-sm btn-outline-success w-100 fw-bold" onClick={() => generateNewSessionCode()} style={{ fontSize: '11px' }}>
+                                    GENERATE NEW CODE
+                                </button>
                             </div>
                         </div>
                     </div>
