@@ -271,7 +271,7 @@ const PointOfSale = ({ triggerToast }) => {
             )}
 
             {/* HEADER */}
-          <header className="navbar navbar-dark bg-dark border-bottom border-secondary px-3 py-2 sticky-top shadow-sm" style={{ zIndex: 1080, top: 0 }}>
+          <header className="navbar navbar-dark bg-dark border-bottom border-secondary px-3 py-2 sticky-top shadow-sm" style={{ zIndex: 1020 }}>
                 <div className="d-flex align-items-center flex-wrap w-100 justify-content-between">
                     <div className="d-flex align-items-center">
                         <div className={`rounded-circle me-2 pulse-dot ${useLocalIp ? 'bg-warning' : 'bg-success'}`} style={{width: '10px', height: '10px'}}></div>
