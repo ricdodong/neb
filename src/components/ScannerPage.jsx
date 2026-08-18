@@ -34,7 +34,7 @@ const ScannerPage = () => {
         return () => window.removeEventListener('hashchange', handleHashChange);
     }, []);
 
-    // Start camera when session is active
+    // Start or stop camera based on session & isScanning state
     useEffect(() => {
         if (sessionId && isScanning) {
             startCamera();
@@ -46,6 +46,7 @@ const ScannerPage = () => {
 
     const startCamera = async () => {
         try {
+            setScanStatus(`Connected to Session: [${sessionId}] - Camera Active`);
             const stream = await navigator.mediaDevices.getUserMedia({
                 video: { facingMode: 'environment' }
             });
@@ -71,6 +72,7 @@ const ScannerPage = () => {
             tracks.forEach(track => track.stop());
             videoRef.current.srcObject = null;
         }
+        setScanStatus("Scanner is currently stopped.");
     };
 
     const startScanningLoop = () => {
@@ -134,7 +136,9 @@ const ScannerPage = () => {
         if (clearMessageTimerRef.current) clearTimeout(clearMessageTimerRef.current);
         clearMessageTimerRef.current = setTimeout(() => {
             setLastScanned(null);
-            setScanStatus(`Connected to Session: [${sessionId}] - Ready for next scan`);
+            if (isScanning) {
+                setScanStatus(`Connected to Session: [${sessionId}] - Ready for next scan`);
+            }
         }, 3000);
 
         if (sessionId) {
@@ -162,6 +166,12 @@ const ScannerPage = () => {
 
                 <div className="position-relative bg-black rounded border border-success overflow-hidden mb-3" style={{ minHeight: '300px' }}>
                     <video ref={videoRef} className="w-100 h-100" style={{ objectFit: 'cover', maxHeight: '350px' }} muted playsInline></video>
+                    {!isScanning && (
+                        <div className="position-absolute top-0 start-0 w-100 h-100 bg-dark bg-opacity-75 d-flex flex-column align-items-center justify-content-center text-secondary">
+                            <i className="fas fa-video-slash fs-1 mb-2"></i>
+                            <span className="small">Scanner is Stopped</span>
+                        </div>
+                    )}
                     <div className="position-absolute top-50 start-50 translate-middle border border-success border-2 rounded opacity-50 pointer-event-none" style={{ width: '80%', height: '120px' }}></div>
                 </div>
 
@@ -177,7 +187,7 @@ const ScannerPage = () => {
                         onClick={() => setIsScanning(!isScanning)}
                         style={{ fontSize: '12px' }}
                     >
-                        {isScanning ? 'PAUSE SCANNER' : 'RESUME SCANNER'}
+                        {isScanning ? <><i className="fas fa-stop me-1"></i>STOP SCANNER</> : <><i className="fas fa-play me-1"></i>START SCANNER</>}
                     </button>
                     <button 
                         className="btn btn-outline-secondary py-2" 
