@@ -12,6 +12,7 @@ const ScannerPage = () => {
     const videoRef = useRef(null);
     const scannerIntervalRef = useRef(null);
     const lastScannedCodeRef = useRef({ code: '', time: 0 });
+    const clearMessageTimerRef = useRef(null);
 
     // Extract session ID from URL hash e.g., #/scanner/481920
     useEffect(() => {
@@ -98,19 +99,43 @@ const ScannerPage = () => {
         }, 300);
     };
 
+    // Helper function to detect URLs and prevent pushing links
+    const isUrl = (val) => {
+        const lowerVal = val.toLowerCase();
+        return (
+            lowerVal.startsWith('http://') ||
+            lowerVal.startsWith('https://') ||
+            lowerVal.startsWith('www.') ||
+            /^[a-zA-Z0-9-]+\.[a-zA-Z]{2,}(\/.*)?$/.test(val)
+        );
+    };
+
     const handleSuccessfulScan = async (code) => {
         const trimmedCode = code.trim();
         const now = Date.now();
 
-        // Anti-flood check (2.5s cooldown per exact code)
-        if (lastScannedCodeRef.current.code === trimmedCode && (now - lastScannedCodeRef.current.time < 2500)) {
+        // 1. URL Check: Reject if scanned value is a web link / URL
+        if (isUrl(trimmedCode)) {
+            setScanStatus(`Ignored URL QR Code: Please scan item serial barcode.`);
+            return;
+        }
+
+        // 2. Anti-flood check (3.5s cooldown per exact code to prevent spamming)
+        if (lastScannedCodeRef.current.code === trimmedCode && (now - lastScannedCodeRef.current.time < 3500)) {
             return;
         }
         lastScannedCodeRef.current = { code: trimmedCode, time: now };
 
         if (navigator.vibrate) navigator.vibrate(150);
         setLastScanned(trimmedCode);
-        setScanStatus(`Successfully Scanned: ${trimmedCode}`);
+        setScanStatus(`Successfully Pushed Serial: ${trimmedCode}`);
+
+        // Clear last scanned badge message after 3 seconds
+        if (clearMessageTimerRef.current) clearTimeout(clearMessageTimerRef.current);
+        clearMessageTimerRef.current = setTimeout(() => {
+            setLastScanned(null);
+            setScanStatus(`Connected to Session: [${sessionId}] - Ready for next scan`);
+        }, 3000);
 
         if (sessionId) {
             try {
@@ -141,8 +166,8 @@ const ScannerPage = () => {
                 </div>
 
                 {lastScanned && (
-                    <div className="alert alert-success py-2 mb-3 text-black fw-bold" style={{ fontSize: '12px' }}>
-                        ⚡ Last Scanned: {lastScanned}
+                    <div className="alert alert-success py-2 mb-3 text-black fw-bold animate__animated animate__fadeIn" style={{ fontSize: '12px' }}>
+                        ⚡ Serial Sent: {lastScanned}
                     </div>
                 )}
 

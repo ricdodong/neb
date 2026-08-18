@@ -29,7 +29,10 @@ const PointOfSale = ({ triggerToast }) => {
     // --- SCANNER PAIRING MODAL STATES ---
     const [showScannerModal, setShowScannerModal] = useState(false);
     const [posActiveSession, setPosActiveSession] = useState(localStorage.getItem('jadestock_pos_session') || '');
-    const lastScannedCodeRef = useRef({ code: '', time: 0 });
+    
+    // Refs to prevent duplicate message flooding on same serial value
+    const lastScannedCodeRef = useRef('');
+    const lastProcessedSerialRef = useRef('');
 
     // --- TERMS & INSTALLMENT STATE ---
     const [termType, setTermType] = useState('months'); 
@@ -90,7 +93,7 @@ const PointOfSale = ({ triggerToast }) => {
         fetchServerInfo();
     }, []);
 
-    // --- WIRELESS SCANNER CLOUD POLLING & AUTO-ADD TO CART ---
+    // --- WIRELESS SCANNER CLOUD POLLING & VALUE-CHANGE DEDUPLICATION ---
     useEffect(() => {
         const pollInterval = setInterval(async () => {
             const currentSession = localStorage.getItem('jadestock_pos_session');
@@ -99,18 +102,20 @@ const PointOfSale = ({ triggerToast }) => {
                     const res = await axios.get(`${BASE_URL}/api/scanner/poll?session=${currentSession}`);
                     if (res.data && res.data.scannedCode) {
                         const { scannedCode, timestamp } = res.data;
-                        const lastProcessed = localStorage.getItem(`jadestock_pos_last_${currentSession}`);
+                        const trimmedSerial = scannedCode.trim();
+                        const lastProcessedTimestamp = localStorage.getItem(`jadestock_pos_last_${currentSession}`);
                         
-                        if (timestamp !== lastProcessed) {
+                        // Only trigger if either the timestamp is fresh OR the serial value itself changed
+                        if (timestamp !== lastProcessedTimestamp || lastProcessedSerialRef.current !== trimmedSerial) {
                             localStorage.setItem(`jadestock_pos_last_${currentSession}`, timestamp);
-                            
-                            const now = Date.now();
-                            if (lastScannedCodeRef.current.code === scannedCode && (now - lastScannedCodeRef.current.time < 2000)) {
-                                return; 
-                            }
-                            lastScannedCodeRef.current = { code: scannedCode, time: now };
+                            lastProcessedSerialRef.current = trimmedSerial;
 
-                            handleScannedSerialNumber(scannedCode.trim());
+                            if (lastScannedCodeRef.current === trimmedSerial) {
+                                return; // Skip if it's the exact same serial value repeating without a change
+                            }
+                            lastScannedCodeRef.current = trimmedSerial;
+
+                            handleScannedSerialNumber(trimmedSerial);
                         }
                     }
                 } catch (err) {
@@ -122,7 +127,7 @@ const PointOfSale = ({ triggerToast }) => {
         return () => clearInterval(pollInterval);
     }, [stock, cart]);
 
-    // Match scanned serial number to stock and auto-add to cart
+    // Match scanned serial number to stock and auto-add to cart (Only accepts value changes to avoid popup spam)
     const handleScannedSerialNumber = (serial) => {
         if (!serial) return;
 
