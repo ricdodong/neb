@@ -19,9 +19,11 @@ const StockManagement = () => {
 
     // Camera & Remote Pair Scanner States
     const [showScanner, setShowScanner] = useState(false);
-    const [isRemoteScannerUI, setIsRemoteScannerUI] = useState(false);
     const [activePairSession, setActivePairSession] = useState(localStorage.getItem('jadestock_active_session') || '');
     
+    // QR Code Modal State for Remote Phone Scanner Pairing
+    const [showQrModal, setShowQrModal] = useState(false);
+
     const videoRef = useRef(null);
     const scannerIntervalRef = useRef(null);
     const searchInputRef = useRef(null);
@@ -212,19 +214,6 @@ const StockManagement = () => {
         lastScannedCodeRef.current = { code: trimmedCode, time: now };
 
         if (navigator.vibrate) navigator.vibrate(150);
-
-        if (isRemoteScannerUI && activePairSession) {
-            try {
-                await axios.post(`${BASE_URL}/api/scanner/push`, {
-                    session: activePairSession,
-                    scannedCode: trimmedCode,
-                    timestamp: now
-                });
-            } catch (err) {
-                console.error("Failed to push scan", err);
-            }
-            return;
-        }
 
         setFormData(prev => {
             if (prev.serial_array.map(s => s.trim()).includes(trimmedCode)) return prev;
@@ -440,12 +429,21 @@ const StockManagement = () => {
         return itemName.includes(query) || itemDesc.includes(query) || itemId.includes(query);
     });
 
-    const generatePairCode = () => {
+    const generatePairCodeAndOpenQr = () => {
         const code = Math.floor(100000 + Math.random() * 900000).toString();
         setActivePairSession(code);
         localStorage.setItem('jadestock_active_session', code);
-        const scannerUrl = `https://dps.ricalgen.eu.org/#/scanner/${code}`;
-        window.open(scannerUrl, '_blank');
+        setShowQrModal(true);
+    };
+
+    const handleUseDeviceCameraDirect = () => {
+        const sessionCode = activePairSession || Math.floor(100000 + Math.random() * 900000).toString();
+        if (!activePairSession) {
+            setActivePairSession(sessionCode);
+            localStorage.setItem('jadestock_active_session', sessionCode);
+        }
+        const targetUrl = `https://dps.ricalgen.eu.org/#/scanner/${sessionCode}`;
+        window.open(targetUrl, '_blank');
     };
 
     return (
@@ -509,316 +507,275 @@ const StockManagement = () => {
 
             {/* MAIN CONTENT GRID */}
             <main className="flex-grow-1 p-3 p-md-4 bg-dark bg-opacity-10">
-                
-                {isRemoteScannerUI ? (
-                    <div className="card bg-dark border border-success text-white p-4 max-w-md mx-auto rounded-3 shadow-lg text-center font-monospace">
-                        <h5 className="text-success fw-bold mb-3"><i className="fas fa-camera me-2"></i>MOBILE BARCODE SCANNER</h5>
-                        
-                        <div className="mb-3">
-                            <label className="text-secondary d-block mb-1 text-start">ENTER 6-DIGIT DESKTOP PAIR CODE:</label>
-                            <div className="input-group">
-                                <input
-                                    type="text"
-                                    className="form-control bg-black text-white border-success text-center fw-bold fs-5"
-                                    placeholder="e.g. 481920"
-                                    maxLength="6"
-                                    value={activePairSession}
-                                    onChange={(e) => {
-                                        setActivePairSession(e.target.value);
-                                        localStorage.setItem('jadestock_active_session', e.target.value);
-                                    }}
-                                />
-                                <button className="btn btn-outline-success" type="button" onClick={() => {
-                                    if(activePairSession.length === 6) {
-                                        setShowScanner(true);
-                                    } else {
-                                        alert("Please enter a valid 6-digit pair code from your desktop session.");
-                                    }
-                                }}>START</button>
-                            </div>
-                        </div>
-
-                        {activePairSession && activePairSession.length === 6 && (
-                            <button className="btn btn-success text-black fw-bold w-100 py-3 mb-3 shadow" onClick={() => setShowScanner(true)}>
-                                <i className="fas fa-barcode me-2"></i>LAUNCH CAMERA SCANNER
-                            </button>
-                        )}
-
-                        <button className="btn btn-dark border-secondary text-secondary btn-sm w-100" onClick={() => setIsRemoteScannerUI(false)}>
-                            EXIT SCANNER MODE & RETURN TO DASHBOARD
-                        </button>
+                <div className="card bg-dark border border-secondary shadow-lg rounded-3">
+                    <div className="card-header bg-black bg-opacity-50 border-bottom border-secondary py-3 px-4 d-flex justify-content-between align-items-center">
+                        <span className="fw-bold text-success uppercase" style={{ fontSize: '13px' }}>
+                            <i className="fas fa-boxes me-2"></i>INVENTORY LEDGER & STOCK LEVELS
+                        </span>
+                        <span className="badge bg-secondary text-white px-2.5 py-1.5" style={{ fontSize: '11px' }}>
+                            TOTAL ITEMS: {filteredInventory.length}
+                        </span>
                     </div>
-                ) : (
-                    <div className="card bg-dark border border-secondary shadow-lg rounded-3">
-                        <div className="card-header bg-black bg-opacity-50 border-bottom border-secondary py-3 px-4 d-flex justify-content-between align-items-center">
-                            <span className="fw-bold text-success uppercase" style={{ fontSize: '13px' }}>
-                                <i className="fas fa-boxes me-2"></i>INVENTORY LEDGER & STOCK LEVELS
-                            </span>
-                            <span className="badge bg-secondary text-white px-2.5 py-1.5" style={{ fontSize: '11px' }}>
-                                TOTAL ITEMS: {filteredInventory.length}
-                            </span>
-                        </div>
-                        <div className="card-body p-0">
-                            {loading ? (
-                                <div className="d-flex justify-content-center align-items-center py-5">
-                                    <div className="spinner-border text-success" role="status"></div>
-                                </div>
-                            ) : filteredInventory.length > 0 ? (
-                                <>
-                                    <div className="table-responsive mb-0 d-none d-lg-block">
-                                        <table className="table table-dark table-hover table-striped align-middle mb-0 text-nowrap" style={{ fontSize: '13px' }}>
-                                            <thead className="table-secondary text-uppercase text-black fw-bold" style={{ fontSize: '12px' }}>
-                                                <tr>
-                                                    <th className="py-3 ps-4">Item #</th>
-                                                    <th className="py-3">Item Name & Description</th>
-                                                    <th className="py-3 text-center">Type</th>
-                                                    <th className="py-3 text-center">Total Stock</th>
-                                                    <th className="py-3 text-center">Sold</th>
-                                                    <th className="py-3 text-center">Available</th>
-                                                    <th className="py-3">Status</th>
-                                                    <th className="py-3 text-end pe-4">Action</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {filteredInventory.map(item => {
-                                                    const isExpanded = expandedItemId === item.id;
-                                                    const itemLedger = ledgers[item.id] || [];
+                    <div className="card-body p-0">
+                        {loading ? (
+                            <div className="d-flex justify-content-center align-items-center py-5">
+                                <div className="spinner-border text-success" role="status"></div>
+                            </div>
+                        ) : filteredInventory.length > 0 ? (
+                            <>
+                                <div className="table-responsive mb-0 d-none d-lg-block">
+                                    <table className="table table-dark table-hover table-striped align-middle mb-0 text-nowrap" style={{ fontSize: '13px' }}>
+                                        <thead className="table-secondary text-uppercase text-black fw-bold" style={{ fontSize: '12px' }}>
+                                            <tr>
+                                                <th className="py-3 ps-4">Item #</th>
+                                                <th className="py-3">Item Name & Description</th>
+                                                <th className="py-3 text-center">Type</th>
+                                                <th className="py-3 text-center">Total Stock</th>
+                                                <th className="py-3 text-center">Sold</th>
+                                                <th className="py-3 text-center">Available</th>
+                                                <th className="py-3">Status</th>
+                                                <th className="py-3 text-end pe-4">Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {filteredInventory.map(item => {
+                                                const isExpanded = expandedItemId === item.id;
+                                                const itemLedger = ledgers[item.id] || [];
 
-                                                    return (
-                                                        <React.Fragment key={item.id}>
-                                                            <tr className={isExpanded ? 'bg-black' : ''}>
-                                                                <td className="ps-4 text-secondary fw-semibold">#{item.id}</td>
-                                                                <td className="fw-semibold py-3">
-                                                                    <div className="d-flex align-items-center">
-                                                                        {item.image_url ? (
-                                                                            <img
-                                                                                src={item.image_url}
-                                                                                alt={item.item_name}
-                                                                                className="rounded me-3 border border-secondary bg-black zoom-hover-img"
-                                                                                style={{ width: '38px', height: '38px', objectFit: 'contain' }}
-                                                                                onClick={() => setLightboxItem(item)}
-                                                                                title="Click to view Lightbox"
-                                                                                onError={(e) => { e.target.style.display = 'none'; }}
-                                                                            />
-                                                                        ) : (
-                                                                            <div className="rounded bg-black text-secondary d-flex align-items-center justify-content-center me-3 border border-secondary" style={{ width: '38px', height: '38px', fontSize: '12px' }}>
-                                                                                <i className="fas fa-image"></i>
-                                                                            </div>
-                                                                        )}
-                                                                        <div>
-                                                                            <span className="text-white fw-bold d-block fs-6">{item.item_name}</span>
-                                                                            {item.item_description && <small className="text-secondary text-truncate d-block mt-0.5" style={{ maxWidth: '300px', fontSize: '11px' }}>{item.item_description}</small>}
+                                                return (
+                                                    <React.Fragment key={item.id}>
+                                                        <tr className={isExpanded ? 'bg-black' : ''}>
+                                                            <td className="ps-4 text-secondary fw-semibold">#{item.id}</td>
+                                                            <td className="fw-semibold py-3">
+                                                                <div className="d-flex align-items-center">
+                                                                    {item.image_url ? (
+                                                                        <img
+                                                                            src={item.image_url}
+                                                                            alt={item.item_name}
+                                                                            className="rounded me-3 border border-secondary bg-black zoom-hover-img"
+                                                                            style={{ width: '38px', height: '38px', objectFit: 'contain' }}
+                                                                            onClick={() => setLightboxItem(item)}
+                                                                            title="Click to view Lightbox"
+                                                                            onError={(e) => { e.target.style.display = 'none'; }}
+                                                                        />
+                                                                    ) : (
+                                                                        <div className="rounded bg-black text-secondary d-flex align-items-center justify-content-center me-3 border border-secondary" style={{ width: '38px', height: '38px', fontSize: '12px' }}>
+                                                                            <i className="fas fa-image"></i>
+                                                                        </div>
+                                                                    )}
+                                                                    <div>
+                                                                        <span className="text-white fw-bold d-block fs-6">{item.item_name}</span>
+                                                                        {item.item_description && <small className="text-secondary text-truncate d-block mt-0.5" style={{ maxWidth: '300px', fontSize: '11px' }}>{item.item_description}</small>}
+                                                                    </div>
+                                                                </div>
+                                                            </td>
+                                                            <td className="text-center">
+                                                                <span className={`badge ${item.type === 'consumable' ? 'bg-info text-black' : 'bg-warning text-black'} fw-bold px-2 py-1`} style={{ fontSize: '10px' }}>
+                                                                    {(item.type || 'repairable').toUpperCase()}
+                                                                </span>
+                                                            </td>
+                                                            <td className="text-center">
+                                                                <span className="badge bg-black text-white border border-secondary px-2.5 py-1.5" style={{ fontSize: '12px' }}>{item.total_qty || 0}</span>
+                                                            </td>
+                                                            <td className="text-center">
+                                                                <span className="badge bg-black text-danger border border-secondary px-2.5 py-1.5" style={{ fontSize: '12px' }}>{item.soldout_qty || 0}</span>
+                                                            </td>
+                                                            <td className="text-center fw-bold text-success fs-6">
+                                                                {item.available_qty || 0}
+                                                            </td>
+                                                            <td>{renderStatusBadge(item.available_qty)}</td>
+                                                            <td className="text-end pe-4">
+                                                                <button
+                                                                    className={`btn px-3 py-1.5 fw-bold ${isExpanded ? 'btn-success text-black' : 'btn-outline-success text-success'}`}
+                                                                    style={{ fontSize: '12px' }}
+                                                                    onClick={() => toggleLedger(item)}
+                                                                >
+                                                                    <i className={`fas ${isExpanded ? 'fa-chevron-up' : 'fa-history'} me-1.5`}></i>
+                                                                    {isExpanded ? 'HIDE' : 'LEDGER'}
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+
+                                                        {isExpanded && (
+                                                            <tr>
+                                                                <td colSpan="8" className="bg-black p-4 border-bottom border-secondary">
+                                                                    <div className="card bg-dark border border-secondary rounded-3 shadow-inner">
+                                                                        <div className="card-header bg-black py-2.5 px-4 d-flex justify-content-between align-items-center border-bottom border-secondary">
+                                                                            <span className="fw-bold text-success uppercase" style={{ fontSize: '12px' }}>
+                                                                                <i className="fas fa-list-alt me-2"></i> Movement History // {item.item_name} (Click row to inspect details)
+                                                                            </span>
+                                                                            <button className="btn btn-sm btn-link text-secondary p-0" onClick={() => setExpandedItemId(null)}>
+                                                                                <i className="fas fa-times"></i>
+                                                                            </button>
+                                                                        </div>
+                                                                        <div className="card-body p-0">
+                                                                            {ledgerLoading ? (
+                                                                                <div className="text-center py-4 text-secondary">Loading ledger transactions...</div>
+                                                                            ) : itemLedger.length > 0 ? (
+                                                                                <div className="table-responsive mb-0">
+                                                                                    <table className="table table-dark table-striped mb-0 align-middle text-nowrap" style={{ fontSize: '12px' }}>
+                                                                                        <thead className="text-secondary uppercase" style={{ fontSize: '11px' }}>
+                                                                                            <tr>
+                                                                                                <th className="py-2.5 ps-4">Date & Time</th>
+                                                                                                <th className="py-2.5">Type</th>
+                                                                                                <th className="py-2.5">Qty</th>
+                                                                                                <th className="py-2.5">Source / Customer</th>
+                                                                                                <th className="py-2.5">Address</th>
+                                                                                                <th className="py-2.5">Forward By</th>
+                                                                                                <th className="py-2.5 pe-4">Freight Cost</th>
+                                                                                            </tr>
+                                                                                        </thead>
+                                                                                        <tbody>
+                                                                                            {itemLedger.map((entry, idx) => (
+                                                                                                <tr
+                                                                                                    key={idx}
+                                                                                                    className="ledger-clickable-row"
+                                                                                                    onClick={() => setSelectedLedgerEntry({ ...entry, parentItem: item })}
+                                                                                                    title="Click to view full transaction details"
+                                                                                                >
+                                                                                                    <td className="ps-4 text-secondary">{new Date(entry.date).toLocaleString()}</td>
+                                                                                                    <td>
+                                                                                                        <span className={`badge px-2.5 py-1 ${['in', 'input'].includes(entry.type.toLowerCase()) ? 'bg-success text-black' : 'bg-danger text-white'}`} style={{ fontSize: '10px' }}>
+                                                                                                            {entry.type.toUpperCase()}
+                                                                                                        </span>
+                                                                                                    </td>
+                                                                                                    <td className="fw-bold">
+                                                                                                        <span className={entry.qty > 0 ? 'text-success' : 'text-danger'}>
+                                                                                                            {entry.qty > 0 ? `+${entry.qty}` : entry.qty}
+                                                                                                        </span>
+                                                                                                    </td>
+                                                                                                    <td className="text-white">{entry.source || 'N/A'}</td>
+                                                                                                    <td className="text-secondary fst-italic">{entry.address || 'N/A'}</td>
+                                                                                                    <td className="text-secondary">{entry.forwardBy || entry.courier || 'N/A'}</td>
+                                                                                                    <td className="pe-4 text-success fw-bold">₱{parseFloat(entry.freightCost || entry.shipping_cost || 0).toFixed(2)}</td>
+                                                                                                </tr>
+                                                                                            ))}
+                                                                                        </tbody>
+                                                                                    </table>
+                                                                                </div>
+                                                                            ) : (
+                                                                                <div className="text-center py-4 text-secondary">No ledger entries registered for this item.</div>
+                                                                            )}
                                                                         </div>
                                                                     </div>
                                                                 </td>
-                                                                <td className="text-center">
-                                                                    <span className={`badge ${item.type === 'consumable' ? 'bg-info text-black' : 'bg-warning text-black'} fw-bold px-2 py-1`} style={{ fontSize: '10px' }}>
-                                                                        {(item.type || 'repairable').toUpperCase()}
-                                                                    </span>
-                                                                </td>
-                                                                <td className="text-center">
-                                                                    <span className="badge bg-black text-white border border-secondary px-2.5 py-1.5" style={{ fontSize: '12px' }}>{item.total_qty || 0}</span>
-                                                                </td>
-                                                                <td className="text-center">
-                                                                    <span className="badge bg-black text-danger border border-secondary px-2.5 py-1.5" style={{ fontSize: '12px' }}>{item.soldout_qty || 0}</span>
-                                                                </td>
-                                                                <td className="text-center fw-bold text-success fs-6">
-                                                                    {item.available_qty || 0}
-                                                                </td>
-                                                                <td>{renderStatusBadge(item.available_qty)}</td>
-                                                                <td className="text-end pe-4">
-                                                                    <button
-                                                                        className={`btn px-3 py-1.5 fw-bold ${isExpanded ? 'btn-success text-black' : 'btn-outline-success text-success'}`}
-                                                                        style={{ fontSize: '12px' }}
-                                                                        onClick={() => toggleLedger(item)}
-                                                                    >
-                                                                        <i className={`fas ${isExpanded ? 'fa-chevron-up' : 'fa-history'} me-1.5`}></i>
-                                                                        {isExpanded ? 'HIDE' : 'LEDGER'}
-                                                                    </button>
-                                                                </td>
                                                             </tr>
+                                                        )}
+                                                    </React.Fragment>
+                                                );
+                                            })}
+                                        </tbody>
+                                    </table>
+                                </div>
 
-                                                            {isExpanded && (
-                                                                <tr>
-                                                                    <td colSpan="8" className="bg-black p-4 border-bottom border-secondary">
-                                                                        <div className="card bg-dark border border-secondary rounded-3 shadow-inner">
-                                                                            <div className="card-header bg-black py-2.5 px-4 d-flex justify-content-between align-items-center border-bottom border-secondary">
-                                                                                <span className="fw-bold text-success uppercase" style={{ fontSize: '12px' }}>
-                                                                                    <i className="fas fa-list-alt me-2"></i> Movement History // {item.item_name} (Click row to inspect details)
-                                                                                </span>
-                                                                                <button className="btn btn-sm btn-link text-secondary p-0" onClick={() => setExpandedItemId(null)}>
-                                                                                    <i className="fas fa-times"></i>
-                                                                                </button>
-                                                                            </div>
-                                                                            <div className="card-body p-0">
-                                                                                {ledgerLoading ? (
-                                                                                    <div className="text-center py-4 text-secondary">Loading ledger transactions...</div>
-                                                                                ) : itemLedger.length > 0 ? (
-                                                                                    <div className="table-responsive mb-0">
-                                                                                        <table className="table table-dark table-striped mb-0 align-middle text-nowrap" style={{ fontSize: '12px' }}>
-                                                                                            <thead className="text-secondary uppercase" style={{ fontSize: '11px' }}>
-                                                                                                <tr>
-                                                                                                    <th className="py-2.5 ps-4">Date & Time</th>
-                                                                                                    <th className="py-2.5">Type</th>
-                                                                                                    <th className="py-2.5">Qty</th>
-                                                                                                    <th className="py-2.5">Source / Customer</th>
-                                                                                                    <th className="py-2.5">Address</th>
-                                                                                                    <th className="py-2.5">Forward By</th>
-                                                                                                    <th className="py-2.5 pe-4">Freight Cost</th>
-                                                                                                </tr>
-                                                                                            </thead>
-                                                                                            <tbody>
-                                                                                                {itemLedger.map((entry, idx) => (
-                                                                                                    <tr
-                                                                                                        key={idx}
-                                                                                                        className="ledger-clickable-row"
-                                                                                                        onClick={() => setSelectedLedgerEntry({ ...entry, parentItem: item })}
-                                                                                                        title="Click to view full transaction details"
-                                                                                                    >
-                                                                                                        <td className="ps-4 text-secondary">{new Date(entry.date).toLocaleString()}</td>
-                                                                                                        <td>
-                                                                                                            <span className={`badge px-2.5 py-1 ${['in', 'input'].includes(entry.type.toLowerCase()) ? 'bg-success text-black' : 'bg-danger text-white'}`} style={{ fontSize: '10px' }}>
-                                                                                                                {entry.type.toUpperCase()}
-                                                                                                            </span>
-                                                                                                        </td>
-                                                                                                        <td className="fw-bold">
-                                                                                                            <span className={entry.qty > 0 ? 'text-success' : 'text-danger'}>
-                                                                                                                {entry.qty > 0 ? `+${entry.qty}` : entry.qty}
-                                                                                                            </span>
-                                                                                                        </td>
-                                                                                                        <td className="text-white">{entry.source || 'N/A'}</td>
-                                                                                                        <td className="text-secondary fst-italic">{entry.address || 'N/A'}</td>
-                                                                                                        <td className="text-secondary">{entry.forwardBy || entry.courier || 'N/A'}</td>
-                                                                                                        <td className="pe-4 text-success fw-bold">₱{parseFloat(entry.freightCost || entry.shipping_cost || 0).toFixed(2)}</td>
-                                                                                                    </tr>
-                                                                                                ))}
-                                                                                            </tbody>
-                                                                                        </table>
-                                                                                    </div>
-                                                                                ) : (
-                                                                                    <div className="text-center py-4 text-secondary">No ledger entries registered for this item.</div>
-                                                                                )}
-                                                                            </div>
-                                                                        </div>
-                                                                    </td>
-                                                                </tr>
-                                                            )}
-                                                        </React.Fragment>
-                                                    );
-                                                })}
-                                            </tbody>
-                                        </table>
-                                    </div>
+                                <div className="d-lg-none p-3 d-flex flex-column gap-3">
+                                    {filteredInventory.map(item => {
+                                        const isExpanded = expandedItemId === item.id;
+                                        const itemLedger = ledgers[item.id] || [];
 
-                                    <div className="d-lg-none p-3 d-flex flex-column gap-3">
-                                        {filteredInventory.map(item => {
-                                            const isExpanded = expandedItemId === item.id;
-                                            const itemLedger = ledgers[item.id] || [];
-
-                                            return (
-                                                <div key={item.id} className="card bg-black border border-secondary rounded-3 p-3 text-light" style={{ fontSize: '12px' }}>
-                                                    <div className="d-flex align-items-center justify-content-between mb-2.5">
-                                                        <div className="d-flex align-items-center gap-2.5">
-                                                            {item.image_url ? (
-                                                                <img
-                                                                    src={item.image_url}
-                                                                    alt={item.item_name}
-                                                                    className="rounded border border-secondary bg-dark zoom-hover-img"
-                                                                    style={{ width: '38px', height: '38px', objectFit: 'contain' }}
-                                                                    onClick={() => setLightboxItem(item)}
-                                                                    onError={(e) => { e.target.style.display = 'none'; }}
-                                                                />
-                                                            ) : (
-                                                                <div className="rounded bg-dark text-secondary d-flex align-items-center justify-content-center border border-secondary" style={{ width: '38px', height: '38px', fontSize: '12px' }}>
-                                                                    <i className="fas fa-image"></i>
-                                                                </div>
-                                                            )}
-                                                            <div>
-                                                                <h6 className="mb-0 fw-bold text-white text-truncate" style={{ fontSize: '13px', maxWidth: '170px' }}>{item.item_name}</h6>
-                                                                <div className="d-flex gap-2 align-items-center mt-0.5">
-                                                                    <small className="text-secondary" style={{ fontSize: '10px' }}>ID: #{item.id}</small>
-                                                                    <span className={`badge ${item.type === 'consumable' ? 'bg-info text-black' : 'bg-warning text-black'} px-1.5 py-0.5`} style={{ fontSize: '9px' }}>
-                                                                        {(item.type || 'repairable').toUpperCase()}
-                                                                    </span>
-                                                                </div>
+                                        return (
+                                            <div key={item.id} className="card bg-black border border-secondary rounded-3 p-3 text-light" style={{ fontSize: '12px' }}>
+                                                <div className="d-flex align-items-center justify-content-between mb-2.5">
+                                                    <div className="d-flex align-items-center gap-2.5">
+                                                        {item.image_url ? (
+                                                            <img
+                                                                src={item.image_url}
+                                                                alt={item.item_name}
+                                                                className="rounded border border-secondary bg-dark zoom-hover-img"
+                                                                style={{ width: '38px', height: '38px', objectFit: 'contain' }}
+                                                                onClick={() => setLightboxItem(item)}
+                                                                onError={(e) => { e.target.style.display = 'none'; }}
+                                                            />
+                                                        ) : (
+                                                            <div className="rounded bg-dark text-secondary d-flex align-items-center justify-content-center border border-secondary" style={{ width: '38px', height: '38px', fontSize: '12px' }}>
+                                                                <i className="fas fa-image"></i>
+                                                            </div>
+                                                        )}
+                                                        <div>
+                                                            <h6 className="mb-0 fw-bold text-white text-truncate" style={{ fontSize: '13px', maxWidth: '170px' }}>{item.item_name}</h6>
+                                                            <div className="d-flex gap-2 align-items-center mt-0.5">
+                                                                <small className="text-secondary" style={{ fontSize: '10px' }}>ID: #{item.id}</small>
+                                                                <span className={`badge ${item.type === 'consumable' ? 'bg-info text-black' : 'bg-warning text-black'} px-1.5 py-0.5`} style={{ fontSize: '9px' }}>
+                                                                    {(item.type || 'repairable').toUpperCase()}
+                                                                </span>
                                                             </div>
                                                         </div>
-                                                        {renderStatusBadge(item.available_qty)}
                                                     </div>
-
-                                                    <div className="row g-2 text-center bg-dark rounded-2 p-2 my-2" style={{ fontSize: '11px' }}>
-                                                        <div className="col-4 border-end border-secondary">
-                                                            <span className="text-secondary d-block" style={{ fontSize: '10px' }}>TOTAL</span>
-                                                            <span className="fw-bold text-white fs-6">{item.total_qty || 0}</span>
-                                                        </div>
-                                                        <div className="col-4 border-end border-secondary">
-                                                            <span className="text-secondary d-block" style={{ fontSize: '10px' }}>SOLD</span>
-                                                            <span className="fw-bold text-danger fs-6">{item.soldout_qty || 0}</span>
-                                                        </div>
-                                                        <div className="col-4">
-                                                            <span className="text-secondary d-block" style={{ fontSize: '10px' }}>AVAILABLE</span>
-                                                            <span className="fw-bold text-success fs-6">{item.available_qty || 0}</span>
-                                                        </div>
-                                                    </div>
-
-                                                    <button
-                                                        className={`btn w-100 py-2 fw-bold ${isExpanded ? 'btn-success text-black' : 'btn-outline-success text-success'}`}
-                                                        style={{ fontSize: '11px' }}
-                                                        onClick={() => toggleLedger(item)}
-                                                    >
-                                                        <i className={`fas ${isExpanded ? 'fa-chevron-up' : 'fa-history'} me-1.5`}></i>
-                                                        {isExpanded ? 'HIDE LEDGER' : 'VIEW LEDGER MOVEMENT'}
-                                                    </button>
-
-                                                    {isExpanded && (
-                                                        <div className="mt-3 pt-3 border-top border-secondary bg-dark p-2.5 rounded-2 animate-fade-in">
-                                                            <span className="fw-bold text-success d-block mb-2" style={{ fontSize: '11px' }}>
-                                                                <i className="fas fa-list-alt me-1.5"></i> LEDGER HISTORY (Tap entry for details):
-                                                            </span>
-                                                            {ledgerLoading ? (
-                                                                <div className="text-center py-3 text-secondary">Loading history...</div>
-                                                            ) : itemLedger.length > 0 ? (
-                                                                <div className="d-flex flex-column gap-2">
-                                                                    {itemLedger.map((entry, idx) => (
-                                                                        <div
-                                                                            key={idx}
-                                                                            className="bg-black border border-secondary rounded-2 p-2.5 text-light ledger-clickable-row"
-                                                                            style={{ fontSize: '11px' }}
-                                                                            onClick={() => setSelectedLedgerEntry({ ...entry, parentItem: item })}
-                                                                        >
-                                                                            <div className="d-flex justify-content-between text-secondary mb-1" style={{ fontSize: '10px' }}>
-                                                                                <span>{new Date(entry.date).toLocaleString()}</span>
-                                                                                <span className={`badge ${['in', 'input'].includes(entry.type.toLowerCase()) ? 'bg-success text-black' : 'bg-danger text-white'}`} style={{ fontSize: '9px' }}>
-                                                                                    {entry.type.toUpperCase()}
-                                                                                </span>
-                                                                            </div>
-                                                                            <div className="fw-bold text-white mb-1">
-                                                                                Qty: <span className={entry.qty > 0 ? 'text-success' : 'text-danger'}>{entry.qty > 0 ? `+${entry.qty}` : entry.qty}</span>
-                                                                            </div>
-                                                                            <div className="text-secondary mb-0.5">Source: <span className="text-white">{entry.source || 'N/A'}</span></div>
-                                                                            <div className="text-secondary fst-italic" style={{ fontSize: '10px' }}>{entry.address || 'N/A'}</div>
-                                                                        </div>
-                                                                    ))}
-                                                                </div>
-                                                            ) : (
-                                                                <div className="text-center py-3 text-secondary">No ledger movements registered.</div>
-                                                            )}
-                                                        </div>
-                                                    )}
+                                                    {renderStatusBadge(item.available_qty)}
                                                 </div>
-                                            );
-                                        })}
-                                    </div>
-                                </>
-                            ) : (
-                                <div className="text-center py-5 text-secondary">
-                                    <i className="fas fa-ghost fs-1 mb-3"></i>
-                                    <p className="mb-0">NO INVENTORY RECORDS MATCHING "{searchQuery}"</p>
+
+                                                <div className="row g-2 text-center bg-dark rounded-2 p-2 my-2" style={{ fontSize: '11px' }}>
+                                                    <div className="col-4 border-end border-secondary">
+                                                        <span className="text-secondary d-block" style={{ fontSize: '10px' }}>TOTAL</span>
+                                                        <span className="fw-bold text-white fs-6">{item.total_qty || 0}</span>
+                                                    </div>
+                                                    <div className="col-4 border-end border-secondary">
+                                                        <span className="text-secondary d-block" style={{ fontSize: '10px' }}>SOLD</span>
+                                                        <span className="fw-bold text-danger fs-6">{item.soldout_qty || 0}</span>
+                                                    </div>
+                                                    <div className="col-4">
+                                                        <span className="text-secondary d-block" style={{ fontSize: '10px' }}>AVAILABLE</span>
+                                                        <span className="fw-bold text-success fs-6">{item.available_qty || 0}</span>
+                                                    </div>
+                                                </div>
+
+                                                <button
+                                                    className={`btn w-100 py-2 fw-bold ${isExpanded ? 'btn-success text-black' : 'btn-outline-success text-success'}`}
+                                                    style={{ fontSize: '11px' }}
+                                                    onClick={() => toggleLedger(item)}
+                                                >
+                                                    <i className={`fas ${isExpanded ? 'fa-chevron-up' : 'fa-history'} me-1.5`}></i>
+                                                    {isExpanded ? 'HIDE LEDGER' : 'VIEW LEDGER MOVEMENT'}
+                                                </button>
+
+                                                {isExpanded && (
+                                                    <div className="mt-3 pt-3 border-top border-secondary bg-dark p-2.5 rounded-2 animate-fade-in">
+                                                        <span className="fw-bold text-success d-block mb-2" style={{ fontSize: '11px' }}>
+                                                            <i className="fas fa-list-alt me-1.5"></i> LEDGER HISTORY (Tap entry for details):
+                                                        </span>
+                                                        {ledgerLoading ? (
+                                                            <div className="text-center py-3 text-secondary">Loading history...</div>
+                                                        ) : itemLedger.length > 0 ? (
+                                                            <div className="d-flex flex-column gap-2">
+                                                                {itemLedger.map((entry, idx) => (
+                                                                    <div
+                                                                        key={idx}
+                                                                        className="bg-black border border-secondary rounded-2 p-2.5 text-light ledger-clickable-row"
+                                                                        style={{ fontSize: '11px' }}
+                                                                        onClick={() => setSelectedLedgerEntry({ ...entry, parentItem: item })}
+                                                                    >
+                                                                        <div className="d-flex justify-content-between text-secondary mb-1" style={{ fontSize: '10px' }}>
+                                                                            <span>{new Date(entry.date).toLocaleString()}</span>
+                                                                            <span className={`badge ${['in', 'input'].includes(entry.type.toLowerCase()) ? 'bg-success text-black' : 'bg-danger text-white'}`} style={{ fontSize: '9px' }}>
+                                                                                {entry.type.toUpperCase()}
+                                                                            </span>
+                                                                        </div>
+                                                                        <div className="fw-bold text-white mb-1">
+                                                                            Qty: <span className={entry.qty > 0 ? 'text-success' : 'text-danger'}>{entry.qty > 0 ? `+${entry.qty}` : entry.qty}</span>
+                                                                        </div>
+                                                                        <div className="text-secondary mb-0.5">Source: <span className="text-white">{entry.source || 'N/A'}</span></div>
+                                                                        <div className="text-secondary fst-italic" style={{ fontSize: '10px' }}>{entry.address || 'N/A'}</div>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        ) : (
+                                                            <div className="text-center py-3 text-secondary">No ledger movements registered.</div>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
                                 </div>
-                            )}
-                        </div>
+                            </>
+                        ) : (
+                            <div className="text-center py-5 text-secondary">
+                                <i className="fas fa-ghost fs-1 mb-3"></i>
+                                <p className="mb-0">NO INVENTORY RECORDS MATCHING "{searchQuery}"</p>
+                            </div>
+                        )}
                     </div>
-                )}
+                </div>
             </main>
 
             {/* LIGHTBOX MODAL */}
@@ -905,31 +862,35 @@ const StockManagement = () => {
                 </div>
             )}
 
-            {/* LIVE CAMERA BARCODE SCANNER MODAL */}
-            {showScanner && (
-                <div className="modal d-block bg-black bg-opacity-95 px-3" tabIndex="-1" style={{ zIndex: 1120 }}>
-                    <div className="modal-dialog modal-dialog-centered modal-md">
-                        <div className="modal-content bg-dark border border-success text-white font-monospace shadow-2xl rounded-3">
-                            <div className="modal-header border-secondary py-3 px-4 bg-black">
-                                <h6 className="modal-title text-success fw-bold" style={{ fontSize: '13px' }}>
-                                    <i className="fas fa-camera me-2"></i>{isRemoteScannerUI ? 'REMOTE MOBILE SCANNER ACTIVE' : 'SCAN BARCODE / QR CODE'}
+            {/* QR CODE PAIRING MODAL */}
+            {showQrModal && (
+                <div className="modal d-block bg-black bg-opacity-95 px-3" tabIndex="-1" style={{ zIndex: 1150 }}>
+                    <div className="modal-dialog modal-dialog-centered modal-sm">
+                        <div className="modal-content bg-dark border border-success text-white font-monospace shadow-2xl rounded-3 text-center p-3">
+                            <div className="modal-header border-secondary py-2 px-3 bg-black">
+                                <h6 className="modal-title text-success fw-bold mx-auto" style={{ fontSize: '13px' }}>
+                                    <i className="fas fa-qrcode me-2"></i>SCAN TO PAIR PHONE SCANNER
                                 </h6>
-                                <button type="button" className="btn-close btn-close-white" onClick={() => setShowScanner(false)}></button>
+                                <button type="button" className="btn-close btn-close-white position-absolute end-0 me-3" onClick={() => setShowQrModal(false)}></button>
                             </div>
-                            <div className="modal-body p-3 text-center">
-                                <div className="position-relative bg-black rounded border border-success overflow-hidden" style={{ minHeight: '280px' }}>
-                                    <video ref={videoRef} className="w-100 h-100" style={{ objectFit: 'cover', maxHeight: '350px' }} muted playsInline></video>
-                                    <div className="position-absolute top-50 start-50 translate-middle border border-success border-2 rounded opacity-50 pointer-event-none" style={{ width: '80%', height: '120px' }}></div>
+                            <div className="modal-body py-4">
+                                <div className="bg-white p-3 rounded d-inline-block shadow mb-3 border border-success">
+                                    <img 
+                                        src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`https://dps.ricalgen.eu.org/#/scanner/${activePairSession}`)}`} 
+                                        alt="Scanner QR Code" 
+                                        className="img-fluid"
+                                        style={{ width: '180px', height: '180px' }}
+                                    />
                                 </div>
-                                <p className="text-secondary small mt-3 mb-0" style={{ fontSize: '11px' }}>
-                                    {isRemoteScannerUI 
-                                        ? `Paired with Code: [${activePairSession}]. URLs and duplicate serials are automatically blocked.`
-                                        : "Align barcode or QR code inside the frame."}
+                                <div className="text-success fw-bold fs-5 mb-1">SESSION: {activePairSession}</div>
+                                <p className="text-secondary small mb-0" style={{ fontSize: '10px' }}>
+                                    Scan this QR code with your mobile camera to open <br/>
+                                    <span className="text-white text-break">https://dps.ricalgen.eu.org/#/scanner/{activePairSession}</span>
                                 </p>
                             </div>
-                            <div className="modal-footer border-secondary bg-black py-3 px-4">
-                                <button type="button" className="btn btn-danger w-100 fw-bold py-2" onClick={() => setShowScanner(false)} style={{ fontSize: '12px' }}>
-                                    CLOSE SCANNER
+                            <div className="modal-footer border-secondary bg-black py-2">
+                                <button type="button" className="btn btn-danger w-100 fw-bold py-1.5" onClick={() => setShowQrModal(false)} style={{ fontSize: '11px' }}>
+                                    CLOSE
                                 </button>
                             </div>
                         </div>
@@ -1031,7 +992,7 @@ const StockManagement = () => {
                                                     <button
                                                         type="button"
                                                         className="btn btn-sm btn-outline-success py-1 px-2.5 fw-bold"
-                                                        onClick={() => setShowScanner(true)}
+                                                        onClick={handleUseDeviceCameraDirect}
                                                         style={{ fontSize: '11px' }}
                                                     >
                                                         <i className="fas fa-camera me-1.5"></i>USE THIS DEVICE CAMERA
@@ -1039,7 +1000,7 @@ const StockManagement = () => {
                                                     <button
                                                         type="button"
                                                         className="btn btn-sm btn-success text-black py-1 px-2.5 fw-bold"
-                                                        onClick={generatePairCode}
+                                                        onClick={generatePairCodeAndOpenQr}
                                                         style={{ fontSize: '11px' }}
                                                     >
                                                         <i className="fas fa-mobile-alt me-1.5"></i>CONNECT PHONE AS SCANNER
@@ -1082,7 +1043,7 @@ const StockManagement = () => {
                                                 })}
                                             </div>
                                             <small className="text-secondary mt-1.5 d-block" style={{ fontSize: '10px' }}>
-                                                {activePairSession ? `Active Pair Session Code: ${activePairSession} (URL: https://dps.ricalgen.eu.org/#/scanner/${activePairSession})` : "Click 'Connect Phone as Scanner' to automatically generate a unique session code and open the mobile scanner interface."}
+                                                {activePairSession ? `Active Pair Session Code: ${activePairSession} (URL: https://dps.ricalgen.eu.org/#/scanner/${activePairSession})` : "Click 'Connect Phone as Scanner' to automatically generate a unique session code and open the mobile pairing QR code."}
                                             </small>
                                         </div>
                                     </div>
