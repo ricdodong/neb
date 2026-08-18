@@ -93,10 +93,16 @@ const StockManagement = () => {
         };
     }, [showModal]);
 
-    // Desktop receives unique scan from paired phone
+    // Desktop receives unique scan from paired phone with validation
     const handleDesktopReceiveScan = (code) => {
         const trimmedCode = code.trim();
         if (!trimmedCode) return;
+
+        // Catch and prevent URL entries
+        if (trimmedCode.startsWith('http://') || trimmedCode.startsWith('https://') || trimmedCode.includes('ricalgen.eu.org')) {
+            alert(`Invalid Serial Scanned: URL links cannot be entered as serial numbers ("${trimmedCode}").`);
+            return;
+        }
 
         // Check if already typed in another row
         if (formData.serial_array.map(s => s.trim()).includes(trimmedCode)) {
@@ -191,6 +197,14 @@ const StockManagement = () => {
 
     const handleSuccessfulScan = async (code) => {
         const trimmedCode = code.trim();
+        if (!trimmedCode) return;
+
+        // Catch and prevent URL entries directly from local scanner
+        if (trimmedCode.startsWith('http://') || trimmedCode.startsWith('https://') || trimmedCode.includes('ricalgen.eu.org')) {
+            alert(`Invalid Serial Scanned: URL links cannot be entered as serial numbers ("${trimmedCode}").`);
+            return;
+        }
+
         const now = Date.now();
         if (lastScannedCodeRef.current.code === trimmedCode && (now - lastScannedCodeRef.current.time < 2500)) {
             return; 
@@ -301,6 +315,13 @@ const StockManagement = () => {
     };
 
     const handleSerialChange = (index, value) => {
+        const trimmedValue = value.trim();
+        // Prevent typing or pasting URLs into individual serial inputs
+        if (trimmedValue.startsWith('http://') || trimmedValue.startsWith('https://') || trimmedValue.includes('ricalgen.eu.org')) {
+            alert(`Invalid Input: URL links are not valid serial numbers.`);
+            return;
+        }
+
         setFormData(prev => {
             const newArray = [...prev.serial_array];
             newArray[index] = value;
@@ -423,7 +444,8 @@ const StockManagement = () => {
         const code = Math.floor(100000 + Math.random() * 900000).toString();
         setActivePairSession(code);
         localStorage.setItem('jadestock_active_session', code);
-        alert(`Pairing Code Generated: ${code}\n\nOpen https://dps.ricalgen.eu.org on your mobile phone, click "PAIR THIS PHONE AS SCANNER", and enter code: ${code}`);
+        const scannerUrl = `https://dps.ricalgen.eu.org/#/scanner/${code}`;
+        window.open(scannerUrl, '_blank');
     };
 
     return (
@@ -488,18 +510,6 @@ const StockManagement = () => {
             {/* MAIN CONTENT GRID */}
             <main className="flex-grow-1 p-3 p-md-4 bg-dark bg-opacity-10">
                 
-                {!isRemoteScannerUI && (
-                    <div className="alert bg-dark border border-success text-white mb-4 d-flex justify-content-between align-items-center flex-wrap gap-2 p-3 rounded-3 shadow">
-                        <div>
-                            <span className="text-success fw-bold d-block mb-1"><i className="fas fa-mobile-alt me-2"></i>MOBILE SCANNER COMPANION MODE</span>
-                            <small className="text-secondary">Want to use this phone camera as a wireless barcode scanner for your desktop?</small>
-                        </div>
-                        <button className="btn btn-success text-black fw-bold btn-sm px-3 py-2" onClick={() => setIsRemoteScannerUI(true)}>
-                            PAIR THIS PHONE AS SCANNER
-                        </button>
-                    </div>
-                )}
-
                 {isRemoteScannerUI ? (
                     <div className="card bg-dark border border-success text-white p-4 max-w-md mx-auto rounded-3 shadow-lg text-center font-monospace">
                         <h5 className="text-success fw-bold mb-3"><i className="fas fa-camera me-2"></i>MOBILE BARCODE SCANNER</h5>
@@ -913,7 +923,7 @@ const StockManagement = () => {
                                 </div>
                                 <p className="text-secondary small mt-3 mb-0" style={{ fontSize: '11px' }}>
                                     {isRemoteScannerUI 
-                                        ? `Paired with Code: [${activePairSession}]. Duplicate serials are blocked automatically.`
+                                        ? `Paired with Code: [${activePairSession}]. URLs and duplicate serials are automatically blocked.`
                                         : "Align barcode or QR code inside the frame."}
                                 </p>
                             </div>
@@ -1011,7 +1021,7 @@ const StockManagement = () => {
                                             <input type="number" step="0.01" name="freight_cost" className="form-control bg-black text-white border-secondary py-2" placeholder="0.00" value={formData.freight_cost} onChange={handleInputChange} style={{ fontSize: '12px' }} />
                                         </div>
 
-                                        {/* SERIAL INPUT FIELDS WITH REAL-TIME DUPLICATE ERROR DISPLAY */}
+                                        {/* SERIAL INPUT FIELDS WITH REAL-TIME DUPLICATE & URL ERROR DISPLAY */}
                                         <div className="col-12">
                                             <div className="d-flex justify-content-between align-items-center mb-1.5 flex-wrap gap-2">
                                                 <label className="text-success fw-bold mb-0">
@@ -1072,7 +1082,7 @@ const StockManagement = () => {
                                                 })}
                                             </div>
                                             <small className="text-secondary mt-1.5 d-block" style={{ fontSize: '10px' }}>
-                                                {activePairSession ? `Active Pair Session Code: ${activePairSession}` : "Click 'Connect Phone as Scanner' to generate a pair code for your mobile device."}
+                                                {activePairSession ? `Active Pair Session Code: ${activePairSession} (URL: https://dps.ricalgen.eu.org/#/scanner/${activePairSession})` : "Click 'Connect Phone as Scanner' to automatically generate a unique session code and open the mobile scanner interface."}
                                             </small>
                                         </div>
                                     </div>
