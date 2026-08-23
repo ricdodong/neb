@@ -14,6 +14,9 @@ const CustomerManagement = () => {
     
     // Modal State
     const [showAddModal, setShowAddModal] = useState(false);
+    const [showDetailModal, setShowDetailModal] = useState(false);
+    const [selectedItemDetail, setSelectedItemDetail] = useState(null);
+
     const [formData, setFormData] = useState({
         name: '',
         address: '',
@@ -73,12 +76,10 @@ const CustomerManagement = () => {
             const res = await axios.post(`${BASE_URL}/api/customers`, formData);
             await fetchCustomers();
             
-            // Automatically select the newly created customer if returned
             if (res.data && res.data.id) {
                 handleSelectCustomer(res.data);
             }
 
-            // Reset and close modal
             setFormData({ name: '', address: '', contact: '', email: '' });
             setShowAddModal(false);
         } catch (err) {
@@ -99,9 +100,11 @@ const CustomerManagement = () => {
             case 'fixing':
             case 'repairing':
             case 'in progress':
+            case 'balance':
                 return 'bg-warning text-dark';
             case 'pending':
             case 'waiting':
+            case 'unpaid':
                 return 'bg-danger';
             case 'cancelled':
             case 'returned':
@@ -136,26 +139,36 @@ const CustomerManagement = () => {
         setExpandedRow(expandedRow === id ? null : id);
     };
 
+    const handleRowClick = (item) => {
+        setSelectedItemDetail(item);
+        setShowDetailModal(true);
+    };
+
     const filteredCustomers = customers.filter(c =>
         c.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    const groupedHistory = useMemo(() => {
+    // Group purchase history by Transaction / OR Number & Date
+    const groupedTransactions = useMemo(() => {
         const groups = {};
         purchaseHistory.forEach((item, index) => {
-            const rawName = item.item_name || "Unknown Item";
-            const normalizedKey = rawName.trim().toLowerCase(); 
-            if (!groups[normalizedKey]) {
-                groups[normalizedKey] = {
-                    displayId: `group-${normalizedKey.replace(/[^a-z0-9]/g, '-')}`, 
-                    item_name: rawName.trim(),
-                    qty: 0,
-                    transactions: [] 
+            const orNum = item.or_number || `OR-UNKNOWN-${index}`;
+            const dateStr = item.purchase_date ? new Date(item.purchase_date).toISOString().split('T')[0] : 'no-date';
+            const groupKey = `${orNum}-${dateStr}`;
+
+            if (!groups[groupKey]) {
+                groups[groupKey] = {
+                    displayId: `txn-${index}`,
+                    or_number: item.or_number || 'N/A',
+                    purchase_date: item.purchase_date,
+                    payment_status: item.payment_status || 'Unpaid',
+                    items: []
                 };
             }
-            groups[normalizedKey].qty += 1;
-            groups[normalizedKey].transactions.push({
-                id: item.id || `row-${index}`, 
+            groups[groupKey].items.push({
+                id: item.id || `row-${index}`,
+                item_name: item.item_name || 'Unknown Item',
+                qty: item.qty || 1,
                 purchase_date: item.purchase_date,
                 serial_number: item.serial_number,
                 srp_amount: item.srp_amount,
@@ -173,7 +186,6 @@ const CustomerManagement = () => {
                 {/* Sidebar: Customer List */}
                 <div className="col-md-4">
                     <div className="card shadow-sm border-0 h-100">
-                        {/* Refined Professional Header */}
                         <div className="card-header bg-white border-0 py-3">
                             <div className="d-flex justify-content-between align-items-center mb-3">
                                 <div>
@@ -288,58 +300,55 @@ const CustomerManagement = () => {
                             {/* Purchase History */}
                             <div className="card shadow-sm border-0 mb-4 overflow-hidden">
                                 <div className="card-header bg-white fw-bold py-3 border-bottom">
-                                    <i className="fas fa-shopping-bag me-2 text-primary"></i>Purchase Ledger
+                                    <i className="fas fa-shopping-bag me-2 text-primary"></i>Purchase Ledger (Transactions)
                                 </div>
                                 <div className="table-responsive">
                                     <table className="table table-hover mb-0">
                                         <thead className="table-light">
                                             <tr>
-                                                <th className="ps-4" style={{ width: '85%' }}>Item Description</th>
-                                                <th className="text-center pe-4">Qty</th> 
+                                                <th className="ps-4">Transaction / OR Number</th>
+                                                <th>Date</th>
+                                                <th className="pe-4 text-center">Status</th> 
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {groupedHistory.length > 0 ? (
-                                                groupedHistory.map((group) => (
+                                            {groupedTransactions.length > 0 ? (
+                                                groupedTransactions.map((group) => (
                                                     <React.Fragment key={group.displayId}>
                                                         <tr onClick={() => toggleRow(group.displayId)} style={{ cursor: 'pointer' }} className={expandedRow === group.displayId ? 'table-primary-subtle' : ''}>
                                                             <td className="fw-bold py-3 ps-4">
                                                                 <i className={`fas fa-caret-${expandedRow === group.displayId ? 'down' : 'right'} me-2 text-primary`}></i>
-                                                                {group.item_name}
+                                                                <span className="badge bg-light text-dark border me-2">{group.or_number}</span>
+                                                            </td>
+                                                            <td className="py-3">
+                                                                {group.purchase_date ? new Date(group.purchase_date).toLocaleDateString() : 'N/A'}
                                                             </td>
                                                             <td className="text-center py-3 pe-4">
-                                                                <span className="badge bg-primary rounded-pill px-3">{group.qty}</span>
+                                                                <span className={`badge ${getStatusBadgeClass(group.payment_status)}`}>
+                                                                    {group.payment_status}
+                                                                </span>
                                                             </td>
                                                         </tr>
 
                                                         {expandedRow === group.displayId && (
                                                             <tr>
-                                                                <td colSpan="2" className="p-0 border-start border-primary border-4">
+                                                                <td colSpan="3" className="p-0 border-start border-primary border-4">
                                                                     <div className="bg-light p-4">
-                                                                        <table className="table table-sm table-bordered bg-white mb-0 shadow-sm rounded">
+                                                                        <div className="text-muted small mb-2 fw-bold">ITEMS IN THIS TRANSACTION (Click a row for full details)</div>
+                                                                        <table className="table table-sm table-bordered table-hover bg-white mb-0 shadow-sm rounded">
                                                                             <thead className="table-secondary tiny text-uppercase">
                                                                                 <tr>
-                                                                                    <th className="ps-2">Date</th>
-                                                                                    <th>OR Number</th>
-                                                                                    <th>Serial Number</th>
+                                                                                    <th className="ps-2">Item Description</th>
+                                                                                    <th className="text-center">Qty</th>
                                                                                     <th>Unit Price</th>
-                                                                                    <th>Status</th>
-                                                                                    <th>Warranty</th>
                                                                                 </tr>
                                                                             </thead>
                                                                             <tbody>
-                                                                                {group.transactions.map((t) => (
-                                                                                    <tr key={t.id}>
-                                                                                        <td className="fw-bold ps-2">{t.purchase_date ? new Date(t.purchase_date).toLocaleDateString() : 'N/A'}</td>
-                                                                                        <td><span className="badge bg-light text-dark border">{t.or_number || 'N/A'}</span></td>
-                                                                                        <td><code className="text-dark fw-bold">{t.serial_number || 'N/A'}</code></td>
-                                                                                        <td>₱{Number(t.srp_amount || 0).toLocaleString()}</td>
-                                                                                        <td>
-                                                                                            <span className={`badge ${getStatusBadgeClass(t.payment_status)}`}>
-                                                                                                {t.payment_status}
-                                                                                            </span>
-                                                                                        </td>
-                                                                                        <td className="text-muted small">{t.warranty_period || '1 Year'}</td>
+                                                                                {group.items.map((item) => (
+                                                                                    <tr key={item.id} onClick={() => handleRowClick(item)} style={{ cursor: 'pointer' }}>
+                                                                                        <td className="ps-2 fw-semibold text-primary">{item.item_name}</td>
+                                                                                        <td className="text-center"><span className="badge bg-secondary rounded-pill">{item.qty}</span></td>
+                                                                                        <td>₱{Number(item.srp_amount || 0).toLocaleString()}</td>
                                                                                     </tr>
                                                                                 ))}
                                                                             </tbody>
@@ -351,7 +360,7 @@ const CustomerManagement = () => {
                                                     </React.Fragment>
                                                 ))
                                             ) : (
-                                                <tr><td colSpan="2" className="text-center py-5 text-muted">No records found.</td></tr>
+                                                <tr><td colSpan="3" className="text-center py-5 text-muted">No records found.</td></tr>
                                             )}
                                         </tbody>
                                     </table>
@@ -517,6 +526,73 @@ const CustomerManagement = () => {
                                     </button>
                                 </div>
                             </form>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Item Detail Modal */}
+            {showDetailModal && selectedItemDetail && (
+                <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+                    <div className="modal-dialog modal-dialog-centered">
+                        <div className="modal-content border-0 shadow-lg">
+                            <div className="modal-header bg-dark text-white">
+                                <h5 className="modal-title fw-bold">
+                                    <i className="fas fa-info-circle me-2 text-primary"></i>Transaction Item Details
+                                </h5>
+                                <button 
+                                    type="button" 
+                                    className="btn-close btn-close-white" 
+                                    onClick={() => setShowDetailModal(false)}
+                                ></button>
+                            </div>
+                            <div className="modal-body p-4">
+                                <ul className="list-group list-group-flush">
+                                    <li className="list-group-item d-flex justify-content-between align-items-center py-3">
+                                        <span className="fw-bold text-muted">Item Description:</span>
+                                        <span className="fw-semibold text-dark">{selectedItemDetail.item_name}</span>
+                                    </li>
+                                    <li className="list-group-item d-flex justify-content-between align-items-center py-3">
+                                        <span className="fw-bold text-muted">Quantity:</span>
+                                        <span className="badge bg-primary rounded-pill px-3">{selectedItemDetail.qty}</span>
+                                    </li>
+                                    <li className="list-group-item d-flex justify-content-between align-items-center py-3">
+                                        <span className="fw-bold text-muted">Purchase Date:</span>
+                                        <span>{selectedItemDetail.purchase_date ? new Date(selectedItemDetail.purchase_date).toLocaleDateString() : 'N/A'}</span>
+                                    </li>
+                                    <li className="list-group-item d-flex justify-content-between align-items-center py-3">
+                                        <span className="fw-bold text-muted">OR Number:</span>
+                                        <span className="badge bg-light text-dark border">{selectedItemDetail.or_number || 'N/A'}</span>
+                                    </li>
+                                    <li className="list-group-item d-flex justify-content-between align-items-center py-3">
+                                        <span className="fw-bold text-muted">Serial Number:</span>
+                                        <code className="text-dark fw-bold">{selectedItemDetail.serial_number || 'N/A'}</code>
+                                    </li>
+                                    <li className="list-group-item d-flex justify-content-between align-items-center py-3">
+                                        <span className="fw-bold text-muted">Unit Price:</span>
+                                        <span className="fw-bold text-success">₱{Number(selectedItemDetail.srp_amount || 0).toLocaleString()}</span>
+                                    </li>
+                                    <li className="list-group-item d-flex justify-content-between align-items-center py-3">
+                                        <span className="fw-bold text-muted">Payment Status:</span>
+                                        <span className={`badge ${getStatusBadgeClass(selectedItemDetail.payment_status)}`}>
+                                            {selectedItemDetail.payment_status}
+                                        </span>
+                                    </li>
+                                    <li className="list-group-item d-flex justify-content-between align-items-center py-3">
+                                        <span className="fw-bold text-muted">Warranty Period:</span>
+                                        <span>{selectedItemDetail.warranty_period || '1 Year'}</span>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div className="modal-footer bg-light px-4 py-3">
+                                <button 
+                                    type="button" 
+                                    className="btn btn-secondary px-4" 
+                                    onClick={() => setShowDetailModal(false)}
+                                >
+                                    Close
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
