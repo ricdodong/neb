@@ -148,7 +148,7 @@ const CustomerManagement = () => {
         c.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    // Group purchase history by Transaction / OR Number & Date
+    // Group purchase history by Transaction / OR Number & Date + Auto-sort (Unpaid/Balance first, then Latest Date)
     const groupedTransactions = useMemo(() => {
         const groups = {};
         purchaseHistory.forEach((item, index) => {
@@ -177,7 +177,24 @@ const CustomerManagement = () => {
                 warranty_period: item.warranty_period
             });
         });
-        return Object.values(groups);
+
+        // Convert to array and sort
+        return Object.values(groups).sort((a, b) => {
+            const statusA = (a.payment_status || '').toLowerCase();
+            const statusB = (b.payment_status || '').toLowerCase();
+
+            const isUnpaidA = statusA === 'unpaid' || statusA === 'balance';
+            const isUnpaidB = statusB === 'unpaid' || statusB === 'balance';
+
+            // 1. Unpaid / Balance items come first
+            if (isUnpaidA && !isUnpaidB) return -1;
+            if (!isUnpaidA && isUnpaidB) return 1;
+
+            // 2. Sort by latest date descending
+            const dateA = a.purchase_date ? new Date(a.purchase_date).getTime() : 0;
+            const dateB = b.purchase_date ? new Date(b.purchase_date).getTime() : 0;
+            return dateB - dateA;
+        });
     }, [purchaseHistory]);
     
     return (
