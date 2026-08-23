@@ -623,7 +623,7 @@ const PointOfSale = ({ triggerToast }) => {
                     <div className="modal-dialog modal-dialog-centered">
                         <div className="modal-content bg-dark border border-secondary text-white font-monospace shadow-2xl">
                             <div className="modal-header border-secondary py-2 bg-black bg-opacity-40">
-                                <h6 className="modal-title text-success fw-bold uppercase">Telemetry // {selectedProduct.name}</h6>
+                                <h6 className="modal-title text-success fw-bold uppercase">Details // {selectedProduct.name}</h6>
                                 <button type="button" className="btn-close btn-close-white scale-75" onClick={() => setSelectedProduct(null)}></button>
                             </div>
                             <div className="modal-body p-3">
@@ -634,7 +634,7 @@ const PointOfSale = ({ triggerToast }) => {
                                     <div className="col-4 text-secondary">UNIT PRICE:</div>
                                     <div className="col-8 text-success fw-bold">{formatPHP(selectedProduct.price)}</div>
                                     <div className="col-4 text-secondary">REMAINING:</div>
-                                    <div className="col-8 text-info">{(selectedProduct.sns || []).filter(sn => !getUsedSNs(selectedProduct.id).includes(sn)).length} items active</div>
+                                    <div className="col-8 text-info">{(selectedProduct.sns || []).filter(sn => !getUsedSNs(selectedProduct.id).includes(sn)).length} items available</div>
                                     <div className="col-4 text-secondary">DESCRIPTION:</div>
                                     <div className="col-8 text-muted small">{selectedProduct.description || "No supplemental hardware metrics declared."}</div>
                                 </div>
