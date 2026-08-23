@@ -636,7 +636,7 @@ const PointOfSale = ({ triggerToast }) => {
                                     <div className="col-4 text-secondary">REMAINING:</div>
                                     <div className="col-8 text-info">{(selectedProduct.sns || []).filter(sn => !getUsedSNs(selectedProduct.id).includes(sn)).length} items available</div>
                                     <div className="col-4 text-secondary">DESCRIPTION:</div>
-                                    <div className="col-8 text-muted small">{selectedProduct.description || "No supplemental hardware metrics declared."}</div>
+                                    <div className="col-8 text-warning small">{selectedProduct.description || "No supplemental hardware metrics declared."}</div>
                                 </div>
                             </div>
                         </div>
