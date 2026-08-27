@@ -271,9 +271,9 @@ const PointOfSale = ({ triggerToast }) => {
                     term_duration: paymentMethod === 'Terms' ? termDuration : null,
 
                     // --- Pass your attachment paths here ---
-                    dr_attachment: uploadedDR ? `/uploads/receipts/${uploadedDR}` : null,
-                    si_attachment: paymentMethod === 'Cash' ? (uploadedSI ? `/uploads/receipts/${uploadedSI}` : null) : null,
-                    ci_attachment: paymentMethod === 'Terms' ? (uploadedCI ? `/uploads/receipts/${uploadedCI}` : null) : null,
+                    dr_attachment: uploadedDR ? `/uploads/receipts/sales/dr/${uploadedDR}` : null,
+                    si_attachment: paymentMethod === 'Cash' ? (uploadedSI ? `/uploads/receipts/sales/si/${uploadedSI}` : null) : null,
+                    ci_attachment: paymentMethod === 'Terms' ? (uploadedCI ? `/uploads/receipts/sales/ci/${uploadedCI}` : null) : null,
                 });
             });
 
