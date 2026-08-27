@@ -478,7 +478,6 @@ const CustomerManagement = () => {
                                                                                 <p className="text-muted small mb-0">Click a row for full details or access the master ledger account.</p>
                                                                             </div>
 
-                                                                            {/* The [Ledger] Button */}
                                                                             <button
                                                                                 type="button"
                                                                                 onClick={() => {
@@ -487,7 +486,6 @@ const CustomerManagement = () => {
                                                                                         return;
                                                                                     }
 
-                                                                                    // Define batchRef locally from your active item details state
                                                                                     const batchRef = selectedItemDetail?.batch_reference;
 
                                                                                     if (!batchRef) {
