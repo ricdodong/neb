@@ -516,7 +516,7 @@ const StockManagement = () => {
                 <div className="d-flex align-items-center justify-content-between w-100 flex-nowrap gap-3">
                     <div className="d-flex align-items-center text-nowrap flex-shrink-0">
                         <div className="rounded-circle me-2 bg-success pulse-dot" style={{ width: '10px', height: '10px' }}></div>
-                        <h4 className="mb-0 fw-bold tracking-tighter me-3 fs-5">JADE<span className="text-success">STOCKS</span></h4>
+                        <h4 className="mb-0 fw-bold tracking-tighter me-3 fs-5">DPS<span className="text-success">STOCKS</span></h4>
                     </div>
 
                     <div className="d-flex gap-2.5 align-items-center justify-content-end flex-wrap flex-md-nowrap w-100">

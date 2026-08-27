@@ -35,7 +35,7 @@ const MobileUpload2 = () => {
             chunkFormData.append('chunkIndex', '0');
             chunkFormData.append('chunk', new Blob([rawBytes], { type: file.type }));
 
-            await axios.post('https://dpsapi.ricalgen.eu.org/api/transactions/upload-chunk', chunkFormData, {
+            await axios.post('https://dpsapi.ricalgen.eu.org/api/po/upload-chunk', chunkFormData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
 
@@ -51,7 +51,7 @@ const MobileUpload2 = () => {
             };
 
             const response = await axios.post(
-                'https://dpsapi.ricalgen.eu.org/api/transactions/finalize-po-staging', 
+                'https://dpsapi.ricalgen.eu.org/api/po/finalize-staging', 
                 finalizePayload,
                 { headers: { 'Content-Type': 'application/json' } }
             );

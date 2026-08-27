@@ -315,7 +315,7 @@ const PointOfSale = ({ triggerToast }) => {
                 <div className="d-flex align-items-center flex-wrap w-100 justify-content-between">
                     <div className="d-flex align-items-center">
                         <div className={`rounded-circle me-2 pulse-dot ${useLocalIp ? 'bg-warning' : 'bg-success'}`} style={{ width: '10px', height: '10px' }}></div>
-                        <h5 className="mb-0 fw-bold tracking-tighter me-3">JADE<span className="text-success">POS</span></h5>
+                        <h5 className="mb-0 fw-bold tracking-tighter me-3">DPS<span className="text-success">POS</span></h5>
 
                         <div className="d-none d-md-flex align-items-center bg-black border border-secondary rounded px-2 py-1">
                             <div className={`rounded-circle me-2 ${useLocalIp ? 'bg-warning' : 'bg-success'}`} style={{ width: '6px', height: '6px' }}></div>

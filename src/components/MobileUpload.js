@@ -91,7 +91,7 @@ const MobileUpload = () => {
 
                     logDebug(`Transmitting Chunk ${i + 1}/${totalChunks} (${(chunkBlob.size / 1024).toFixed(1)} KB)...`);
 
-                    const chunkRes = await axios.post(`${API_BASE}/api/transactions/upload-chunk`, chunkForm, {
+                    const chunkRes = await axios.post(`${API_BASE}/api/po/upload-chunk`, chunkForm, {
                         headers: { 'Content-Type': 'multipart/form-data' },
                         withCredentials: true,
                         onUploadProgress: (progressEvent) => {
@@ -117,7 +117,7 @@ const MobileUpload = () => {
                     type: docType // 'dr' or 'po'
                 };
 
-                const finalizeRes = await axios.post(`${API_BASE}/api/transactions/finalize-po-staging`, finalizePayload, {
+                const finalizeRes = await axios.post(`${API_BASE}/api/po/finalize-staging`, finalizePayload, {
                     headers: { 'Content-Type': 'application/json' },
                     withCredentials: true
                 });
@@ -140,7 +140,7 @@ const MobileUpload = () => {
                 formData.append('batch_reference', batchRef);
                 formData.append('type', docType);
 
-                const res = await axios.post(`${API_BASE}/api/transactions/attach-scan`, formData, {
+                const res = await axios.post(`${API_BASE}/api/po/attach-scan`, formData, {
                     headers: { 'Content-Type': 'multipart/form-data' },
                     withCredentials: true,
                     onUploadProgress: (progressEvent) => {
@@ -200,12 +200,10 @@ const MobileUpload = () => {
                         }} 
                         style={{ margin: '8px 0 15px 0', display: 'block', width: '100%', background: '#121212', color: '#fff', border: '1px solid #333', padding: '12px', borderRadius: '8px', fontSize: '14px' }}
                     >
-                        <option value="receipt">Official Receipt (OR)</option>
-                        <option value="dr">Delivery Receipt (DR - Staged)</option>
-                        <option value="po">Purchase Order (PO - Staged)</option>
+                        <option value="dr">Delivery Receipt (DR)</option>
+                        <option value="po">Purchase Order (PO)</option>
                         <option value="si">Sales Invoice (SI)</option>
                         <option value="ci">Charge Invoice (CI)</option>
-                        <option value="qr">QR Payment Proof</option>
                     </select>
 
                     {/* CAPTURE INPUT */}
