@@ -481,41 +481,41 @@ const CustomerManagement = () => {
                                                                             </div>
 
                                                                             {/* The [Ledger] Button */}
-                                                                           <button
-    type="button"
-    onClick={() => {
-        if (!selectedCustomer || !selectedCustomer.id) {
-            alert("Please select a customer first.");
-            return;
-        }
-        if (!targetBatchReference) {
-            console.warn("No batch reference provided to handleOpenLedger.");
-        // Pass the batch reference from your current selected item or row state
-        const batchRef = selectedItemDetail?.batch_reference;
-        }
-        
-        if (!batchRef) {
-            alert("Batch reference is missing for this transaction item.");
-            return;
-        }
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={() => {
+                                                                                    if (!selectedCustomer || !selectedCustomer.id) {
+                                                                                        alert("Please select a customer first.");
+                                                                                        return;
+                                                                                    }
+                                                                                    if (!targetBatchReference) {
+                                                                                        console.warn("No batch reference provided to handleOpenLedger.");
+                                                                                        // Pass the batch reference from your current selected item or row state
+                                                                                        const batchRef = selectedItemDetail?.batch_reference;
+                                                                                    }
 
-        handleOpenLedger(batchRef);
-    }}
-    disabled={loadingLedger}
-    className="btn btn-primary d-inline-flex align-items-center justify-content-center gap-2 px-3 py-2 shadow-sm"
->
-    {loadingLedger ? (
-        <>
-            <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-            Loading Ledger...
-        </>
-    ) : (
-        <>
-            <i className="fas fa-file-invoice-dollar"></i>
-            View Ledger
-        </>
-    )}
-</button>
+                                                                                    if (!batchRef) {
+                                                                                        alert("Batch reference is missing for this transaction item.");
+                                                                                        return;
+                                                                                    }
+
+                                                                                    handleOpenLedger(batchRef);
+                                                                                }}
+                                                                                disabled={loadingLedger}
+                                                                                className="btn btn-primary d-inline-flex align-items-center justify-content-center gap-2 px-3 py-2 shadow-sm"
+                                                                            >
+                                                                                {loadingLedger ? (
+                                                                                    <>
+                                                                                        <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                                                                        Loading Ledger...
+                                                                                    </>
+                                                                                ) : (
+                                                                                    <>
+                                                                                        <i className="fas fa-file-invoice-dollar"></i>
+                                                                                        View Ledger
+                                                                                    </>
+                                                                                )}
+                                                                            </button>
                                                                         </div>
                                                                         <table className="table table-sm table-bordered table-hover bg-white mb-0 shadow-sm rounded">
                                                                             <thead className="table-secondary tiny text-uppercase">
