@@ -120,7 +120,7 @@ const CustomerManagement = () => {
     };
 
     // handle open ledger modal
-    const handleOpenLedger = async (transactionOrCustomerId) => {
+    const handleOpenLedger = async (batchReference = null) => {
         if (!selectedCustomer) {
             alert("Please select a customer first.");
             return;
@@ -129,18 +129,20 @@ const CustomerManagement = () => {
         setLoadingLedger(true);
         try {
             const res = await axios.get(`${BASE_URL}/api/customers/${selectedCustomer.id}/history`);
-            const historyData = res.data; // This is your raw array from the API
+            const historyData = res.data;
 
             if (!Array.isArray(historyData) || historyData.length === 0) {
                 throw new Error("No purchase history found for this customer.");
             }
 
-            // Calculate totals dynamically and transform rows into standard ledger format
             let overallTotal = 0;
             let overallPaid = 0;
             let overallBalance = 0;
+            let scheduleItems = [];
+            let attachmentsMap = new Map();
 
-            const scheduleItems = historyData.map((item, index) => {
+            // Loop through each item in the history to build financials and term schedules
+            historyData.forEach((item, index) => {
                 const amount = Number(item.srp_amount) || 0;
                 overallTotal += amount;
 
@@ -151,61 +153,62 @@ const CustomerManagement = () => {
                     overallBalance += amount;
                 }
 
-                return {
-                    id: item.transaction_id || index,
-                    period: `${item.item_name} (SN: ${item.serial_number || 'N/A'})`,
-                    dueDate: item.purchase_date ? item.purchase_date.split(' ')[0] : 'N/A',
-                    amount: amount,
-                    status: isPaid ? 'Paid' : 'Unpaid',
-                    paidDate: isPaid ? (item.purchase_date ? item.purchase_date.split(' ')[0] : '-') : '-',
-                    reference: item.batch_reference || 'N/A'
-                };
+                // Collect unique document attachments from the stream
+                if (item.dr_attachment && !attachmentsMap.has('dr')) {
+                    attachmentsMap.set('dr', { id: 'dr', name: 'Delivery Receipt (DR)', type: 'image', url: `${FILE_URL}${item.dr_attachment.replace(/^\/+/, '')}` });
+                }
+                if (item.ci_attachment && !attachmentsMap.has('ci')) {
+                    attachmentsMap.set('ci', { id: 'ci', name: 'Charge Invoice (CI)', type: 'image', url: `${FILE_URL}${item.ci_attachment.replace(/^\/+/, '')}` });
+                }
+                if (item.si_attachment && !attachmentsMap.has('si')) {
+                    attachmentsMap.set('si', { id: 'si', name: 'Sales Invoice (SI)', type: 'image', url: `${FILE_URL}${item.si_attachment.replace(/^\/+/, '')}` });
+                }
+
+                // Generate Schedule Breakdown based on Term Type and Duration
+                if (item.payment_method === 'Terms' && item.term_duration > 0) {
+                    const duration = Number(item.term_duration);
+                    const termTypeLabel = item.term_type ? item.term_type.charAt(0).toUpperCase() + item.term_type.slice(1) : 'Periods';
+                    const installmentAmount = amount / duration;
+
+                    for (let i = 1; i <= duration; i++) {
+                        scheduleItems.push({
+                            id: `${item.transaction_id}-${i}`,
+                            period: `${item.item_name} - ${termTypeLabel} ${i} of ${duration}`,
+                            dueDate: item.purchase_date ? item.purchase_date.split(' ')[0] : 'N/A',
+                            amount: installmentAmount,
+                            status: isPaid ? 'Paid' : 'Unpaid',
+                            paidDate: isPaid ? (item.purchase_date ? item.purchase_date.split(' ')[0] : '-') : '-',
+                            reference: item.batch_reference || 'N/A'
+                        });
+                    }
+                } else {
+                    // Standard Cash or Full Settlement Row
+                    scheduleItems.push({
+                        id: item.transaction_id || index,
+                        period: `${item.item_name} (Cash / Full Payment)`,
+                        dueDate: item.purchase_date ? item.purchase_date.split(' ')[0] : 'N/A',
+                        amount: amount,
+                        status: isPaid ? 'Paid' : 'Unpaid',
+                        paidDate: isPaid ? (item.purchase_date ? item.purchase_date.split(' ')[0] : '-') : '-',
+                        reference: item.batch_reference || 'N/A'
+                    });
+                }
             });
 
-            // Extract document attachments using your FILE_URL base path
-            const sampleItem = historyData[0];
-            const attachmentsList = [];
-            if (sampleItem.dr_attachment) {
-                attachmentsList.push({
-                    id: 'dr',
-                    name: 'Delivery Receipt (DR)',
-                    type: 'image',
-                    url: `${FILE_URL}${sampleItem.dr_attachment.replace(/^\/+/, '')}`
-                });
-            }
-            if (sampleItem.ci_attachment) {
-                attachmentsList.push({
-                    id: 'ci',
-                    name: 'Charge Invoice (CI)',
-                    type: 'image',
-                    url: `${FILE_URL}${sampleItem.ci_attachment.replace(/^\/+/, '')}`
-                });
-            }
-            if (sampleItem.si_attachment) {
-                attachmentsList.push({
-                    id: 'si',
-                    name: 'Sales Invoice (SI)',
-                    type: 'image',
-                    url: `${FILE_URL}${sampleItem.si_attachment.replace(/^\/+/, '')}`
-                });
-            }
-
-            // Set structured ledger data object for the modal view
             setLedgerData({
-                documentId: sampleItem.batch_reference || `INV-${selectedCustomer.id}`,
+                documentId: historyData[0]?.batch_reference || `INV-${selectedCustomer.id}`,
                 clientName: selectedCustomer.name || 'Client',
-                paymentTerms: "Standard Itemized Ledger Schedule",
+                paymentTerms: "Mixed Terms & Cash Schedule",
                 overallTotal: overallTotal,
                 overallPaid: overallPaid,
                 overallBalance: overallBalance,
-                attachments: attachmentsList,
+                attachments: Array.from(attachmentsMap.values()),
                 schedule: scheduleItems
             });
 
             setIsLedgerOpen(true);
         } catch (err) {
             console.error("Error loading master ledger, using fallback", err);
-            // Fallback mock structure so the UI doesn't crash if the endpoint fails
             setLedgerData({
                 documentId: `INV-${selectedCustomer?.id || '2026'}-01`,
                 clientName: selectedCustomer?.name || 'Selected Client',
@@ -218,7 +221,6 @@ const CustomerManagement = () => {
                 ],
                 schedule: [
                     { id: 1, period: "Month 1 (Jan 2026)", dueDate: "2026-01-31", amount: 3000, status: "Paid", paidDate: "2026-01-28", reference: "OR-8821" },
-                    { id: 2, period: "Month 2 (Feb 2026)", dueDate: "2026-02-28", amount: 3000, status: "Paid", paidDate: "2026-02-25", reference: "OR-8932" },
                 ]
             });
             setIsLedgerOpen(true);
