@@ -84,7 +84,7 @@ const MobileUpload2 = () => {
                 borderRadius: '24px',
                 boxShadow: 'inset 4px 4px 10px #000'
             }}>
-                <h3 style={{ fontWeight: '900', margin: '0 0 5px 0' }}>PO Logistics Attacher</h3>
+                <h3 style={{ fontWeight: '900', margin: '0 0 5px 0' }}>PO Doc Uploader</h3>
                 <p style={{ color: '#666', fontSize: '0.85rem', marginBottom: '25px' }}>
                     Target Batch Reference: <span style={{ color: '#00ff88', fontFamily: 'monospace', fontWeight: 'bold' }}>{batchRef}</span>
                 </p>

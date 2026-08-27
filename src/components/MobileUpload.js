@@ -182,7 +182,7 @@ const MobileUpload = () => {
                 borderRadius: '20px',
                 boxShadow: 'inset 0 0 20px #000'
             }}>
-                <h3 style={{ fontWeight: '900', margin: '0 0 5px 0' }}>System Scan Tool</h3>
+                <h3 style={{ fontWeight: '900', margin: '0 0 5px 0' }}>PO Doc Re-Upload</h3>
                 <p style={{ color: '#00ff88', fontFamily: 'monospace', fontWeight: 'bold', fontSize: '13px', wordBreak: 'break-all' }}>
                     Batch Ref: {batchRef || 'NONE'}
                 </p>
