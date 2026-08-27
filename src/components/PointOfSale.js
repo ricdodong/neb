@@ -426,37 +426,18 @@ const PointOfSale = ({ triggerToast }) => {
                 <aside className={`col-12 col-lg-4 col-xl-3 bg-dark border-start border-secondary d-flex flex-column custom-vh-lg shadow-lg mobile-cart-overlay ${showMobileCart ? 'show' : ''}`}>
 
                     {isSuccessView ? (
-                        <div className="p-4 d-flex flex-column h-100 overflow-auto animate__animated animate__fadeIn">
-                            <div className="text-center mb-3">
-                                <i className="fas fa-check-circle text-success fs-1 mb-2"></i>
+                        <div className="p-4 d-flex flex-column h-100 justify-content-center text-center animate__animated animate__fadeIn">
+                            <div className="mb-4">
+                                <i className="fas fa-check-circle text-success fs-1 mb-3"></i>
                                 <h5 className="fw-bold text-success mb-1">SALE RECORDED</h5>
-                                <p className="text-secondary tiny-text mb-0">
-                                    {useLocalIp ? '🔴 Offline Mode: Scan local IP' : '🌐 Online Mode: Scan production cloud link'}
+                                <p className="text-secondary small mb-0">
+                                    Transaction completed successfully.
                                 </p>
                             </div>
 
-                            <div className="bg-white p-3 d-flex justify-content-center rounded mb-3 mx-auto shadow-lg border border-success" style={{ maxWidth: '210px' }}>
-                                <QRCodeSVG
-                                    value={useLocalIp ? `${FRONT_URL}/mobile-uploads/${lastTransactionId}` : `${BASE_URL}/mobile-uploads/${lastTransactionId}`}
-                                    size={160}
-                                    level={"H"}
-                                    includeMargin={true}
-                                />
-                            </div>
-
-                            <div className="mt-auto border-top border-secondary pt-3 bg-dark">
-                                <p className="tiny-text text-secondary mb-3 text-center uppercase fw-bold">System Attachment Routing</p>
-
+                            <div className="mt-4">
                                 <button
-                                    className="btn btn-primary w-100 mb-2 py-3 fw-bold tracking-wide uppercase"
-                                    onClick={handleScanRedirect}
-                                    style={{ fontSize: '13px' }}
-                                >
-                                    <i className="fas fa-camera me-2"></i>[Scan Receipt]
-                                </button>
-
-                                <button
-                                    className="btn btn-link btn-sm text-secondary w-100 text-decoration-none mt-2"
+                                    className="btn btn-outline-success w-100 py-3 fw-bold tracking-wider uppercase"
                                     onClick={() => {
                                         setIsSuccessView(false);
                                         setShowMobileCart(false);
