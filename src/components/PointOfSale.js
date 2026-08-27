@@ -41,6 +41,12 @@ const PointOfSale = ({ triggerToast }) => {
     const [lastTransactionId, setLastTransactionId] = useState(null);
     const [serverBaseUrl, setServerBaseUrl] = useState('');
     const [useLocalIp, setUseLocalIp] = useState(false);
+    
+    // --- DOCUMENT UPLOAD MODAL STATE ---
+    const [showDocUploadModal, setShowDocUploadModal] = useState(false);
+    const [uploadedDR, setUploadedDR] = useState(null);
+    const [uploadedSI, setUploadedSI] = useState(null);
+    const [uploadedCI, setUploadedCI] = useState(null);
 
     // --- API Interactions ---
     const fetchServerInfo = async () => {
