@@ -488,11 +488,9 @@ const CustomerManagement = () => {
                                                                                         alert("Please select a customer first.");
                                                                                         return;
                                                                                     }
-                                                                                    if (!targetBatchReference) {
-                                                                                        console.warn("No batch reference provided to handleOpenLedger.");
-                                                                                        // Pass the batch reference from your current selected item or row state
-                                                                                        const batchRef = selectedItemDetail?.batch_reference;
-                                                                                    }
+
+                                                                                    // Define batchRef locally from your active item details state
+                                                                                    const batchRef = selectedItemDetail?.batch_reference;
 
                                                                                     if (!batchRef) {
                                                                                         alert("Batch reference is missing for this transaction item.");
