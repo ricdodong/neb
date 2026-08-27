@@ -224,6 +224,7 @@ const PointOfSale = ({ triggerToast }) => {
         const currentBatchRef = autoBatchRef || `TRX-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
         try {
+            // Inside your handleCheckout file loop or batch mapping:
             const salePromises = cart.map(async (item) => {
                 return await axios.post(`${BASE_URL}/api/sales`, {
                     customer_id: selectedCustomerId,
@@ -236,7 +237,12 @@ const PointOfSale = ({ triggerToast }) => {
                     address: customer?.address || "POS Terminal",
                     batch_reference: currentBatchRef,
                     term_type: paymentMethod === 'Terms' ? termType : null,
-                    term_duration: paymentMethod === 'Terms' ? termDuration : null
+                    term_duration: paymentMethod === 'Terms' ? termDuration : null,
+
+                    // --- Pass your attachment paths here ---
+                    dr_attachment: uploadedDR ? `/uploads/receipts/${uploadedDR}` : null,
+                    si_attachment: paymentMethod === 'Cash' ? (uploadedSI ? `/uploads/receipts/${uploadedSI}` : null) : null,
+                    ci_attachment: paymentMethod === 'Terms' ? (uploadedCI ? `/uploads/receipts/${uploadedCI}` : null) : null,
                 });
             });
 
