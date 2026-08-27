@@ -2,414 +2,263 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { QRCodeSVG } from 'qrcode.react'; 
 
-/**
- * JADE POS - Point of Sale Component
- * Optimized with direct Scan Receipt redirection, Wireless Scanner Pairing & Scanner Active/Stop Control.
- */
 const BASE_URL = 'https://dpsapi.ricalgen.eu.org';
 const FRONT_URL = 'https://dps.ricalgen.eu.org';
 
-const PointOfSale = ({ triggerToast }) => {
-    // --- State Management ---
-    const [stock, setStock] = useState([]);
+const PointOfSale = ({
+    products = [],
+    onCommitTransaction,
+    useLocalIp
+}) => {
+    // --- STATE MANAGEMENT ---
     const [cart, setCart] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [selectedCustomerId, setSelectedCustomerId] = useState('');
-    const [customers, setCustomers] = useState([]);
-    const [pendingSelections, setPendingSelections] = useState({});
-    const [searchTerm, setSearchTerm] = useState(''); 
+    const [searchTerm, setSearchTerm] = useState('');
+    const [selectedCategory, setSelectedCategory] = useState('ALL');
     
+    // View Controllers
     const [isCheckoutView, setIsCheckoutView] = useState(false);
-    const [paymentMethod, setPaymentMethod] = useState('Cash'); 
-    const [amountTendered, setAmountTendered] = useState('');
-    const [orNumber, setOrNumber] = useState(''); 
-    const [selectedProduct, setSelectedProduct] = useState(null);
-    
-    const [showMobileCart, setShowMobileCart] = useState(false);
-
-    // --- SCANNER PAIRING & ACTIVE TOGGLE STATES ---
-    const [showScannerModal, setShowScannerModal] = useState(false);
-    const [posActiveSession, setPosActiveSession] = useState(localStorage.getItem('jadestock_pos_session') || '');
-    const [isScannerActive, setIsScannerActive] = useState(true);
-    
-    // Refs to prevent duplicate message flooding on same serial value
-    const lastScannedCodeRef = useRef('');
-    const lastProcessedSerialRef = useRef('');
-
-    // --- TERMS & INSTALLMENT STATE ---
-    const [termType, setTermType] = useState('months'); 
-    const [termDuration, setTermDuration] = useState('7'); 
-
-    // --- SCAN REDIRECT & NETWORK STATE ---
     const [isSuccessView, setIsSuccessView] = useState(false);
-    const [lastTransactionId, setLastTransactionId] = useState(null); 
-    const [serverBaseUrl, setServerBaseUrl] = useState('');
-    const [useLocalIp, setUseLocalIp] = useState(false);
+    const [showMobileCart, setShowMobileCart] = useState(false);
+    
+    // Modals & Refs
+    const [selectedProduct, setSelectedProduct] = useState(null);
+    const [showScannerModal, setShowScannerModal] = useState(false);
+    const [posActiveSession, setPosActiveSession] = useState('SESS-101');
+    const searchInputRef = useRef(null);
 
-    // --- API Interactions ---
-    const fetchServerInfo = async () => {
-        try {
-            const res = await axios.get(`${BASE_URL}/api/server-info`);
-            setServerBaseUrl(res.data.baseUrl);
-            setUseLocalIp(false);
-        } catch (err) {
-            console.error("Network discovery fallback activated");
-            setUseLocalIp(true);
-            if (err.response && err.response.data && err.response.data.baseUrl) {
-                setServerBaseUrl(err.response.data.baseUrl);
-            } else {
-                setServerBaseUrl('http://112.199.118.232:5000');
-            }
-        }
+    // Checkout Form Data
+    const [orNumber, setOrNumber] = useState('');
+    const [paymentMethod, setPaymentMethod] = useState('Cash'); // 'Cash' or 'Terms'
+    const [amountTendered, setAmountTendered] = useState('');
+    const [termType, setTermType] = useState('months');
+    const [termDuration, setTermDuration] = useState('1');
+    const [lastTransactionId, setLastTransactionId] = useState(null);
+
+    // Document Upload States
+    const [drFile, setDrFile] = useState(null); // Delivery Receipt (Required for Cash & Terms)
+    const [siFile, setSiFile] = useState(null); // Sales Invoice (Required for Cash)
+    const [ciFile, setCiFile] = useState(null); // Charge Invoice (Required for Terms)
+
+    // --- CALCULATED VALUES ---
+    const totalAmount = cart.reduce((sum, item) => sum + (Number(item.price) || 0), 0);
+    const changeAmount = Math.max(0, (parseFloat(amountTendered) || 0) - totalAmount);
+
+    const getUsedSNs = (productId) => {
+        return cart.filter(item => item.id === productId).map(item => item.selectedSN);
     };
 
-    const fetchStock = async () => {
-        try {
-            setIsLoading(true);
-            const res = await axios.get(`${BASE_URL}/api/pos-inventory?t=${Date.now()}`);
-            const sanitizedStock = res.data.map(item => ({
-                ...item,
-                price: Number(item.price || 0),
-                image: item.image_url || `https://placehold.co/400x300/1a1a1a/28a745?text=${encodeURIComponent(item.name)}`
-            }));
-            setStock(sanitizedStock);
-        } catch (err) {
-            triggerToast("Database connection failed", "error");
-        } finally {
-            setIsLoading(false);
-        }
+    const formatPHP = (amount) => {
+        return new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(amount || 0);
     };
-
-    const fetchCustomers = async () => {
-        try {
-            const res = await axios.get(`${BASE_URL}/api/customers`);
-            setCustomers(res.data);
-        } catch (err) { 
-            console.error("Customer fetch error:", err); 
-        }
-    };
-
-    useEffect(() => {
-        fetchStock();
-        fetchCustomers();
-        fetchServerInfo();
-    }, []);
-
-    // --- WIRELESS SCANNER CLOUD POLLING & VALUE-CHANGE DEDUPLICATION ---
-    useEffect(() => {
-        if (!isScannerActive) return;
-
-        const pollInterval = setInterval(async () => {
-            const currentSession = localStorage.getItem('jadestock_pos_session');
-            if (currentSession) {
-                try {
-                    const res = await axios.get(`${BASE_URL}/api/scanner/poll?session=${currentSession}`);
-                    if (res.data && res.data.scannedCode) {
-                        const { scannedCode, timestamp } = res.data;
-                        const trimmedSerial = scannedCode.trim();
-                        const lastProcessedTimestamp = localStorage.getItem(`jadestock_pos_last_${currentSession}`);
-                        
-                        // Only trigger if either the timestamp is fresh OR the serial value itself changed
-                        if (timestamp !== lastProcessedTimestamp || lastProcessedSerialRef.current !== trimmedSerial) {
-                            localStorage.setItem(`jadestock_pos_last_${currentSession}`, timestamp);
-                            lastProcessedSerialRef.current = trimmedSerial;
-
-                            if (lastScannedCodeRef.current === trimmedSerial) {
-                                return; // Skip if it's the exact same serial value repeating without a change
-                            }
-                            lastScannedCodeRef.current = trimmedSerial;
-
-                            handleScannedSerialNumber(trimmedSerial);
-                        }
-                    }
-                } catch (err) {
-                    // Silent background poll error handling
-                }
-            }
-        }, 800);
-
-        return () => clearInterval(pollInterval);
-    }, [stock, cart, isScannerActive]);
-
-    // Match scanned serial number to stock and auto-add to cart
-    const handleScannedSerialNumber = (serial) => {
-        if (!serial) return;
-
-        // Check if serial is already in the cart
-        const alreadyInCart = cart.some(c => c.selectedSN === serial);
-        if (alreadyInCart) {
-            triggerToast(`Serial "${serial}" is already in the cart!`, "warning");
-            return;
-        }
-
-        // Find product containing this serial number in stock
-        let matchedProduct = null;
-        let foundSN = null;
-
-        for (const p of stock) {
-            const usedInCart = cart.filter(c => c.id === p.id).map(c => c.selectedSN);
-            const availableSNs = p.sns ? p.sns.filter(sn => !usedInCart.includes(sn)) : [];
-            
-            if (availableSNs.includes(serial)) {
-                matchedProduct = p;
-                foundSN = serial;
-                break;
-            }
-        }
-
-        if (matchedProduct && foundSN) {
-            setCart(prevCart => [...prevCart, { ...matchedProduct, cartId: Math.random(), selectedSN: foundSN }]);
-            triggerToast(`Scanned & Added: ${matchedProduct.name} (${foundSN})`, "success");
-        } else {
-            triggerToast(`Serial "${serial}" not found or already sold out in inventory.`, "error");
-        }
-    };
-
-    const generateNewSessionCode = () => {
-        const code = Math.floor(100000 + Math.random() * 900000).toString();
-        setPosActiveSession(code);
-        localStorage.setItem('jadestock_pos_session', code);
-        setShowScannerModal(true);
-    };
-
-    // --- Helpers ---
-    const filteredStock = stock.filter(p => 
-        p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-        String(p.id).includes(searchTerm)
-    );
-
-    const getUsedSNs = (productId) => cart.filter(c => c.id === productId).map(c => c.selectedSN);
-    const formatPHP = (amt) => "₱" + Number(amt || 0).toLocaleString(undefined, { minimumFractionDigits: 2 });
-    const totalAmount = cart.reduce((total, item) => total + Number(item.price || 0), 0);
-    const changeAmount = Number(amountTendered) > totalAmount ? Number(amountTendered) - totalAmount : 0;
 
     const installmentBreakdown = () => {
         const duration = parseInt(termDuration) || 1;
         return totalAmount / duration;
     };
 
-    // --- Actions ---
-    const addToCart = (product) => {
-        const chosenSN = pendingSelections[product.id];
-        if (!chosenSN) {
-            triggerToast("Select SN first", "warning");
-            return;
+    // Auto-focus search input on component mount
+    useEffect(() => {
+        if (searchInputRef.current) {
+            searchInputRef.current.focus();
         }
-        setCart([...cart, { ...product, cartId: Math.random(), selectedSN: chosenSN }]);
-        setPendingSelections({ ...pendingSelections, [product.id]: '' });
-        
-        if (window.innerWidth < 992) triggerToast(`Added ${product.name}`, "success");
+    }, []);
+
+    // --- HANDLERS ---
+    const handleAddToCart = (product, sn) => {
+        const cartId = `${product.id}-${sn}-${Date.now()}`;
+        setCart([...cart, { ...product, selectedSN: sn, cartId }]);
     };
 
-    const handleCheckout = async () => {
-        if (!orNumber) return triggerToast("Please enter OR Number", "warning");
-        if (!selectedCustomerId) return triggerToast("Please select a customer", "warning");
-        
-        if (paymentMethod === 'Cash' && Number(amountTendered) < totalAmount) {
-            return triggerToast("Incomplete Cash Payment", "error");
-        }
-        
-        const customer = customers.find(c => String(c.id) === String(selectedCustomerId));
-        const compositeTrackingRef = `${orNumber}-${Date.now()}`;
-
-        try {
-            const salePromises = cart.map(async (item) => {
-                return await axios.post(`${BASE_URL}/api/sales`, {
-                    customer_id: selectedCustomerId,
-                    item_id: item.id,
-                    serial_number: item.selectedSN,
-                    payment_status: paymentMethod === 'Terms' ? 'Pending' : 'Paid',
-                    payment_method: paymentMethod,
-                    amount_paid: paymentMethod === 'Terms' ? 0 : amountTendered, 
-                    or_number: orNumber,
-                    name: customer?.name || "Guest",
-                    address: customer?.address || "POS Terminal",
-                    batch_reference: compositeTrackingRef,
-                    term_type: paymentMethod === 'Terms' ? termType : null,
-                    term_duration: paymentMethod === 'Terms' ? termDuration : null
-                });
-            });
-
-            await Promise.all(salePromises);
-            
-            triggerToast(`Transaction ${orNumber} Recorded`, "success");
-            
-            setLastTransactionId(compositeTrackingRef);
-            setIsSuccessView(true);
-
-            // Reset cart states
-            setCart([]);
-            setSelectedCustomerId('');
-            setIsCheckoutView(false);
-            setAmountTendered('');
-            setOrNumber('');
-            setPaymentMethod('Cash');
-            fetchStock(); 
-        } catch (err) { 
-            triggerToast("Transaction Failed", "error"); 
-        }
+    const generateNewSessionCode = () => {
+        const newCode = 'SESS-' + Math.floor(1000 + Math.random() * 9000);
+        setPosActiveSession(newCode);
     };
 
     const handleScanRedirect = () => {
-        if (!lastTransactionId) return;
-        
-        const targetUrl = `${FRONT_URL}/mobile-uploads/${lastTransactionId}`;
-        window.open(targetUrl, '_blank');
+        const url = `${FRONT_URL}/mobile-uploads/${lastTransactionId}`;
+        window.open(url, '_blank');
     };
 
+    const handleCheckout = async () => {
+        if (!orNumber.trim()) {
+            alert('Please enter a valid Reference / Receipt Number.');
+            return;
+        }
+
+        if (paymentMethod === 'Cash' && parseFloat(amountTendered) < totalAmount) {
+            alert('Insufficient tendered amount.');
+            return;
+        }
+
+        // --- DOCUMENT UPLOAD VALIDATION ---
+        if (!drFile) {
+            alert('Delivery Receipt (DR) is required.');
+            return;
+        }
+
+        if (paymentMethod === 'Cash' && !siFile) {
+            alert('Cash Settlement requires uploading a Sales Invoice (SI).');
+            return;
+        }
+
+        if (paymentMethod === 'Terms' && !ciFile) {
+            alert('Pay In Terms requires uploading a Charge Invoice (CI).');
+            return;
+        }
+
+        // Prepare Multipart Form Data for axios API call
+        const formData = new FormData();
+        formData.append('referenceNumber', orNumber);
+        formData.append('paymentMethod', paymentMethod);
+        formData.append('totalAmount', totalAmount);
+        formData.append('amountTendered', paymentMethod === 'Cash' ? parseFloat(amountTendered) : totalAmount);
+        formData.append('changeAmount', paymentMethod === 'Cash' ? changeAmount : 0);
+        formData.append('items', JSON.stringify(cart.map(item => ({
+            id: item.id,
+            name: item.name,
+            price: item.price,
+            serialNumber: item.selectedSN
+        }))));
+
+        if (paymentMethod === 'Terms') {
+            formData.append('installmentDetails', JSON.stringify({
+                termType,
+                termDuration,
+                amortization: installmentBreakdown()
+            }));
+        }
+
+        // Append required files
+        formData.append('deliveryReceipt', drFile);
+        if (paymentMethod === 'Cash') {
+            formData.append('salesInvoice', siFile);
+        } else {
+            formData.append('chargeInvoice', ciFile);
+        }
+
+        try {
+            if (onCommitTransaction) {
+                const res = await onCommitTransaction(formData);
+                if (res && res.transactionId) {
+                    setLastTransactionId(res.transactionId);
+                } else {
+                    setLastTransactionId('TXN-' + Date.now());
+                }
+            } else {
+                // Direct API call fallback using imported axios & BASE_URL
+                const response = await axios.post(`${BASE_URL}/api/sales`, formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                });
+                setLastTransactionId(response.data.transactionId || 'TXN-' + Date.now());
+            }
+
+            setIsCheckoutView(false);
+            setIsSuccessView(true);
+            setCart([]);
+
+            // Reset Upload Inputs
+            setDrFile(null);
+            setSiFile(null);
+            setCiFile(null);
+        } catch (error) {
+            console.error('Checkout failed:', error);
+            alert('Failed to process transaction. Please try again.');
+        }
+    };
+
+    // Filter Logic
+    const categories = ['ALL', ...new Set(products.map(p => p.category).filter(Boolean))];
+    const filteredProducts = products.filter(p => {
+        const matchesCategory = selectedCategory === 'ALL' || p.category === selectedCategory;
+        const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) || p.id.toString().includes(searchTerm);
+        return matchesCategory && matchesSearch;
+    });
+
     return (
-        <div className="container-fluid min-vh-100 bg-black text-light p-0 d-flex flex-column font-monospace overflow-hidden position-relative">
-            
-            {showMobileCart && (
-                <div 
-                    className="mobile-cart-backdrop d-lg-none"
-                    onClick={() => setShowMobileCart(false)}
-                />
-            )}
+        <div className="container-fluid bg-black text-white min-vh-100 font-monospace p-0 d-flex flex-column">
+            {/* TOP BAR */}
+            <div className="bg-dark border-bottom border-secondary p-3 d-flex justify-content-between align-items-center shadow-sm">
+                <div className="d-flex align-items-center gap-2">
+                    <i className="fas fa-terminal text-success fs-4"></i>
+                    <h5 className="mb-0 fw-bold tracking-wider text-success">POS TERMINAL</h5>
+                </div>
+                <div className="d-flex align-items-center gap-2">
+                    <button className="btn btn-outline-success btn-sm fw-bold" onClick={() => setShowScannerModal(true)}>
+                        <i className="fas fa-qrcode me-2"></i>PAIR SCANNER
+                    </button>
+                    <button className="btn btn-success btn-sm d-lg-none fw-bold" onClick={() => setShowMobileCart(!showMobileCart)}>
+                        <i className="fas fa-shopping-cart me-1"></i> CART ({cart.length})
+                    </button>
+                </div>
+            </div>
 
-            {/* HEADER */}
-            <header className="navbar navbar-dark bg-dark border-bottom border-secondary px-3 py-2 sticky-top shadow-sm" style={{ zIndex: 1020 }}>
-                <div className="d-flex align-items-center flex-wrap w-100 justify-content-between">
-                    <div className="d-flex align-items-center">
-                        <div className={`rounded-circle me-2 pulse-dot ${useLocalIp ? 'bg-warning' : 'bg-success'}`} style={{width: '10px', height: '10px'}}></div>
-                        <h5 className="mb-0 fw-bold tracking-tighter me-3">JADE<span className="text-success">POS</span></h5>
-                        
-                        <div className="d-none d-md-flex align-items-center bg-black border border-secondary rounded px-2 py-1">
-                            <div className={`rounded-circle me-2 ${useLocalIp ? 'bg-warning' : 'bg-success'}`} style={{width: '6px', height: '6px'}}></div>
-                            <span className="text-secondary fw-bold" style={{fontSize: '10px'}}>
-                                NODE: <span className="text-white">{FRONT_URL.replace('https://', '').replace('http://', '') || 'CONNECTING...'}</span>
-                            </span>
-                        </div>
-                    </div>
-                    
-                    <div className="d-flex gap-2 align-items-center mt-2 mt-md-0 flex-grow-1 justify-content-end">
-                        {/* CONNECT SCANNER BUTTON */}
-                        <button 
-                            className="btn btn-sm btn-outline-success fw-bold text-nowrap"
-                            onClick={() => {
-                                if (!posActiveSession) {
-                                    generateNewSessionCode();
-                                } else {
-                                    setShowScannerModal(true);
-                                }
-                            }}
-                            style={{ fontSize: '12px' }}
-                        >
-                            <i className="fas fa-barcode me-1.5"></i>CONNECT SCANNER
-                        </button>
-
-                        {/* STOP / START SCANNER TOGGLE BUTTON */}
-                        <button 
-                            className={`btn btn-sm fw-bold text-nowrap ${isScannerActive ? 'btn-outline-danger' : 'btn-outline-success'}`}
-                            onClick={() => setIsScannerActive(!isScannerActive)}
-                            style={{ fontSize: '12px' }}
-                            title="Toggle wireless scanner listener"
-                        >
-                            <i className={`fas ${isScannerActive ? 'fa-stop-circle' : 'fa-play-circle'} me-1.5`}></i>
-                            {isScannerActive ? 'STOP SCANNER' : 'START SCANNER'}
-                        </button>
-
-                        <div className="position-relative flex-grow-1 flex-md-grow-0" style={{ maxWidth: '220px' }}>
-                            <i className="fas fa-search position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
+            {/* MAIN CONTENT WORKSPACE */}
+            <div className="row g-0 flex-grow-1">
+                {/* PRODUCT CATALOG (LEFT) */}
+                <div className="col-12 col-lg-8 col-xl-9 p-3 d-flex flex-column">
+                    <div className="row g-2 mb-3">
+                        <div className="col-12 col-md-6">
                             <input 
+                                ref={searchInputRef}
                                 type="text" 
-                                className="form-control form-control-sm bg-black border-secondary text-white ps-5 w-100" 
-                                placeholder="Filter items..." 
-                                style={{borderRadius: '20px'}}
+                                className="form-control bg-dark text-white border-secondary"
+                                placeholder="Search product name or ID..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                             />
                         </div>
-                        <select 
-                            className={`form-select form-select-sm bg-dark text-light border-${selectedCustomerId ? 'secondary' : 'danger'} w-auto`}
-                            value={selectedCustomerId}
-                            onChange={(e) => setSelectedCustomerId(e.target.value)}
-                        >
-                            <option value="" disabled>Select Customer</option>
-                            {customers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                        </select>
-
-                        <button 
-                            className="btn btn-sm btn-success d-lg-none position-relative ms-2"
-                            onClick={() => setShowMobileCart(true)}
-                        >
-                            <i className="fas fa-shopping-cart"></i>
-                            {cart.length > 0 && (
-                                <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style={{fontSize: '0.6rem'}}>
-                                    {cart.length}
-                                </span>
-                            )}
-                        </button>
-                    </div>
-                </div>
-            </header>
-
-            <div className="row g-0 flex-grow-1 overflow-hidden position-relative">
-                {/* PRODUCT GRID */}
-                <main className="col-12 col-lg-8 col-xl-9 p-3 bg-dark bg-opacity-25 overflow-auto custom-vh-lg">
-                    {isLoading ? (
-                        <div className="d-flex h-100 justify-content-center align-items-center py-5">
-                            <div className="spinner-border text-success" role="status"></div>
+                        <div className="col-12 col-md-6 d-flex gap-1 overflow-auto">
+                            {categories.map(cat => (
+                                <button 
+                                    key={cat} 
+                                    className={`btn btn-sm ${selectedCategory === cat ? 'btn-success' : 'btn-outline-secondary text-white'}`}
+                                    onClick={() => setSelectedCategory(cat)}
+                                >
+                                    {cat}
+                                </button>
+                            ))}
                         </div>
-                    ) : (
-                        <div className="row g-2 g-md-3 pb-5 pb-lg-0">
-                            {filteredStock.map(p => {
-                                const usedInCart = getUsedSNs(p.id);
-                                const availableToSelect = p.sns ? p.sns.filter(sn => !usedInCart.includes(sn)) : [];
-                                const remainingCount = availableToSelect.length;
+                    </div>
 
-                                return (
-                                    <div className="col-6 col-md-4 col-xl-3" key={p.id}>
-                                        <div className={`card h-100 border-secondary bg-dark shadow-sm pro-card ${remainingCount === 0 ? 'sold-out' : ''}`}>
-                                            <div className="position-relative overflow-hidden" style={{height: '140px'}}>
-                                                <img 
-                                                    src={p.image} 
-                                                    className="card-img-top w-100 h-100 object-fit-cover opacity-75 clickable-img" 
-                                                    alt={p.name} 
-                                                    onClick={() => setSelectedProduct(p)}
-                                                />
-                                                <div className="position-absolute top-0 end-0 m-2">
-                                                    <span className={`badge ${remainingCount < 3 ? 'bg-danger' : 'bg-dark border border-secondary'} rounded-pill tiny-text`}>
-                                                        STK: {remainingCount}
-                                                    </span>
-                                                </div>
-                                            </div>
+                    {/* PRODUCT GRID */}
+                    <div className="row g-3 overflow-auto flex-grow-1" style={{ maxHeight: 'calc(100vh - 160px)' }}>
+                        {filteredProducts.map(product => {
+                            const availableSNs = (product.sns || []).filter(sn => !getUsedSNs(product.id).includes(sn));
+                            return (
+                                <div key={product.id} className="col-12 col-sm-6 col-md-4 col-xl-3">
+                                    <div className="card bg-dark border-secondary h-100 d-flex flex-column justify-content-between p-2">
+                                        <div onClick={() => setSelectedProduct(product)} className="cursor-pointer">
+                                            <img src={product.image} className="card-img-top rounded mb-2" style={{ height: '120px', objectFit: 'cover' }} alt="" />
+                                            <h6 className="card-title text-white text-truncate mb-1">{product.name}</h6>
+                                            <div className="text-success fw-bold mb-2">{formatPHP(product.price)}</div>
+                                        </div>
 
-                                            <div className="card-body p-2 d-flex flex-column">
-                                                <h6 className="card-title text-white fw-bold mb-1 tiny-text text-truncate">{p.name}</h6>
-                                                <p className="text-success fw-bold mb-2 tiny-text">{formatPHP(p.price)}</p>
-                                                
-                                                {remainingCount > 0 ? (
-                                                    <div className="mt-auto">
-                                                        <select 
-                                                            className="form-select form-select-sm bg-black text-white border-secondary mb-2 tiny-text"
-                                                            value={pendingSelections[p.id] || ''}
-                                                            onChange={(e) => setPendingSelections({...pendingSelections, [p.id]: e.target.value})}
-                                                        >
-                                                            <option value="">Select SN</option>
-                                                            {availableToSelect.map(sn => <option key={sn} value={sn}>{sn}</option>)}
-                                                        </select>
-                                                        <button 
-                                                            className="btn btn-success btn-sm w-100 fw-bold tiny-text"
-                                                            onClick={() => addToCart(p)}
-                                                            disabled={!pendingSelections[p.id] || isCheckoutView}
-                                                        >
-                                                            <i className="fas fa-plus me-1"></i>ADD
-                                                        </button>
-                                                    </div>
-                                                ) : (
-                                                    <button className="btn btn-outline-secondary btn-sm w-100 disabled mt-auto tiny-text">UNAVAILABLE</button>
-                                                )}
-                                            </div>
+                                        <div>
+                                            <label className="tiny-text text-secondary mb-1">SELECT SERIAL NUMBER:</label>
+                                            <select 
+                                                className="form-select form-select-sm bg-black text-white border-secondary mb-2"
+                                                onChange={(e) => {
+                                                    if (e.target.value) {
+                                                        handleAddToCart(product, e.target.value);
+                                                        e.target.value = '';
+                                                    }
+                                                }}
+                                                disabled={availableSNs.length === 0}
+                                            >
+                                                <option value="">{availableSNs.length > 0 ? `-- ${availableSNs.length} Available --` : 'OUT OF STOCK'}</option>
+                                                {availableSNs.map(sn => (
+                                                    <option key={sn} value={sn}>{sn}</option>
+                                                ))}
+                                            </select>
                                         </div>
                                     </div>
-                                );
-                            })}
-                        </div>
-                    )}
-                </main>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
 
-                {/* CART ASIDE */}
+                {/* CART ASIDE (RIGHT) */}
                 <aside className={`col-12 col-lg-4 col-xl-3 bg-dark border-start border-secondary d-flex flex-column custom-vh-lg shadow-lg mobile-cart-overlay ${showMobileCart ? 'show' : ''}`}>
                     
                     {isSuccessView ? (
@@ -418,13 +267,13 @@ const PointOfSale = ({ triggerToast }) => {
                                 <i className="fas fa-check-circle text-success fs-1 mb-2"></i>
                                 <h5 className="fw-bold text-success mb-1">SALE RECORDED</h5>
                                 <p className="text-secondary tiny-text mb-0">
-                                    {useLocalIp ? '🔴 Offline Mode: Scan local IP' : '🌐 Online Mode: Scan production cloud link'}
+                                    {useLocalIp ? '🔴 Offline Mode' : '🌐 Online Mode: Synced with cloud'}
                                 </p>
                             </div>
 
                             <div className="bg-white p-3 d-flex justify-content-center rounded mb-3 mx-auto shadow-lg border border-success" style={{ maxWidth: '210px' }}>
                                 <QRCodeSVG 
-                                    value={useLocalIp ? `${FRONT_URL}/mobile-uploads/${lastTransactionId}` : `${BASE_URL}/mobile-uploads/${lastTransactionId}`} 
+                                    value={`${FRONT_URL}/mobile-uploads/${lastTransactionId}`} 
                                     size={160}
                                     level={"H"}
                                     includeMargin={true}
@@ -439,7 +288,7 @@ const PointOfSale = ({ triggerToast }) => {
                                     onClick={handleScanRedirect}
                                     style={{ fontSize: '13px' }}
                                 >
-                                    <i className="fas fa-camera me-2"></i>[Scan Receipt]
+                                    <i className="fas fa-camera me-2"></i>[View Upload Route]
                                 </button>
                                 
                                 <button 
@@ -470,8 +319,9 @@ const PointOfSale = ({ triggerToast }) => {
                                     <div className="animate__animated animate__fadeIn">
                                         <div className="bg-black bg-opacity-40 p-3 rounded border border-secondary mb-3 shadow-inner">
                                             
+                                            {/* OFFICIAL REFERENCE NUMBER */}
                                             <div className="mb-3">
-                                                <label className="text-info tiny-text fw-bold mb-1">OFFICIAL RECEIPT #</label>
+                                                <label className="text-info tiny-text fw-bold mb-1">REFERENCE / RECEIPT #</label>
                                                 <input 
                                                     type="text" 
                                                     className="form-control form-control-sm bg-black text-white border-info mb-2"
@@ -480,18 +330,60 @@ const PointOfSale = ({ triggerToast }) => {
                                                     onChange={(e) => setOrNumber(e.target.value.toUpperCase())}
                                                 />
                                             </div>
-<div className="mb-3">
+
+                                            {/* PAYMENT METHOD */}
+                                            <div className="mb-3">
                                                 <label className="text-secondary tiny-text fw-bold mb-1">PAYMENT METHOD</label>
                                                 <select 
                                                     className="form-select form-select-sm bg-black text-white border-secondary"
                                                     value={paymentMethod}
                                                     onChange={(e) => setPaymentMethod(e.target.value)}
                                                 >
-                                                    <option value="Cash">Cash Settlement</option>
+                                                    <option value="Cash">Cash Settlement (COD)</option>
                                                     <option value="Terms">Pay In Terms (Installment)</option>
                                                 </select>
                                             </div>
 
+                                            {/* REQUIRED DOCUMENT UPLOADS */}
+                                            <div className="border border-secondary p-2 rounded mb-3 bg-dark bg-opacity-50">
+                                                <label className="text-info tiny-text fw-bold mb-2 d-block">REQUIRED DOCUMENTS</label>
+
+                                                {/* Delivery Receipt (Always Required) */}
+                                                <div className="mb-2">
+                                                    <label className="text-secondary tiny-text d-block mb-1">DELIVERY RECEIPT (DR) *</label>
+                                                    <input 
+                                                        type="file" 
+                                                        accept="image/*,.pdf"
+                                                        className="form-control form-control-sm bg-black text-white border-secondary tiny-text"
+                                                        onChange={(e) => setDrFile(e.target.files[0] || null)}
+                                                    />
+                                                </div>
+
+                                                {/* Conditional Uploads based on Payment Method */}
+                                                {paymentMethod === 'Cash' ? (
+                                                    <div className="mb-1">
+                                                        <label className="text-secondary tiny-text d-block mb-1">SALES INVOICE (SI) *</label>
+                                                        <input 
+                                                            type="file" 
+                                                            accept="image/*,.pdf"
+                                                            className="form-control form-control-sm bg-black text-white border-secondary tiny-text"
+                                                            onChange={(e) => setSiFile(e.target.files[0] || null)}
+                                                        />
+                                                    </div>
+                                                ) : (
+                                                    <div className="mb-1">
+                                                        <label className="text-secondary tiny-text d-block mb-1">CHARGE INVOICE (CI) *</label>
+                                                        <input 
+                                                            type="file" 
+                                                            accept="image/*,.pdf"
+                                                            className="form-control form-control-sm bg-black text-white border-secondary tiny-text"
+                                                            onChange={(e) => setCiFile(e.target.files[0] || null)}
+                                                        />
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            {/* INSTALLMENT CONFIGURATION */}
                                             {paymentMethod === 'Terms' ? (
                                                 <div className="border border-secondary p-2 rounded mb-3 bg-dark bg-opacity-50 animate__animated animate__fadeIn">
                                                     <label className="text-warning tiny-text fw-bold mb-1">INSTALLMENT CONFIGURATION</label>
