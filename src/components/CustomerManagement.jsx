@@ -754,27 +754,27 @@ const CustomerManagement = () => {
                 </div>
             )}
 
-            {/* --- MASTER FINANCIAL LEDGER MODAL --- */}
+{/* --- MASTER FINANCIAL LEDGER MODAL --- */}
             {isLedgerOpen && ledgerData && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
-                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4 overflow-y-auto">
+                    <div className="bg-white border border-slate-100 rounded-2xl shadow-2xl shadow-slate-900/20 w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
 
                         {/* Modal Header */}
-                        <div className="px-6 py-4 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
+                        <div className="px-6 py-4 bg-slate-50/80 border-b border-slate-200/80 flex items-center justify-between shrink-0">
                             <div className="flex items-center gap-3">
-                                <div className="p-2 bg-indigo-100 text-indigo-700 rounded-lg">
-                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                <div className="p-2.5 bg-indigo-50 text-indigo-600 rounded-xl border border-indigo-100">
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                     </svg>
                                 </div>
                                 <div>
-                                    <h2 className="text-xl font-bold text-gray-900">Master Financial Ledger</h2>
-                                    <p className="text-xs text-gray-500">Document / Batch ID: <span className="font-mono font-medium text-indigo-600">{ledgerData.documentId}</span> • Client: {ledgerData.clientName}</p>
+                                    <h2 className="text-lg font-bold text-slate-900 tracking-tight">Master Financial Ledger</h2>
+                                    <p className="text-xs text-slate-500 font-medium">Batch ID: <span className="font-mono text-indigo-600">{ledgerData.documentId}</span> • Client: <strong className="text-slate-700">{ledgerData.clientName}</strong></p>
                                 </div>
                             </div>
                             <button
                                 onClick={() => setIsLedgerOpen(false)}
-                                className="text-gray-400 hover:text-gray-600 p-2 rounded-full hover:bg-gray-200/60 transition-colors"
+                                className="text-slate-400 hover:text-slate-600 p-2 rounded-xl hover:bg-slate-200/60 transition-colors"
                             >
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -783,35 +783,35 @@ const CustomerManagement = () => {
                         </div>
 
                         {/* Modal Body (Scrollable Financial Table & KPIs) */}
-                        <div className="p-6 overflow-y-auto space-y-6 flex-1">
+                        <div className="p-6 overflow-y-auto space-y-6 flex-1 bg-white">
 
                             {/* Financial KPI Summary Cards */}
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 rounded-xl p-4">
-                                    <p className="text-xs font-semibold text-indigo-600 uppercase tracking-wider">Overall Ledger Total</p>
-                                    <p className="text-2xl font-black text-gray-900 mt-1">₱{Number(ledgerData.overallTotal || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
+                                <div className="bg-gradient-to-br from-indigo-50/50 to-blue-50/50 border border-indigo-100/80 rounded-xl p-4 shadow-xs">
+                                    <p className="text-xs font-bold text-indigo-600 uppercase tracking-wider">Overall Ledger Total</p>
+                                    <p className="text-2xl font-black text-slate-900 mt-1">₱{Number(ledgerData.overallTotal || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
                                 </div>
-                                <div className="bg-gradient-to-br from-emerald-50 to-green-50 border border-emerald-100 rounded-xl p-4">
-                                    <p className="text-xs font-semibold text-emerald-600 uppercase tracking-wider">Overall Paid Amount</p>
+                                <div className="bg-gradient-to-br from-emerald-50/50 to-green-50/50 border border-emerald-100/80 rounded-xl p-4 shadow-xs">
+                                    <p className="text-xs font-bold text-emerald-600 uppercase tracking-wider">Overall Paid Amount</p>
                                     <p className="text-2xl font-black text-emerald-700 mt-1">₱{Number(ledgerData.overallPaid || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
                                 </div>
-                                <div className="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-100 rounded-xl p-4">
-                                    <p className="text-xs font-semibold text-amber-600 uppercase tracking-wider">Overall Balance Due</p>
+                                <div className="bg-gradient-to-br from-amber-50/50 to-orange-50/50 border border-amber-100/80 rounded-xl p-4 shadow-xs">
+                                    <p className="text-xs font-bold text-amber-600 uppercase tracking-wider">Overall Balance Due</p>
                                     <p className="text-2xl font-black text-amber-700 mt-1">₱{Number(ledgerData.overallBalance || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
                                 </div>
                             </div>
 
-                            {/* Monday.com Standard Enterprise Ledger Schedule Matrix */}
-                            <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-xs">
-                                <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
-                                    <h4 className="text-sm font-bold text-gray-800 uppercase tracking-wide">Payment Schedule & Terms Breakdown</h4>
-                                    <span className="text-xs bg-gray-200 text-gray-700 px-2.5 py-1 rounded-md font-medium">Terms: {ledgerData.paymentTerms}</span>
+                            {/* Payment Schedule Matrix */}
+                            <div className="bg-white border border-slate-200/80 rounded-xl overflow-hidden shadow-xs">
+                                <div className="px-4 py-3.5 bg-slate-50/80 border-b border-slate-200/80 flex items-center justify-between">
+                                    <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Payment Schedule & Terms Breakdown</h4>
+                                    <span className="text-xs bg-slate-200/70 text-slate-700 px-2.5 py-1 rounded-md font-semibold">Terms: {ledgerData.paymentTerms}</span>
                                 </div>
                                 <div className="overflow-x-auto">
                                     <table className="w-full text-left border-collapse">
                                         <thead>
-                                            <tr className="bg-gray-100/70 text-gray-600 uppercase text-[11px] font-semibold tracking-wider border-b border-gray-200">
-                                                <th className="py-3 px-4">Billing Period / Item Breakdown</th>
+                                            <tr className="bg-slate-100/70 text-slate-600 uppercase text-[11px] font-bold tracking-wider border-b border-slate-200/80">
+                                                <th className="py-3 px-4">Billing Period / Item</th>
                                                 <th className="py-3 px-4">Due Date</th>
                                                 <th className="py-3 px-4">Amount Due</th>
                                                 <th className="py-3 px-4">Status</th>
@@ -819,22 +819,23 @@ const CustomerManagement = () => {
                                                 <th className="py-3 px-4">Batch Reference</th>
                                             </tr>
                                         </thead>
-                                        <tbody className="divide-y divide-gray-100 text-sm">
+                                        <tbody className="divide-y divide-slate-100 text-sm">
                                             {ledgerData.schedule?.map((row) => (
-                                                <tr key={row.id} className="hover:bg-gray-50/80 transition-colors">
-                                                    <td className="py-3 px-4 font-medium text-gray-900">{row.period}</td>
-                                                    <td className="py-3 px-4 text-gray-600">{row.dueDate}</td>
-                                                    <td className="py-3 px-4 font-mono text-gray-800">₱{Number(row.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                                                <tr key={row.id} className="hover:bg-slate-50/60 transition-colors">
+                                                    <td className="py-3 px-4 font-semibold text-slate-900">{row.period}</td>
+                                                    <td className="py-3 px-4 text-slate-600 font-medium">{row.dueDate}</td>
+                                                    <td className="py-3 px-4 font-mono font-medium text-slate-800">₱{Number(row.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
                                                     <td className="py-3 px-4">
-                                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${row.status === 'Paid'
-                                                            ? 'bg-emerald-100 text-emerald-800'
-                                                            : 'bg-amber-100 text-amber-800'
-                                                            }`}>
+                                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                                                            row.status === 'Paid'
+                                                                ? 'bg-emerald-100 text-emerald-800 border border-emerald-200/60'
+                                                                : 'bg-amber-100 text-amber-800 border border-amber-200/60'
+                                                        }`}>
                                                             {row.status}
                                                         </span>
                                                     </td>
-                                                    <td className="py-3 px-4 text-gray-600 font-mono text-xs">{row.paidDate}</td>
-                                                    <td className="py-3 px-4 text-gray-600 font-mono text-xs">{row.reference}</td>
+                                                    <td className="py-3 px-4 text-slate-500 font-mono text-xs font-medium">{row.paidDate}</td>
+                                                    <td className="py-3 px-4 text-slate-500 font-mono text-xs font-medium">{row.reference}</td>
                                                 </tr>
                                             ))}
                                         </tbody>
@@ -843,26 +844,26 @@ const CustomerManagement = () => {
                             </div>
 
                             {/* Document Attachments Viewer Section */}
-                            <div className="bg-white border border-gray-200 rounded-xl p-4">
-                                <h4 className="text-sm font-bold text-gray-800 uppercase tracking-wide mb-3">Linked Supporting Documents & Receipts</h4>
+                            <div className="bg-slate-50/50 border border-slate-200/80 rounded-xl p-4">
+                                <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-3">Linked Supporting Documents & Receipts</h4>
                                 {ledgerData.attachments && ledgerData.attachments.length > 0 ? (
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                         {ledgerData.attachments.map((file) => (
-                                            <div key={file.id} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition">
+                                            <div key={file.id} className="flex items-center justify-between p-3 bg-white border border-slate-200/80 rounded-xl shadow-2xs hover:border-slate-300 transition">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="p-2 bg-indigo-50 text-indigo-600 rounded-md">
+                                                    <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg border border-indigo-100">
                                                         <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                                                             <path strokeLinecap="round" strokeLinejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                                                         </svg>
                                                     </div>
                                                     <div>
-                                                        <p className="text-sm font-medium text-gray-800">{file.name}</p>
-                                                        <p className="text-xs text-gray-400 uppercase">{file.type} document</p>
+                                                        <p className="text-sm font-semibold text-slate-800">{file.name}</p>
+                                                        <p className="text-[11px] text-slate-400 font-medium uppercase">{file.type} document</p>
                                                     </div>
                                                 </div>
                                                 <button
                                                     onClick={() => setSelectedImage(file.url)}
-                                                    className="text-xs font-medium text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-md transition"
+                                                    className="text-xs font-bold text-indigo-600 hover:text-indigo-700 bg-indigo-50 hover:bg-indigo-100/80 px-3 py-1.5 rounded-lg border border-indigo-100 transition"
                                                 >
                                                     Preview
                                                 </button>
@@ -870,17 +871,17 @@ const CustomerManagement = () => {
                                         ))}
                                     </div>
                                 ) : (
-                                    <p className="text-xs text-gray-400 italic">No document attachments found for this transaction batch.</p>
+                                    <p className="text-xs text-slate-400 italic">No document attachments found for this transaction batch.</p>
                                 )}
                             </div>
 
                         </div>
 
                         {/* Modal Footer */}
-                        <div className="px-6 py-3 bg-gray-50 border-t border-gray-200 flex justify-end">
+                        <div className="px-6 py-3.5 bg-slate-50/80 border-t border-slate-200/80 flex justify-end shrink-0">
                             <button
                                 onClick={() => setIsLedgerOpen(false)}
-                                className="bg-gray-800 hover:bg-gray-900 text-white px-5 py-2 rounded-lg text-sm font-medium transition"
+                                className="bg-slate-900 hover:bg-slate-800 text-white px-5 py-2 rounded-xl text-xs font-semibold shadow-sm transition"
                             >
                                 Close Ledger
                             </button>
@@ -892,19 +893,19 @@ const CustomerManagement = () => {
 
             {/* --- DOCUMENT LIGHTBOX MODAL --- */}
             {selectedImage && (
-                <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/80 p-4">
-                    <div className="relative max-w-3xl w-full bg-white rounded-xl overflow-hidden shadow-2xl">
-                        <div className="p-3 bg-gray-900 text-white flex justify-between items-center">
-                            <span className="text-sm font-medium">Document Lightbox Preview</span>
+                <div className="fixed inset-60 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4">
+                    <div className="relative max-w-3xl w-full bg-white border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
+                        <div className="px-4 py-3 bg-slate-900 text-white flex justify-between items-center border-b border-slate-800">
+                            <span className="text-xs font-bold tracking-wide uppercase text-slate-300">Document Lightbox Preview</span>
                             <button
                                 onClick={() => setSelectedImage(null)}
-                                className="text-gray-400 hover:text-white text-lg font-bold px-2"
+                                className="text-slate-400 hover:text-white text-lg font-bold px-2 rounded-lg transition"
                             >
                                 &times;
                             </button>
                         </div>
-                        <div className="p-4 flex items-center justify-center bg-gray-950">
-                            <img src={selectedImage} alt="Attachment Preview" className="max-h-[70vh] object-contain rounded-lg" />
+                        <div className="p-6 flex items-center justify-center bg-slate-950">
+                            <img src={selectedImage} alt="Attachment Preview" className="max-h-[70vh] object-contain rounded-xl border border-slate-800 shadow-lg" />
                         </div>
                     </div>
                 </div>
