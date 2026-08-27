@@ -8,6 +8,7 @@ import { QRCodeSVG } from 'qrcode.react';
  */
 const BASE_URL = 'https://dpsapi.ricalgen.eu.org';
 const FRONT_URL = 'https://dps.ricalgen.eu.org';
+
 const PointOfSale = ({ triggerToast }) => {
     // --- State Management ---
     const [stock, setStock] = useState([]);
@@ -130,7 +131,7 @@ const PointOfSale = ({ triggerToast }) => {
         return () => clearInterval(pollInterval);
     }, [stock, cart, isScannerActive]);
 
-    // Match scanned serial number to stock and auto-add to cart (Only accepts value changes to avoid popup spam)
+    // Match scanned serial number to stock and auto-add to cart
     const handleScannedSerialNumber = (serial) => {
         if (!serial) return;
 
@@ -197,7 +198,7 @@ const PointOfSale = ({ triggerToast }) => {
         setCart([...cart, { ...product, cartId: Math.random(), selectedSN: chosenSN }]);
         setPendingSelections({ ...pendingSelections, [product.id]: '' });
         
-        if(window.innerWidth < 992) triggerToast(`Added ${product.name}`, "success");
+        if (window.innerWidth < 992) triggerToast(`Added ${product.name}`, "success");
     };
 
     const handleCheckout = async () => {
@@ -249,14 +250,10 @@ const PointOfSale = ({ triggerToast }) => {
         }
     };
 
-    // NEW REDIRECT FUNCTION FOR SCAN ACTION
     const handleScanRedirect = () => {
         if (!lastTransactionId) return;
         
-        const targetUrl = useLocalIp 
-            ? `${FRONT_URL}/mobile-uploads/${lastTransactionId}` 
-            : `${FRONT_URL}/mobile-uploads/${lastTransactionId}`;
-            
+        const targetUrl = `${FRONT_URL}/mobile-uploads/${lastTransactionId}`;
         window.open(targetUrl, '_blank');
     };
 
@@ -271,7 +268,7 @@ const PointOfSale = ({ triggerToast }) => {
             )}
 
             {/* HEADER */}
-          <header className="navbar navbar-dark bg-dark border-bottom border-secondary px-3 py-2 sticky-top shadow-sm" style={{ zIndex: 1020 }}>
+            <header className="navbar navbar-dark bg-dark border-bottom border-secondary px-3 py-2 sticky-top shadow-sm" style={{ zIndex: 1020 }}>
                 <div className="d-flex align-items-center flex-wrap w-100 justify-content-between">
                     <div className="d-flex align-items-center">
                         <div className={`rounded-circle me-2 pulse-dot ${useLocalIp ? 'bg-warning' : 'bg-success'}`} style={{width: '10px', height: '10px'}}></div>
@@ -483,8 +480,7 @@ const PointOfSale = ({ triggerToast }) => {
                                                     onChange={(e) => setOrNumber(e.target.value.toUpperCase())}
                                                 />
                                             </div>
-
-                                            <div className="mb-3">
+<div className="mb-3">
                                                 <label className="text-secondary tiny-text fw-bold mb-1">PAYMENT METHOD</label>
                                                 <select 
                                                     className="form-select form-select-sm bg-black text-white border-secondary"
