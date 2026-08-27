@@ -187,6 +187,37 @@ const PointOfSale = ({ triggerToast }) => {
         setIsCheckoutView(true);
     };
 
+    // Upload handler function
+    const handleUploadFile = async (fileObject, docType) => {
+        try {
+            const formData = new FormData();
+            formData.append('file', fileObject); // fileObject comes from e.target.files[0]
+
+            // Post to your backend R2 upload endpoint
+            const response = await axios.post(`${BASE_URL}/api/upload`, formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+
+            const data = response.data;
+
+            if (data.success) {
+                // CRITICAL: Save the filename STRING returned from your server, NOT the File object!
+                const filename = data.filename; // e.g. "uploaded_dr_1786881556776_DR.jpg"
+
+                if (docType === 'DR') setUploadedDR(filename);
+                if (docType === 'SI') setUploadedSI(filename);
+                if (docType === 'CI') setUploadedCI(filename);
+
+                triggerToast(`${docType} uploaded successfully to R2`, "success");
+            } else {
+                triggerToast(data.error || "Upload failed", "error");
+            }
+        } catch (err) {
+            console.error(err);
+            triggerToast("Failed to upload file to storage", "error");
+        }
+    };
+
     const getUsedSNs = (productId) => cart.filter(c => c.id === productId).map(c => c.selectedSN);
     const formatPHP = (amt) => "₱" + Number(amt || 0).toLocaleString(undefined, { minimumFractionDigits: 2 });
     const totalAmount = cart.reduce((total, item) => total + Number(item.price || 0), 0);
@@ -642,17 +673,61 @@ const PointOfSale = ({ triggerToast }) => {
                                     <input
                                         type="file"
                                         className="form-control form-control-sm bg-black text-white border-secondary"
-                                        onChange={(e) => setUploadedDR(e.target.files[0])}
+                                        onChange={async (e) => {
+                                            const file = e.target.files[0];
+                                            if (!file) return;
+
+                                            const formData = new FormData();
+                                            formData.append('file', file);
+
+                                            try {
+                                                const res = await axios.post(`${BASE_URL}/api/upload`, formData, {
+                                                    headers: { 'Content-Type': 'multipart/form-data' }
+                                                });
+                                                if (res.data.success) {
+                                                    // Save ONLY the filename string returned by your R2 backend storage
+                                                    setUploadedDR(res.data.filename);
+                                                } else {
+                                                    alert("Upload failed: " + (res.data.error || "Unknown error"));
+                                                }
+                                            } catch (err) {
+                                                console.error(err);
+                                                alert("Error uploading file to storage.");
+                                            }
+                                        }}
                                     />
+                                    {uploadedDR && <div className="tiny-text text-success mt-1">✓ Attached: {uploadedDR}</div>}
                                 </div>
+
                                 {(paymentMethod === 'Cash' || paymentMethod === 'Cash Settlement') ? (
                                     <div className="mb-3">
                                         <label className="text-secondary d-block mb-1">Upload Sales Invoice (SI):</label>
                                         <input
                                             type="file"
                                             className="form-control form-control-sm bg-black text-white border-secondary"
-                                            onChange={(e) => setUploadedSI(e.target.files[0])}
+                                            onChange={async (e) => {
+                                                const file = e.target.files[0];
+                                                if (!file) return;
+
+                                                const formData = new FormData();
+                                                formData.append('file', file);
+
+                                                try {
+                                                    const res = await axios.post(`${BASE_URL}/api/upload`, formData, {
+                                                        headers: { 'Content-Type': 'multipart/form-data' }
+                                                    });
+                                                    if (res.data.success) {
+                                                        setUploadedSI(res.data.filename);
+                                                    } else {
+                                                        alert("Upload failed: " + (res.data.error || "Unknown error"));
+                                                    }
+                                                } catch (err) {
+                                                    console.error(err);
+                                                    alert("Error uploading file to storage.");
+                                                }
+                                            }}
                                         />
+                                        {uploadedSI && <div className="tiny-text text-success mt-1">✓ Attached: {uploadedSI}</div>}
                                     </div>
                                 ) : (
                                     <div className="mb-3">
@@ -660,8 +735,29 @@ const PointOfSale = ({ triggerToast }) => {
                                         <input
                                             type="file"
                                             className="form-control form-control-sm bg-black text-white border-secondary"
-                                            onChange={(e) => setUploadedCI(e.target.files[0])}
+                                            onChange={async (e) => {
+                                                const file = e.target.files[0];
+                                                if (!file) return;
+
+                                                const formData = new FormData();
+                                                formData.append('file', file);
+
+                                                try {
+                                                    const res = await axios.post(`${BASE_URL}/api/upload`, formData, {
+                                                        headers: { 'Content-Type': 'multipart/form-data' }
+                                                    });
+                                                    if (res.data.success) {
+                                                        setUploadedCI(res.data.filename);
+                                                    } else {
+                                                        alert("Upload failed: " + (res.data.error || "Unknown error"));
+                                                    }
+                                                } catch (err) {
+                                                    console.error(err);
+                                                    alert("Error uploading file to storage.");
+                                                }
+                                            }}
                                         />
+                                        {uploadedCI && <div className="tiny-text text-success mt-1">✓ Attached: {uploadedCI}</div>}
                                     </div>
                                 )}
                             </div>
@@ -675,7 +771,7 @@ const PointOfSale = ({ triggerToast }) => {
                                         if (ready) {
                                             setShowDocUploadModal(false);
                                         } else {
-                                            alert("Please attach all required document files before proceeding.");
+                                            alert("Please wait for files to finish uploading or attach all required documents.");
                                         }
                                     }}
                                 >
