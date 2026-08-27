@@ -127,18 +127,18 @@ const CustomerManagement = () => {
             return;
         }
 
+        if (!targetBatchReference) {
+            alert("Batch reference is required to view this ledger.");
+            return;
+        }
+
         setLoadingLedger(true);
         try {
-            // Use the dedicated batch endpoint if a target batch is specified, otherwise fall back to history
-            const endpoint = targetBatchReference
-                ? `${BASE_URL}/api/customers/${selectedCustomer.id}/${targetBatchReference}/ledger`
-                : `${BASE_URL}/api/customers/${selectedCustomer.id}/history`;
-
-            const res = await axios.get(endpoint);
+            const res = await axios.get(`${BASE_URL}/api/customers/${selectedCustomer.id}/${targetBatchReference}/ledger`);
             const historyData = res.data;
 
             if (!Array.isArray(historyData) || historyData.length === 0) {
-                throw new Error("No transaction records found for this selection.");
+                throw new Error("No transaction records found for this batch reference.");
             }
 
             let overallTotal = 0;
@@ -147,7 +147,7 @@ const CustomerManagement = () => {
             let scheduleItems = [];
             let attachmentsMap = new Map();
 
-            // Loop through each item in the fetched data
+            // Loop through each item in the fetched batch data
             historyData.forEach((item, index) => {
                 const amount = Number(item.srp_amount) || 0;
                 overallTotal += amount;
@@ -202,7 +202,7 @@ const CustomerManagement = () => {
             });
 
             setLedgerData({
-                documentId: targetBatchReference || historyData[0]?.batch_reference || `INV-${selectedCustomer.id}`,
+                documentId: targetBatchReference,
                 clientName: selectedCustomer.name || 'Client',
                 paymentTerms: "Mixed Terms & Cash Schedule",
                 overallTotal: overallTotal,
@@ -214,7 +214,7 @@ const CustomerManagement = () => {
 
             setIsLedgerOpen(true);
         } catch (err) {
-            console.error("Error loading ledger, using fallback", err);
+            console.error("Error loading specific batch ledger, using fallback", err);
             setLedgerData({
                 documentId: targetBatchReference || `INV-${selectedCustomer?.id || '2026'}-01`,
                 clientName: selectedCustomer?.name || 'Selected Client',
