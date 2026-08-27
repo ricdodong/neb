@@ -121,15 +121,91 @@ const CustomerManagement = () => {
 
     // handle open ledger modal
     const handleOpenLedger = async (transactionOrCustomerId) => {
+        if (!selectedCustomer) {
+            alert("Please select a customer first.");
+            return;
+        }
+
         setLoadingLedger(true);
         try {
-            // Adjust the endpoint route based on your backend structure
-            const res = await axios.get(`${BASE_URL}/api/customers/${selectedCustomer.id}/ledger`);
-            setLedgerData(res.data);
+            const res = await axios.get(`${BASE_URL}/api/customers/${selectedCustomer.id}/history`);
+            const historyData = res.data; // This is your raw array from the API
+
+            if (!Array.isArray(historyData) || historyData.length === 0) {
+                throw new Error("No purchase history found for this customer.");
+            }
+
+            // Calculate totals dynamically and transform rows into standard ledger format
+            let overallTotal = 0;
+            let overallPaid = 0;
+            let overallBalance = 0;
+
+            const scheduleItems = historyData.map((item, index) => {
+                const amount = Number(item.srp_amount) || 0;
+                overallTotal += amount;
+
+                const isPaid = (item.payment_status || '').toLowerCase() === 'paid';
+                if (isPaid) {
+                    overallPaid += amount;
+                } else {
+                    overallBalance += amount;
+                }
+
+                return {
+                    id: item.transaction_id || index,
+                    period: `${item.item_name} (SN: ${item.serial_number || 'N/A'})`,
+                    dueDate: item.purchase_date ? item.purchase_date.split(' ')[0] : 'N/A',
+                    amount: amount,
+                    status: isPaid ? 'Paid' : 'Unpaid',
+                    paidDate: isPaid ? (item.purchase_date ? item.purchase_date.split(' ')[0] : '-') : '-',
+                    reference: item.batch_reference || 'N/A'
+                };
+            });
+
+            // Extract document attachments using your FILE_URL base path
+            const sampleItem = historyData[0];
+            const attachmentsList = [];
+            if (sampleItem.dr_attachment) {
+                attachmentsList.push({
+                    id: 'dr',
+                    name: 'Delivery Receipt (DR)',
+                    type: 'image',
+                    url: `${FILE_URL}${sampleItem.dr_attachment.replace(/^\/+/, '')}`
+                });
+            }
+            if (sampleItem.ci_attachment) {
+                attachmentsList.push({
+                    id: 'ci',
+                    name: 'Charge Invoice (CI)',
+                    type: 'image',
+                    url: `${FILE_URL}${sampleItem.ci_attachment.replace(/^\/+/, '')}`
+                });
+            }
+            if (sampleItem.si_attachment) {
+                attachmentsList.push({
+                    id: 'si',
+                    name: 'Sales Invoice (SI)',
+                    type: 'image',
+                    url: `${FILE_URL}${sampleItem.si_attachment.replace(/^\/+/, '')}`
+                });
+            }
+
+            // Set structured ledger data object for the modal view
+            setLedgerData({
+                documentId: sampleItem.batch_reference || `INV-${selectedCustomer.id}`,
+                clientName: selectedCustomer.name || 'Client',
+                paymentTerms: "Standard Itemized Ledger Schedule",
+                overallTotal: overallTotal,
+                overallPaid: overallPaid,
+                overallBalance: overallBalance,
+                attachments: attachmentsList,
+                schedule: scheduleItems
+            });
+
             setIsLedgerOpen(true);
         } catch (err) {
-            console.error("Error loading master ledger", err);
-            // Fallback mock structure so the modal doesn't fail if the API endpoint is still pending
+            console.error("Error loading master ledger, using fallback", err);
+            // Fallback mock structure so the UI doesn't crash if the endpoint fails
             setLedgerData({
                 documentId: `INV-${selectedCustomer?.id || '2026'}-01`,
                 clientName: selectedCustomer?.name || 'Selected Client',
@@ -150,7 +226,6 @@ const CustomerManagement = () => {
             setLoadingLedger(false);
         }
     };
-
     // end of handle open ledger modal
 
     const handleImageUpload = async (e) => {
