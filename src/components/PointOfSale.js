@@ -300,13 +300,6 @@ const PointOfSale = ({ triggerToast }) => {
         }
     };
 
-    const handleScanRedirect = () => {
-        if (!lastTransactionId) return;
-
-        const targetUrl = `${FRONT_URL}/mobile-uploads/${lastTransactionId}`;
-        window.open(targetUrl, '_blank');
-    };
-
     return (
         <div className="container-fluid min-vh-100 bg-black text-light p-0 d-flex flex-column font-monospace overflow-hidden position-relative">
 
