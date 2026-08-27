@@ -753,159 +753,157 @@ const CustomerManagement = () => {
                     </div>
                 </div>
             )}
-
 {/* --- MASTER FINANCIAL LEDGER MODAL --- */}
             {isLedgerOpen && ledgerData && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4 overflow-y-auto">
-                    <div className="bg-white border border-slate-100 rounded-2xl shadow-2xl shadow-slate-900/20 w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-
-                        {/* Modal Header */}
-                        <div className="px-6 py-4 bg-slate-50/80 border-b border-slate-200/80 flex items-center justify-between shrink-0">
-                            <div className="flex items-center gap-3">
-                                <div className="p-2.5 bg-indigo-50 text-indigo-600 rounded-xl border border-indigo-100">
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                    </svg>
-                                </div>
-                                <div>
-                                    <h2 className="text-lg font-bold text-slate-900 tracking-tight">Master Financial Ledger</h2>
-                                    <p className="text-xs text-slate-500 font-medium">Batch ID: <span className="font-mono text-indigo-600">{ledgerData.documentId}</span> • Client: <strong className="text-slate-700">{ledgerData.clientName}</strong></p>
-                                </div>
-                            </div>
-                            <button
-                                onClick={() => setIsLedgerOpen(false)}
-                                className="text-slate-400 hover:text-slate-600 p-2 rounded-xl hover:bg-slate-200/60 transition-colors"
-                            >
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                            </button>
-                        </div>
-
-                        {/* Modal Body (Scrollable Financial Table & KPIs) */}
-                        <div className="p-6 overflow-y-auto space-y-6 flex-1 bg-white">
-
-                            {/* Financial KPI Summary Cards */}
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div className="bg-gradient-to-br from-indigo-50/50 to-blue-50/50 border border-indigo-100/80 rounded-xl p-4 shadow-xs">
-                                    <p className="text-xs font-bold text-indigo-600 uppercase tracking-wider">Overall Ledger Total</p>
-                                    <p className="text-2xl font-black text-slate-900 mt-1">₱{Number(ledgerData.overallTotal || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
-                                </div>
-                                <div className="bg-gradient-to-br from-emerald-50/50 to-green-50/50 border border-emerald-100/80 rounded-xl p-4 shadow-xs">
-                                    <p className="text-xs font-bold text-emerald-600 uppercase tracking-wider">Overall Paid Amount</p>
-                                    <p className="text-2xl font-black text-emerald-700 mt-1">₱{Number(ledgerData.overallPaid || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
-                                </div>
-                                <div className="bg-gradient-to-br from-amber-50/50 to-orange-50/50 border border-amber-100/80 rounded-xl p-4 shadow-xs">
-                                    <p className="text-xs font-bold text-amber-600 uppercase tracking-wider">Overall Balance Due</p>
-                                    <p className="text-2xl font-black text-amber-700 mt-1">₱{Number(ledgerData.overallBalance || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
-                                </div>
+                <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}>
+                    <div className="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
+                        <div className="modal-content border-0 shadow-lg">
+                            
+                            {/* Modal Header */}
+                            <div className="modal-header bg-dark text-white px-4 py-3">
+                                <h5 className="modal-title fw-bold d-flex align-items-center gap-2">
+                                    <i className="fas fa-file-invoice-dollar text-primary"></i>
+                                    Master Financial Ledger
+                                    <span className="text-muted fs-6 fw-normal ms-2">
+                                        (Batch ID: <strong className="text-info">{ledgerData.documentId}</strong> • Client: <strong className="text-light">{ledgerData.clientName}</strong>)
+                                    </span>
+                                </h5>
+                                <button
+                                    type="button"
+                                    className="btn-close btn-close-white"
+                                    onClick={() => setIsLedgerOpen(false)}
+                                ></button>
                             </div>
 
-                            {/* Payment Schedule Matrix */}
-                            <div className="bg-white border border-slate-200/80 rounded-xl overflow-hidden shadow-xs">
-                                <div className="px-4 py-3.5 bg-slate-50/80 border-b border-slate-200/80 flex items-center justify-between">
-                                    <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Payment Schedule & Terms Breakdown</h4>
-                                    <span className="text-xs bg-slate-200/70 text-slate-700 px-2.5 py-1 rounded-md font-semibold">Terms: {ledgerData.paymentTerms}</span>
-                                </div>
-                                <div className="overflow-x-auto">
-                                    <table className="w-full text-left border-collapse">
-                                        <thead>
-                                            <tr className="bg-slate-100/70 text-slate-600 uppercase text-[11px] font-bold tracking-wider border-b border-slate-200/80">
-                                                <th className="py-3 px-4">Billing Period / Item</th>
-                                                <th className="py-3 px-4">Due Date</th>
-                                                <th className="py-3 px-4">Amount Due</th>
-                                                <th className="py-3 px-4">Status</th>
-                                                <th className="py-3 px-4">Paid Date</th>
-                                                <th className="py-3 px-4">Batch Reference</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-slate-100 text-sm">
-                                            {ledgerData.schedule?.map((row) => (
-                                                <tr key={row.id} className="hover:bg-slate-50/60 transition-colors">
-                                                    <td className="py-3 px-4 font-semibold text-slate-900">{row.period}</td>
-                                                    <td className="py-3 px-4 text-slate-600 font-medium">{row.dueDate}</td>
-                                                    <td className="py-3 px-4 font-mono font-medium text-slate-800">₱{Number(row.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                                                    <td className="py-3 px-4">
-                                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${
-                                                            row.status === 'Paid'
-                                                                ? 'bg-emerald-100 text-emerald-800 border border-emerald-200/60'
-                                                                : 'bg-amber-100 text-amber-800 border border-amber-200/60'
-                                                        }`}>
-                                                            {row.status}
-                                                        </span>
-                                                    </td>
-                                                    <td className="py-3 px-4 text-slate-500 font-mono text-xs font-medium">{row.paidDate}</td>
-                                                    <td className="py-3 px-4 text-slate-500 font-mono text-xs font-medium">{row.reference}</td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-
-                            {/* Document Attachments Viewer Section */}
-                            <div className="bg-slate-50/50 border border-slate-200/80 rounded-xl p-4">
-                                <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-3">Linked Supporting Documents & Receipts</h4>
-                                {ledgerData.attachments && ledgerData.attachments.length > 0 ? (
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                        {ledgerData.attachments.map((file) => (
-                                            <div key={file.id} className="flex items-center justify-between p-3 bg-white border border-slate-200/80 rounded-xl shadow-2xs hover:border-slate-300 transition">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg border border-indigo-100">
-                                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                                                        </svg>
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-sm font-semibold text-slate-800">{file.name}</p>
-                                                        <p className="text-[11px] text-slate-400 font-medium uppercase">{file.type} document</p>
-                                                    </div>
-                                                </div>
-                                                <button
-                                                    onClick={() => setSelectedImage(file.url)}
-                                                    className="text-xs font-bold text-indigo-600 hover:text-indigo-700 bg-indigo-50 hover:bg-indigo-100/80 px-3 py-1.5 rounded-lg border border-indigo-100 transition"
-                                                >
-                                                    Preview
-                                                </button>
-                                            </div>
-                                        ))}
+                            {/* Modal Body */}
+                            <div className="modal-body p-4 bg-light">
+                                
+                                {/* Financial KPI Summary Cards */}
+                                <div className="row g-3 mb-4">
+                                    <div className="col-md-4">
+                                        <div className="p-3 bg-white border rounded shadow-sm">
+                                            <p className="text-uppercase fw-bold text-primary small mb-1">Overall Ledger Total</p>
+                                            <h4 className="fw-bold text-dark mb-0">₱{Number(ledgerData.overallTotal || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</h4>
+                                        </div>
                                     </div>
-                                ) : (
-                                    <p className="text-xs text-slate-400 italic">No document attachments found for this transaction batch.</p>
-                                )}
+                                    <div className="col-md-4">
+                                        <div className="p-3 bg-white border rounded shadow-sm">
+                                            <p className="text-uppercase fw-bold text-success small mb-1">Overall Paid Amount</p>
+                                            <h4 className="fw-bold text-success mb-0">₱{Number(ledgerData.overallPaid || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</h4>
+                                        </div>
+                                    </div>
+                                    <div className="col-md-4">
+                                        <div className="p-3 bg-white border rounded shadow-sm">
+                                            <p className="text-uppercase fw-bold text-warning small mb-1">Overall Balance Due</p>
+                                            <h4 className="fw-bold text-warning mb-0">₱{Number(ledgerData.overallBalance || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</h4>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Payment Schedule Matrix */}
+                                <div className="card border-0 shadow-sm mb-4">
+                                    <div className="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                                        <h6 className="fw-bold text-dark mb-0 text-uppercase small">Payment Schedule & Terms Breakdown</h6>
+                                        <span className="badge bg-secondary">Terms: {ledgerData.paymentTerms}</span>
+                                    </div>
+                                    <div className="table-responsive mb-0">
+                                        <table className="table table-hover align-middle mb-0">
+                                            <thead className="table-light text-uppercase small text-muted">
+                                                <tr>
+                                                    <th className="py-3 ps-3">Billing Period / Item</th>
+                                                    <th className="py-3">Due Date</th>
+                                                    <th className="py-3">Amount Due</th>
+                                                    <th className="py-3">Status</th>
+                                                    <th className="py-3">Paid Date</th>
+                                                    <th className="py-3 pe-3">Batch Reference</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {ledgerData.schedule?.map((row) => (
+                                                    <tr key={row.id}>
+                                                        <td className="ps-3 fw-semibold text-dark">{row.period}</td>
+                                                        <td className="text-muted">{row.dueDate}</td>
+                                                        <td className="font-monospace fw-bold text-dark">₱{Number(row.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                                                        <td>
+                                                            <span className={`badge ${row.status === 'Paid' ? 'bg-success' : 'bg-warning text-dark'}`}>
+                                                                {row.status}
+                                                            </span>
+                                                        </td>
+                                                        <td className="text-muted font-monospace small">{row.paidDate}</td>
+                                                        <td className="pe-3 text-muted font-monospace small">{row.reference}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                {/* Document Attachments Viewer Section */}
+                                <div className="card border-0 shadow-sm">
+                                    <div className="card-header bg-white py-3">
+                                        <h6 className="fw-bold text-dark mb-0 text-uppercase small">Linked Supporting Documents & Receipts</h6>
+                                    </div>
+                                    <div className="card-body">
+                                        {ledgerData.attachments && ledgerData.attachments.length > 0 ? (
+                                            <div className="row g-2">
+                                                {ledgerData.attachments.map((file) => (
+                                                    <div className="col-md-6" key={file.id}>
+                                                        <div className="p-3 border rounded d-flex justify-content-between align-items-center bg-white shadow-2xs">
+                                                            <div>
+                                                                <p className="fw-bold text-dark mb-0 small">{file.name}</p>
+                                                                <span className="text-muted text-uppercase" style={{ fontSize: '10px' }}>{file.type} document</span>
+                                                            </div>
+                                                            <button
+                                                                type="button"
+                                                                className="btn btn-outline-primary btn-sm"
+                                                                onClick={() => setSelectedImage(file.url)}
+                                                            >
+                                                                Preview
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <p className="text-muted italic small mb-0">No document attachments found for this transaction batch.</p>
+                                        )}
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            {/* Modal Footer */}
+                            <div className="modal-footer bg-white px-4 py-3">
+                                <button
+                                    type="button"
+                                    className="btn btn-secondary px-4"
+                                    onClick={() => setIsLedgerOpen(false)}
+                                >
+                                    Close Ledger
+                                </button>
                             </div>
 
                         </div>
-
-                        {/* Modal Footer */}
-                        <div className="px-6 py-3.5 bg-slate-50/80 border-t border-slate-200/80 flex justify-end shrink-0">
-                            <button
-                                onClick={() => setIsLedgerOpen(false)}
-                                className="bg-slate-900 hover:bg-slate-800 text-white px-5 py-2 rounded-xl text-xs font-semibold shadow-sm transition"
-                            >
-                                Close Ledger
-                            </button>
-                        </div>
-
                     </div>
                 </div>
             )}
 
             {/* --- DOCUMENT LIGHTBOX MODAL --- */}
             {selectedImage && (
-                <div className="fixed inset-60 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4">
-                    <div className="relative max-w-3xl w-full bg-white border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
-                        <div className="px-4 py-3 bg-slate-900 text-white flex justify-between items-center border-b border-slate-800">
-                            <span className="text-xs font-bold tracking-wide uppercase text-slate-300">Document Lightbox Preview</span>
-                            <button
-                                onClick={() => setSelectedImage(null)}
-                                className="text-slate-400 hover:text-white text-lg font-bold px-2 rounded-lg transition"
-                            >
-                                &times;
-                            </button>
-                        </div>
-                        <div className="p-6 flex items-center justify-center bg-slate-950">
-                            <img src={selectedImage} alt="Attachment Preview" className="max-h-[70vh] object-contain rounded-xl border border-slate-800 shadow-lg" />
+                <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.8)', zIndex: 1060 }}>
+                    <div className="modal-dialog modal-dialog-centered modal-lg">
+                        <div className="modal-content border-0 shadow-lg bg-dark text-white">
+                            <div className="modal-header border-secondary py-2">
+                                <h6 className="modal-title small uppercase fw-bold">Document Lightbox Preview</h6>
+                                <button
+                                    type="button"
+                                    className="btn-close btn-close-white"
+                                    onClick={() => setSelectedImage(null)}
+                                ></button>
+                            </div>
+                            <div className="modal-body text-center p-3 bg-black">
+                                <img src={selectedImage} alt="Attachment Preview" className="img-fluid rounded max-h-[70vh]" />
+                            </div>
                         </div>
                     </div>
                 </div>
