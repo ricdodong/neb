@@ -204,56 +204,56 @@ const PointOfSale = ({ triggerToast }) => {
     };
 
     const handleCheckout = async () => {
-    if (!selectedCustomerId) return triggerToast("Please select a customer", "warning");
+        if (!selectedCustomerId) return triggerToast("Please select a customer", "warning");
 
-    const isCash = paymentMethod === 'Cash' || paymentMethod === 'Cash Settlement';
-    if (isCash && Number(amountTendered) < totalAmount) {
-        return triggerToast("Incomplete Cash Payment", "error");
-    }
+        const isCash = paymentMethod === 'Cash' || paymentMethod === 'Cash Settlement';
+        if (isCash && Number(amountTendered) < totalAmount) {
+            return triggerToast("Incomplete Cash Payment", "error");
+        }
 
-    const customer = customers.find(c => String(c.id) === String(selectedCustomerId));
-    
-    // Auto-generate transaction batch reference
-    const autoBatchRef = `TRX-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+        const customer = customers.find(c => String(c.id) === String(selectedCustomerId));
 
-    try {
-        const salePromises = cart.map(async (item) => {
-            return await axios.post(`${BASE_URL}/api/sales`, {
-                customer_id: selectedCustomerId,
-                item_id: item.id,
-                serial_number: item.selectedSN,
-                payment_status: paymentMethod === 'Terms' ? 'Unpaid' : 'Paid',
-                payment_method: paymentMethod,
-                amount_paid: paymentMethod === 'Terms' ? 0 : amountTendered,
-                name: customer?.name || "Guest",
-                address: customer?.address || "POS Terminal",
-                batch_reference: autoBatchRef,
-                term_type: paymentMethod === 'Terms' ? termType : null,
-                term_duration: paymentMethod === 'Terms' ? termDuration : null
+        // Auto-generate transaction batch reference
+        const autoBatchRef = `TRX-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+
+        try {
+            const salePromises = cart.map(async (item) => {
+                return await axios.post(`${BASE_URL}/api/sales`, {
+                    customer_id: selectedCustomerId,
+                    item_id: item.id,
+                    serial_number: item.selectedSN,
+                    payment_status: paymentMethod === 'Terms' ? 'Unpaid' : 'Paid',
+                    payment_method: paymentMethod,
+                    amount_paid: paymentMethod === 'Terms' ? 0 : amountTendered,
+                    name: customer?.name || "Guest",
+                    address: customer?.address || "POS Terminal",
+                    batch_reference: autoBatchRef,
+                    term_type: paymentMethod === 'Terms' ? termType : null,
+                    term_duration: paymentMethod === 'Terms' ? termDuration : null
+                });
             });
-        });
 
-        await Promise.all(salePromises);
+            await Promise.all(salePromises);
 
-        triggerToast(`Transaction Recorded: ${autoBatchRef}`, "success");
+            triggerToast(`Transaction Recorded: ${autoBatchRef}`, "success");
 
-        setLastTransactionId(autoBatchRef);
-        setIsSuccessView(true);
+            setLastTransactionId(autoBatchRef);
+            setIsSuccessView(true);
 
-        // Reset cart states
-        setCart([]);
-        setSelectedCustomerId('');
-        setIsCheckoutView(false);
-        setAmountTendered('');
-        setPaymentMethod('Cash');
-        setUploadedDR(null);
-        setUploadedSI(null);
-        setUploadedCI(null);
-        fetchStock();
-    } catch (err) {
-        triggerToast("Transaction Failed", "error");
-    }
-};
+            // Reset cart states
+            setCart([]);
+            setSelectedCustomerId('');
+            setIsCheckoutView(false);
+            setAmountTendered('');
+            setPaymentMethod('Cash');
+            setUploadedDR(null);
+            setUploadedSI(null);
+            setUploadedCI(null);
+            fetchStock();
+        } catch (err) {
+            triggerToast("Transaction Failed", "error");
+        }
+    };
 
     const handleScanRedirect = () => {
         if (!lastTransactionId) return;
@@ -481,8 +481,7 @@ const PointOfSale = ({ triggerToast }) => {
                                                     type="text"
                                                     className="form-control form-control-sm bg-black text-white border-info mb-2"
                                                     placeholder="Required"
-                                                    value={batchRefNumber}
-                                                    onChange={(e) => setBatchRefNumber(e.target.value.toUpperCase())}
+                                                    value={autoBatchRef}
                                                 />
                                             </div>
                                             <div className="mb-3">
