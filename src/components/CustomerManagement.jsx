@@ -17,6 +17,7 @@ const CustomerManagement = () => {
     const [ledgerData, setLedgerData] = useState(null);
     const [selectedImage, setSelectedImage] = useState(null);
     const [loadingLedger, setLoadingLedger] = useState(false);
+    const [targetBatchReference, setTargetBatchReference] = useState(null);
 
     // Modal State
     const [showAddModal, setShowAddModal] = useState(false);
@@ -490,15 +491,15 @@ const CustomerManagement = () => {
         if (!targetBatchReference) {
             console.warn("No batch reference provided to handleOpenLedger.");
         // Pass the batch reference from your current selected item or row state
-        const batchRef2 = selectedItemDetail?.batch_reference;
+        const batchRef = selectedItemDetail?.batch_reference;
         }
         
-        if (!batchRef2) {
+        if (!batchRef) {
             alert("Batch reference is missing for this transaction item.");
             return;
         }
 
-        handleOpenLedger(batchRef2);
+        handleOpenLedger(batchRef);
     }}
     disabled={loadingLedger}
     className="btn btn-primary d-inline-flex align-items-center justify-content-center gap-2 px-3 py-2 shadow-sm"
