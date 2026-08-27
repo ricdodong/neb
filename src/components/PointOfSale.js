@@ -18,7 +18,7 @@ const PointOfSale = ({ triggerToast }) => {
     const [isCheckoutView, setIsCheckoutView] = useState(false);
     const [paymentMethod, setPaymentMethod] = useState('Cash');
     const [amountTendered, setAmountTendered] = useState('');
-    const [orNumber, setOrNumber] = useState('');
+    const [autoBatchRef, setAutoBatchRef] = useState('');
     const [selectedProduct, setSelectedProduct] = useState(null);
 
     const [showMobileCart, setShowMobileCart] = useState(false);
@@ -180,6 +180,13 @@ const PointOfSale = ({ triggerToast }) => {
         String(p.id).includes(searchTerm)
     );
 
+    // Helper or click handler to enter checkout view cleanly
+    const proceedToCheckout = () => {
+        if (cart.length === 0) return;
+        setAutoBatchRef(`TRX-${Date.now()}-${Math.floor(Math.random() * 1000)}`);
+        setIsCheckoutView(true);
+    };
+
     const getUsedSNs = (productId) => cart.filter(c => c.id === productId).map(c => c.selectedSN);
     const formatPHP = (amt) => "₱" + Number(amt || 0).toLocaleString(undefined, { minimumFractionDigits: 2 });
     const totalAmount = cart.reduce((total, item) => total + Number(item.price || 0), 0);
@@ -213,8 +220,8 @@ const PointOfSale = ({ triggerToast }) => {
 
         const customer = customers.find(c => String(c.id) === String(selectedCustomerId));
 
-        // Auto-generate transaction batch reference
-        const autoBatchRef = `TRX-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+        // Use the existing autoBatchRef state safely
+        const currentBatchRef = autoBatchRef || `TRX-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
         try {
             const salePromises = cart.map(async (item) => {
@@ -227,7 +234,7 @@ const PointOfSale = ({ triggerToast }) => {
                     amount_paid: paymentMethod === 'Terms' ? 0 : amountTendered,
                     name: customer?.name || "Guest",
                     address: customer?.address || "POS Terminal",
-                    batch_reference: autoBatchRef,
+                    batch_reference: currentBatchRef,
                     term_type: paymentMethod === 'Terms' ? termType : null,
                     term_duration: paymentMethod === 'Terms' ? termDuration : null
                 });
@@ -235,16 +242,17 @@ const PointOfSale = ({ triggerToast }) => {
 
             await Promise.all(salePromises);
 
-            triggerToast(`Transaction Recorded: ${autoBatchRef}`, "success");
+            triggerToast(`Transaction Recorded: ${currentBatchRef}`, "success");
 
-            setLastTransactionId(autoBatchRef);
+            setLastTransactionId(currentBatchRef);
             setIsSuccessView(true);
 
-            // Reset cart states
+            // Reset states
             setCart([]);
             setSelectedCustomerId('');
             setIsCheckoutView(false);
             setAmountTendered('');
+            setAutoBatchRef(''); // Reset for next transaction
             setPaymentMethod('Cash');
             setUploadedDR(null);
             setUploadedSI(null);
@@ -479,9 +487,10 @@ const PointOfSale = ({ triggerToast }) => {
                                                 <label className="text-info tiny-text fw-bold mb-1">BATCH REFERENCE #</label>
                                                 <input
                                                     type="text"
-                                                    className="form-control form-control-sm bg-black text-white border-info mb-2"
-                                                    placeholder="Required"
+                                                    className="form-control form-control-sm bg-black text-white border-info mb-2 opacity-75"
+                                                    placeholder="Auto-generated"
                                                     value={autoBatchRef}
+                                                    readOnly
                                                 />
                                             </div>
                                             <div className="mb-3">
