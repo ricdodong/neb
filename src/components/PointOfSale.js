@@ -2,10 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { QRCodeSVG } from 'qrcode.react';
 
-/**
- * JADE POS - Point of Sale Component
- * Optimized with direct Scan Receipt redirection, Wireless Scanner Pairing & Scanner Active/Stop Control.
- */
 const BASE_URL = 'https://dpsapi.ricalgen.eu.org';
 const FRONT_URL = 'https://dps.ricalgen.eu.org';
 
