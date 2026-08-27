@@ -679,13 +679,13 @@ const PointOfSale = ({ triggerToast }) => {
 
                                             const formData = new FormData();
                                             formData.append('file', file);
+                                            formData.append('type', 'dr');
 
                                             try {
                                                 const res = await axios.post(`${BASE_URL}/api/upload`, formData, {
                                                     headers: { 'Content-Type': 'multipart/form-data' }
                                                 });
                                                 if (res.data.success) {
-                                                    // Save ONLY the filename string returned by your R2 backend storage
                                                     setUploadedDR(res.data.filename);
                                                 } else {
                                                     alert("Upload failed: " + (res.data.error || "Unknown error"));
@@ -711,6 +711,7 @@ const PointOfSale = ({ triggerToast }) => {
 
                                                 const formData = new FormData();
                                                 formData.append('file', file);
+                                                formData.append('type', 'si');
 
                                                 try {
                                                     const res = await axios.post(`${BASE_URL}/api/upload`, formData, {
@@ -741,6 +742,7 @@ const PointOfSale = ({ triggerToast }) => {
 
                                                 const formData = new FormData();
                                                 formData.append('file', file);
+                                                formData.append('type', 'ci');
 
                                                 try {
                                                     const res = await axios.post(`${BASE_URL}/api/upload`, formData, {
