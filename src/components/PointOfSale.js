@@ -590,7 +590,18 @@ const PointOfSale = ({ triggerToast }) => {
                                     {isCheckoutView ? (
                                         <button
                                             className="btn btn-success w-100 py-2 fw-bold tracking-wider"
-                                            onClick={handleCheckout}
+                                            onClick={() => {
+                                                const isCash = paymentMethod === 'Cash' || paymentMethod === 'Cash Settlement';
+                                                const hasUploadedDocs = isCash ? uploadedSI && uploadedDR : uploadedCI && uploadedDR;
+
+                                                if (!hasUploadedDocs) {
+                                                    alert(isCash ? "Please upload DR and SI first" : "Please upload DR and CI first");
+                                                    setShowDocUploadModal(true);
+                                                    return;
+                                                }
+
+                                                handleCheckout();
+                                            }}
                                         >
                                             <i className="fas fa-lock me-2"></i>COMMIT TRANSACTION
                                         </button>
@@ -608,6 +619,68 @@ const PointOfSale = ({ triggerToast }) => {
                     )}
                 </aside>
             </div>
+
+            {/* DOCUMENT UPLOAD MODAL (DR / SI / CI) */}
+            {showDocUploadModal && (
+                <div className="modal d-block bg-black bg-opacity-75" tabIndex="-1" style={{ zIndex: 1100 }}>
+                    <div className="modal-dialog modal-dialog-centered">
+                        <div className="modal-content bg-dark border border-secondary text-white font-monospace shadow-2xl">
+                            <div className="modal-header border-secondary py-2 bg-black bg-opacity-40">
+                                <h6 className="modal-title text-success fw-bold uppercase">
+                                    Upload Required Documents // {(paymentMethod === 'Cash' || paymentMethod === 'Cash Settlement') ? 'DR & SI' : 'DR & CI'}
+                                </h6>
+                                <button type="button" className="btn-close btn-close-white scale-75" onClick={() => setShowDocUploadModal(false)}></button>
+                            </div>
+                            <div className="modal-body p-3 small">
+                                <div className="mb-3">
+                                    <label className="text-secondary d-block mb-1">Upload Delivery Receipt (DR):</label>
+                                    <input
+                                        type="file"
+                                        className="form-control form-control-sm bg-black text-white border-secondary"
+                                        onChange={(e) => setUploadedDR(e.target.files[0])}
+                                    />
+                                </div>
+                                {(paymentMethod === 'Cash' || paymentMethod === 'Cash Settlement') ? (
+                                    <div className="mb-3">
+                                        <label className="text-secondary d-block mb-1">Upload Sales Invoice (SI):</label>
+                                        <input
+                                            type="file"
+                                            className="form-control form-control-sm bg-black text-white border-secondary"
+                                            onChange={(e) => setUploadedSI(e.target.files[0])}
+                                        />
+                                    </div>
+                                ) : (
+                                    <div className="mb-3">
+                                        <label className="text-secondary d-block mb-1">Upload Collection Invoice (CI):</label>
+                                        <input
+                                            type="file"
+                                            className="form-control form-control-sm bg-black text-white border-secondary"
+                                            onChange={(e) => setUploadedCI(e.target.files[0])}
+                                        />
+                                    </div>
+                                )}
+                            </div>
+                            <div className="modal-footer border-secondary py-2 bg-black">
+                                <button
+                                    type="button"
+                                    className="btn btn-sm btn-success w-100 fw-bold"
+                                    onClick={() => {
+                                        const isCash = paymentMethod === 'Cash' || paymentMethod === 'Cash Settlement';
+                                        const ready = isCash ? (uploadedDR && uploadedSI) : (uploadedDR && uploadedCI);
+                                        if (ready) {
+                                            setShowDocUploadModal(false);
+                                        } else {
+                                            alert("Please attach all required document files before proceeding.");
+                                        }
+                                    }}
+                                >
+                                    CONFIRM ATTACHMENTS
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* PRODUCT SPEC DETAIL MODAL */}
             {selectedProduct && (
