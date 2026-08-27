@@ -151,7 +151,7 @@ const CustomerManagement = () => {
         }
     };
 
-// end of handle open ledger modal
+    // end of handle open ledger modal
 
     const handleImageUpload = async (e) => {
         const file = e.target.files[0];
@@ -390,7 +390,29 @@ const CustomerManagement = () => {
                                                             <tr>
                                                                 <td colSpan="3" className="p-0 border-start border-primary border-4">
                                                                     <div className="bg-light p-4">
-                                                                        <div className="text-muted small mb-2 fw-bold">ITEMS IN THIS TRANSACTION (Click a row for full details)</div>
+                                                                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-4 border-b border-gray-100 gap-4">
+                                                                            <div>
+                                                                                <h3 className="text-lg font-semibold text-gray-900">ITEMS IN THIS TRANSACTION</h3>
+                                                                                <p className="text-xs text-gray-500">Click a row for full details or access the master ledger account.</p>
+                                                                            </div>
+
+                                                                            {/* The [Ledger] Button */}
+                                                                            <button
+                                                                                onClick={() => handleOpenLedger(selectedCustomer?.id)}
+                                                                                disabled={loadingLedger || !selectedCustomer}
+                                                                                className="inline-flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-sm font-medium px-4 py-2 rounded-lg shadow-sm transition-all focus:ring-2 focus:ring-indigo-500"
+                                                                            >
+                                                                                {loadingLedger ? (
+                                                                                    <span className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></span>
+                                                                                ) : (
+                                                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                                                                                    </svg>
+                                                                                )}
+                                                                                [Ledger]
+                                                                            </button>
+                                                                        </div>
+
                                                                         <table className="table table-sm table-bordered table-hover bg-white mb-0 shadow-sm rounded">
                                                                             <thead className="table-secondary tiny text-uppercase">
                                                                                 <tr>
