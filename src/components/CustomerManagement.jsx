@@ -478,6 +478,7 @@ const CustomerManagement = () => {
                                                                             <button
                                                                                 type="button"
                                                                                 onClick={() => {
+                                                                                    console.log("Current selectedCustomer:", selectedCustomer);
                                                                                     if (!selectedCustomer) {
                                                                                         alert("Please select a customer first.");
                                                                                         return;
@@ -834,8 +835,8 @@ const CustomerManagement = () => {
                                                     <td className="py-3 px-4 font-mono text-gray-800">₱{Number(row.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
                                                     <td className="py-3 px-4">
                                                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${row.status === 'Paid'
-                                                                ? 'bg-emerald-100 text-emerald-800'
-                                                                : 'bg-amber-100 text-amber-800'
+                                                            ? 'bg-emerald-100 text-emerald-800'
+                                                            : 'bg-amber-100 text-amber-800'
                                                             }`}>
                                                             {row.status}
                                                         </span>
