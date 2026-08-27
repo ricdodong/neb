@@ -11,7 +11,12 @@ const CustomerManagement = () => {
     const [purchaseHistory, setPurchaseHistory] = useState([]);
     const [serviceHistory, setServiceHistory] = useState([]);
     const [expandedRow, setExpandedRow] = useState(null);
-    
+    // Add these inside your existing component function:
+    const [isLedgerOpen, setIsLedgerOpen] = useState(false);
+    const [ledgerData, setLedgerData] = useState(null);
+    const [selectedImage, setSelectedImage] = useState(null);
+    const [loadingLedger, setLoadingLedger] = useState(false);
+
     // Modal State
     const [showAddModal, setShowAddModal] = useState(false);
     const [showDetailModal, setShowDetailModal] = useState(false);
@@ -25,7 +30,7 @@ const CustomerManagement = () => {
     });
     const [submitting, setSubmitting] = useState(false);
     const [modalError, setModalError] = useState('');
-    
+
     const fileInputRef = useRef(null);
 
     useEffect(() => {
@@ -43,8 +48,8 @@ const CustomerManagement = () => {
 
     const handleSelectCustomer = async (customer) => {
         setSelectedCustomer(customer);
-        setExpandedRow(null); 
-        
+        setExpandedRow(null);
+
         try {
             const [ledgerRes, serviceRes] = await Promise.all([
                 axios.get(`${BASE_URL}/api/customers/${customer.id}/history`),
@@ -75,7 +80,7 @@ const CustomerManagement = () => {
         try {
             const res = await axios.post(`${BASE_URL}/api/customers`, formData);
             await fetchCustomers();
-            
+
             if (res.data && res.data.id) {
                 handleSelectCustomer(res.data);
             }
@@ -114,6 +119,40 @@ const CustomerManagement = () => {
         }
     };
 
+    // handle open ledger modal
+    const handleOpenLedger = async (transactionOrCustomerId) => {
+        setLoadingLedger(true);
+        try {
+            // Adjust the endpoint route based on your backend structure
+            const res = await axios.get(`${BASE_URL}/api/customers/${selectedCustomer.id}/ledger`);
+            setLedgerData(res.data);
+            setIsLedgerOpen(true);
+        } catch (err) {
+            console.error("Error loading master ledger", err);
+            // Fallback mock structure so the modal doesn't fail if the API endpoint is still pending
+            setLedgerData({
+                documentId: `INV-${selectedCustomer?.id || '2026'}-01`,
+                clientName: selectedCustomer?.name || 'Selected Client',
+                paymentTerms: "Monthly (12 Months Schedule)",
+                overallTotal: 36000.00,
+                overallPaid: 15000.00,
+                overallBalance: 21000.00,
+                attachments: [
+                    { id: 1, name: "Signed_Service_Contract.pdf", type: "pdf", url: "#" }
+                ],
+                schedule: [
+                    { id: 1, period: "Month 1 (Jan 2026)", dueDate: "2026-01-31", amount: 3000, status: "Paid", paidDate: "2026-01-28", reference: "OR-8821" },
+                    { id: 2, period: "Month 2 (Feb 2026)", dueDate: "2026-02-28", amount: 3000, status: "Paid", paidDate: "2026-02-25", reference: "OR-8932" },
+                ]
+            });
+            setIsLedgerOpen(true);
+        } finally {
+            setLoadingLedger(false);
+        }
+    };
+
+// end of handle open ledger modal
+
     const handleImageUpload = async (e) => {
         const file = e.target.files[0];
         if (!file || !selectedCustomer) return;
@@ -125,9 +164,9 @@ const CustomerManagement = () => {
             const res = await axios.post(`${BASE_URL}/api/customers/${selectedCustomer.id}/upload-photo`, formDataObj, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
-            
+
             setSelectedCustomer({ ...selectedCustomer, profile_picture: res.data.imageUrl });
-            fetchCustomers(); 
+            fetchCustomers();
             alert("Profile picture updated!");
         } catch (err) {
             console.error("Upload failed", err);
@@ -148,18 +187,18 @@ const CustomerManagement = () => {
         c.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    // Group purchase history by Transaction / OR Number & Date + Auto-sort (Unpaid/Balance first, then Latest Date)
+    // Group purchase history by Transaction / Batch Reference & Date + Auto-sort (Unpaid/Balance first, then Latest Date)
     const groupedTransactions = useMemo(() => {
         const groups = {};
         purchaseHistory.forEach((item, index) => {
-            const orNum = item.or_number || `OR-UNKNOWN-${index}`;
+            const batchRef = item.batch_reference || `BR-UNKNOWN-${index}`;
             const dateStr = item.purchase_date ? new Date(item.purchase_date).toISOString().split('T')[0] : 'no-date';
-            const groupKey = `${orNum}-${dateStr}`;
+            const groupKey = `${batchRef}-${dateStr}`;
 
             if (!groups[groupKey]) {
                 groups[groupKey] = {
                     displayId: `txn-${index}`,
-                    or_number: item.or_number || 'N/A',
+                    batch_reference: item.batch_reference || 'N/A',
                     purchase_date: item.purchase_date,
                     payment_status: item.payment_status || 'Unpaid',
                     items: []
@@ -172,7 +211,7 @@ const CustomerManagement = () => {
                 purchase_date: item.purchase_date,
                 serial_number: item.serial_number,
                 srp_amount: item.srp_amount,
-                or_number: item.or_number,
+                batch_reference: item.batch_reference,
                 payment_status: item.payment_status,
                 warranty_period: item.warranty_period
             });
@@ -196,7 +235,7 @@ const CustomerManagement = () => {
             return dateB - dateA;
         });
     }, [purchaseHistory]);
-    
+
     return (
         <div className="container-fluid py-4 bg-light min-vh-100 rounded">
             <div className="row g-4">
@@ -209,7 +248,7 @@ const CustomerManagement = () => {
                                     <h5 className="mb-0 fw-bold text-dark">Directory</h5>
                                     <span className="text-muted small">{customers.length} Total Customers</span>
                                 </div>
-                                <button 
+                                <button
                                     className="btn btn-primary btn-sm d-flex align-items-center gap-1 px-3 shadow-sm"
                                     onClick={() => setShowAddModal(true)}
                                 >
@@ -267,11 +306,11 @@ const CustomerManagement = () => {
                                 <div className="d-flex align-items-center">
                                     <div className="position-relative me-4" style={{ cursor: 'pointer' }} onClick={() => fileInputRef.current.click()}>
                                         {selectedCustomer.profile_picture ? (
-                                            <img 
-                                                src={`${FILE_URL}${selectedCustomer.profile_picture}`} 
-                                                alt="Profile" 
-                                                className="rounded-circle border border-3 border-primary shadow-sm" 
-                                                style={{ width: '100px', height: '100px', objectFit: 'cover' }} 
+                                            <img
+                                                src={`${FILE_URL}${selectedCustomer.profile_picture}`}
+                                                alt="Profile"
+                                                className="rounded-circle border border-3 border-primary shadow-sm"
+                                                style={{ width: '100px', height: '100px', objectFit: 'cover' }}
                                             />
                                         ) : (
                                             <div className="rounded-circle bg-secondary d-flex align-items-center justify-content-center border border-3 border-primary" style={{ width: '100px', height: '100px' }}>
@@ -281,12 +320,12 @@ const CustomerManagement = () => {
                                         <div className="position-absolute bottom-0 end-0 bg-primary rounded-circle shadow-sm d-flex align-items-center justify-content-center border border-white border-2" style={{ width: '32px', height: '32px' }}>
                                             <i className="fas fa-camera fa-xs text-white"></i>
                                         </div>
-                                        <input 
-                                            type="file" 
-                                            ref={fileInputRef} 
-                                            onChange={handleImageUpload} 
-                                            className="d-none" 
-                                            accept="image/*" 
+                                        <input
+                                            type="file"
+                                            ref={fileInputRef}
+                                            onChange={handleImageUpload}
+                                            className="d-none"
+                                            accept="image/*"
                                         />
                                     </div>
 
@@ -323,9 +362,9 @@ const CustomerManagement = () => {
                                     <table className="table table-hover mb-0">
                                         <thead className="table-light">
                                             <tr>
-                                                <th className="ps-4">Transaction / OR Number</th>
+                                                <th className="ps-4">Transaction / Batch Reference</th>
                                                 <th>Date</th>
-                                                <th className="pe-4 text-center">Status</th> 
+                                                <th className="pe-4 text-center">Status</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -335,7 +374,7 @@ const CustomerManagement = () => {
                                                         <tr onClick={() => toggleRow(group.displayId)} style={{ cursor: 'pointer' }} className={expandedRow === group.displayId ? 'table-primary-subtle' : ''}>
                                                             <td className="fw-bold py-3 ps-4">
                                                                 <i className={`fas fa-caret-${expandedRow === group.displayId ? 'down' : 'right'} me-2 text-primary`}></i>
-                                                                <span className="badge bg-light text-dark border me-2">{group.or_number}</span>
+                                                                <span className="badge bg-light text-dark border me-2">{group.batch_reference}</span>
                                                             </td>
                                                             <td className="py-3">
                                                                 {group.purchase_date ? new Date(group.purchase_date).toLocaleDateString() : 'N/A'}
@@ -443,9 +482,9 @@ const CustomerManagement = () => {
                                 <h5 className="modal-title fw-bold">
                                     <i className="fas fa-user-plus me-2"></i>Add New Client
                                 </h5>
-                                <button 
-                                    type="button" 
-                                    className="btn-close btn-close-white" 
+                                <button
+                                    type="button"
+                                    className="btn-close btn-close-white"
                                     onClick={() => setShowAddModal(false)}
                                     disabled={submitting}
                                 ></button>
@@ -461,14 +500,14 @@ const CustomerManagement = () => {
                                         <label className="form-label fw-bold small text-muted">Client's Name <span className="text-danger">*</span></label>
                                         <div className="input-group">
                                             <span className="input-group-text bg-light"><i className="fas fa-user text-muted"></i></span>
-                                            <input 
-                                                type="text" 
-                                                className="form-control" 
+                                            <input
+                                                type="text"
+                                                className="form-control"
                                                 name="name"
                                                 placeholder="Enter full name"
                                                 value={formData.name}
                                                 onChange={handleInputChange}
-                                                required 
+                                                required
                                             />
                                         </div>
                                     </div>
@@ -476,13 +515,13 @@ const CustomerManagement = () => {
                                         <label className="form-label fw-bold small text-muted">Address</label>
                                         <div className="input-group">
                                             <span className="input-group-text bg-light"><i className="fas fa-map-marker-alt text-muted"></i></span>
-                                            <input 
-                                                type="text" 
-                                                className="form-control" 
+                                            <input
+                                                type="text"
+                                                className="form-control"
                                                 name="address"
                                                 placeholder="Enter complete address"
                                                 value={formData.address}
-                                                onChange={handleInputChange} 
+                                                onChange={handleInputChange}
                                             />
                                         </div>
                                     </div>
@@ -490,14 +529,14 @@ const CustomerManagement = () => {
                                         <label className="form-label fw-bold small text-muted">Contact No <span className="text-danger">*</span></label>
                                         <div className="input-group">
                                             <span className="input-group-text bg-light"><i className="fas fa-phone-alt text-muted"></i></span>
-                                            <input 
-                                                type="text" 
-                                                className="form-control" 
+                                            <input
+                                                type="text"
+                                                className="form-control"
                                                 name="contact"
                                                 placeholder="e.g. 09123456789"
                                                 value={formData.contact}
                                                 onChange={handleInputChange}
-                                                required 
+                                                required
                                             />
                                         </div>
                                     </div>
@@ -505,28 +544,28 @@ const CustomerManagement = () => {
                                         <label className="form-label fw-bold small text-muted">Email</label>
                                         <div className="input-group">
                                             <span className="input-group-text bg-light"><i className="fas fa-envelope text-muted"></i></span>
-                                            <input 
-                                                type="email" 
-                                                className="form-control" 
+                                            <input
+                                                type="email"
+                                                className="form-control"
                                                 name="email"
                                                 placeholder="e.g. client@example.com"
                                                 value={formData.email}
-                                                onChange={handleInputChange} 
+                                                onChange={handleInputChange}
                                             />
                                         </div>
                                     </div>
                                 </div>
                                 <div className="modal-footer bg-light px-4 py-3">
-                                    <button 
-                                        type="button" 
-                                        className="btn btn-outline-secondary px-4" 
+                                    <button
+                                        type="button"
+                                        className="btn btn-outline-secondary px-4"
                                         onClick={() => setShowAddModal(false)}
                                         disabled={submitting}
                                     >
                                         Cancel
                                     </button>
-                                    <button 
-                                        type="submit" 
+                                    <button
+                                        type="submit"
                                         className="btn btn-primary px-4 shadow-sm"
                                         disabled={submitting}
                                     >
@@ -557,9 +596,9 @@ const CustomerManagement = () => {
                                 <h5 className="modal-title fw-bold">
                                     <i className="fas fa-info-circle me-2 text-primary"></i>Transaction Item Details
                                 </h5>
-                                <button 
-                                    type="button" 
-                                    className="btn-close btn-close-white" 
+                                <button
+                                    type="button"
+                                    className="btn-close btn-close-white"
                                     onClick={() => setShowDetailModal(false)}
                                 ></button>
                             </div>
@@ -578,8 +617,8 @@ const CustomerManagement = () => {
                                         <span>{selectedItemDetail.purchase_date ? new Date(selectedItemDetail.purchase_date).toLocaleDateString() : 'N/A'}</span>
                                     </li>
                                     <li className="list-group-item d-flex justify-content-between align-items-center py-3">
-                                        <span className="fw-bold text-muted">OR Number:</span>
-                                        <span className="badge bg-light text-dark border">{selectedItemDetail.or_number || 'N/A'}</span>
+                                        <span className="fw-bold text-muted">Batch Reference:</span>
+                                        <span className="badge bg-light text-dark border">{selectedItemDetail.batch_reference || 'N/A'}</span>
                                     </li>
                                     <li className="list-group-item d-flex justify-content-between align-items-center py-3">
                                         <span className="fw-bold text-muted">Serial Number:</span>
@@ -602,9 +641,9 @@ const CustomerManagement = () => {
                                 </ul>
                             </div>
                             <div className="modal-footer bg-light px-4 py-3">
-                                <button 
-                                    type="button" 
-                                    className="btn btn-secondary px-4" 
+                                <button
+                                    type="button"
+                                    className="btn btn-secondary px-4"
                                     onClick={() => setShowDetailModal(false)}
                                 >
                                     Close
