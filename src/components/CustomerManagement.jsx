@@ -477,10 +477,10 @@ const CustomerManagement = () => {
                                                             <tr>
                                                                 <td colSpan="3" className="p-0 border-start border-primary border-4">
                                                                     <div className="bg-light p-4">
-                                                                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-4 border-b border-gray-100 gap-4">
+                                                                        <div className="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between pb-3 mb-3 border-bottom gap-3">
                                                                             <div>
-                                                                                <h3 className="text-lg font-semibold text-gray-900">ITEMS IN THIS TRANSACTION</h3>
-                                                                                <p className="text-xs text-gray-500">Click a row for full details or access the master ledger account.</p>
+                                                                                <h3 className="h5 fw-bold text-dark mb-1">ITEMS IN THIS TRANSACTION</h3>
+                                                                                <p className="text-muted small mb-0">Click a row for full details or access the master ledger account.</p>
                                                                             </div>
 
                                                                             {/* The [Ledger] Button */}
@@ -491,10 +491,11 @@ const CustomerManagement = () => {
                                                                                         alert("Please select a customer first.");
                                                                                         return;
                                                                                     }
-                                                                                    handleOpenLedger();
+                                                                                    // Pass the current batch reference so it only filters for this specific batch
+                                                                                    handleOpenLedger(selectedItemDetail?.batch_reference || null);
                                                                                 }}
                                                                                 disabled={loadingLedger}
-                                                                                className="btn btn-primary d-inline-flex align-items-center gap-2 px-3 py-2 shadow-sm"
+                                                                                className="btn btn-primary d-inline-flex align-items-center justify-content-center gap-2 px-3 py-2 shadow-sm"
                                                                             >
                                                                                 {loadingLedger ? (
                                                                                     <>
@@ -509,7 +510,6 @@ const CustomerManagement = () => {
                                                                                 )}
                                                                             </button>
                                                                         </div>
-
                                                                         <table className="table table-sm table-bordered table-hover bg-white mb-0 shadow-sm rounded">
                                                                             <thead className="table-secondary tiny text-uppercase">
                                                                                 <tr>
