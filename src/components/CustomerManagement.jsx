@@ -12,14 +12,13 @@ const CustomerManagement = () => {
     const [serviceHistory, setServiceHistory] = useState([]);
     const [expandedRow, setExpandedRow] = useState(null);
 
-    // Add these inside your existing component function:
+    // Modal and Ledger States
     const [isLedgerOpen, setIsLedgerOpen] = useState(false);
     const [ledgerData, setLedgerData] = useState(null);
     const [selectedImage, setSelectedImage] = useState(null);
     const [loadingLedger, setLoadingLedger] = useState(false);
-    const [targetBatchReference, setTargetBatchReference] = useState(null);
 
-    // Modal State
+    // Modal UI State
     const [showAddModal, setShowAddModal] = useState(false);
     const [showDetailModal, setShowDetailModal] = useState(false);
     const [selectedItemDetail, setSelectedItemDetail] = useState(null);
@@ -121,7 +120,7 @@ const CustomerManagement = () => {
         }
     };
 
-    // handle open ledger modal
+    // Open ledger modal and compute summary totals safely
     const handleOpenLedger = async (targetBatchReference = null) => {
         if (!selectedCustomer) {
             alert("Please select a customer first.");
@@ -172,32 +171,32 @@ const CustomerManagement = () => {
                 }
 
                 // Generate Schedule Breakdown based on Term Type and Duration
-                if (item.payment_method === 'Terms' && item.term_duration > 0) {
+                if (item.payment_method === 'Terms' && Number(item.term_duration) > 0) {
                     const duration = Number(item.term_duration);
                     const termTypeLabel = item.term_type ? item.term_type.charAt(0).toUpperCase() + item.term_type.slice(1) : 'Periods';
                     const installmentAmount = amount / duration;
 
                     for (let i = 1; i <= duration; i++) {
                         scheduleItems.push({
-                            id: `${item.transaction_id}-${i}`,
-                            period: `${item.item_name} - ${termTypeLabel} ${i} of ${duration}`,
+                            id: `${item.transaction_id || index}-${i}`,
+                            period: `${item.item_name || 'Item'} - ${termTypeLabel} ${i} of ${duration}`,
                             dueDate: item.purchase_date ? item.purchase_date.split(' ')[0] : 'N/A',
                             amount: installmentAmount,
                             status: isPaid ? 'Paid' : 'Unpaid',
                             paidDate: isPaid ? (item.purchase_date ? item.purchase_date.split(' ')[0] : '-') : '-',
-                            reference: item.batch_reference || 'N/A'
+                            reference: item.batch_reference || targetBatchReference
                         });
                     }
                 } else {
                     // Standard Cash or Full Settlement Row
                     scheduleItems.push({
                         id: item.transaction_id || index,
-                        period: `${item.item_name} (Cash / Full Payment)`,
+                        period: `${item.item_name || 'Item'} (Cash / Full Payment)`,
                         dueDate: item.purchase_date ? item.purchase_date.split(' ')[0] : 'N/A',
                         amount: amount,
                         status: isPaid ? 'Paid' : 'Unpaid',
                         paidDate: isPaid ? (item.purchase_date ? item.purchase_date.split(' ')[0] : '-') : '-',
-                        reference: item.batch_reference || 'N/A'
+                        reference: item.batch_reference || targetBatchReference
                     });
                 }
             });
@@ -206,9 +205,9 @@ const CustomerManagement = () => {
                 documentId: targetBatchReference,
                 clientName: selectedCustomer.name || 'Client',
                 paymentTerms: "Mixed Terms & Cash Schedule",
-                overallTotal: overallTotal,
-                overallPaid: overallPaid,
-                overallBalance: overallBalance,
+                overallTotal,
+                overallPaid,
+                overallBalance,
                 attachments: Array.from(attachmentsMap.values()),
                 schedule: scheduleItems
             });
@@ -235,7 +234,6 @@ const CustomerManagement = () => {
             setLoadingLedger(false);
         }
     };
-    // end of handle open ledger modal
 
     const handleImageUpload = async (e) => {
         const file = e.target.files[0];
@@ -267,11 +265,13 @@ const CustomerManagement = () => {
         setShowDetailModal(true);
     };
 
-    const filteredCustomers = customers.filter(c =>
-        c.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredCustomers = useMemo(() => {
+        return customers.filter(c =>
+            c.name.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+    }, [customers, searchTerm]);
 
-    // Group purchase history by Transaction / Batch Reference & Date + Auto-sort (Unpaid/Balance first, then Latest Date)
+    // Group purchase history by Transaction / Batch Reference & Date + Auto-sort
     const groupedTransactions = useMemo(() => {
         const groups = {};
         purchaseHistory.forEach((item, index) => {
@@ -295,13 +295,13 @@ const CustomerManagement = () => {
                 purchase_date: item.purchase_date,
                 serial_number: item.serial_number,
                 srp_amount: item.srp_amount,
-                batch_reference: item.batch_reference,
+                batch_reference: item.batch_reference || 'N/A',
                 payment_status: item.payment_status,
                 warranty_period: item.warranty_period
             });
         });
 
-        // Convert to array and sort
+        // Convert to array and sort (Unpaid/Balance first, then Latest Date)
         return Object.values(groups).sort((a, b) => {
             const statusA = (a.payment_status || '').toLowerCase();
             const statusB = (b.payment_status || '').toLowerCase();
@@ -309,11 +309,9 @@ const CustomerManagement = () => {
             const isUnpaidA = statusA === 'unpaid' || statusA === 'balance';
             const isUnpaidB = statusB === 'unpaid' || statusB === 'balance';
 
-            // 1. Unpaid / Balance items come first
             if (isUnpaidA && !isUnpaidB) return -1;
             if (!isUnpaidA && isUnpaidB) return 1;
 
-            // 2. Sort by latest date descending
             const dateA = a.purchase_date ? new Date(a.purchase_date).getTime() : 0;
             const dateB = b.purchase_date ? new Date(b.purchase_date).getTime() : 0;
             return dateB - dateA;
