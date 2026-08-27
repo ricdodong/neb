@@ -121,7 +121,7 @@ const CustomerManagement = () => {
     };
 
     // handle open ledger modal
-    const handleOpenLedger = async (batchReference = null) => {
+    const handleOpenLedger = async (targetBatchReference = null) => {
         if (!selectedCustomer) {
             alert("Please select a customer first.");
             return;
@@ -136,14 +136,23 @@ const CustomerManagement = () => {
                 throw new Error("No purchase history found for this customer.");
             }
 
+            // Filter history items if a specific batchReference was provided
+            const filteredHistory = targetBatchReference
+                ? historyData.filter(item => item.batch_reference === targetBatchReference)
+                : historyData; // Fallback to all if none specified
+
+            if (filteredHistory.length === 0) {
+                throw new Error("No items found for this specific batch reference.");
+            }
+
             let overallTotal = 0;
             let overallPaid = 0;
             let overallBalance = 0;
             let scheduleItems = [];
             let attachmentsMap = new Map();
 
-            // Loop through each item in the history to build financials and term schedules
-            historyData.forEach((item, index) => {
+            // Loop through each item in the filtered history
+            filteredHistory.forEach((item, index) => {
                 const amount = Number(item.srp_amount) || 0;
                 overallTotal += amount;
 
@@ -197,7 +206,7 @@ const CustomerManagement = () => {
             });
 
             setLedgerData({
-                documentId: historyData[0]?.batch_reference || `INV-${selectedCustomer.id}`,
+                documentId: targetBatchReference || filteredHistory[0]?.batch_reference || `INV-${selectedCustomer.id}`,
                 clientName: selectedCustomer.name || 'Client',
                 paymentTerms: "Mixed Terms & Cash Schedule",
                 overallTotal: overallTotal,
@@ -211,7 +220,7 @@ const CustomerManagement = () => {
         } catch (err) {
             console.error("Error loading master ledger, using fallback", err);
             setLedgerData({
-                documentId: `INV-${selectedCustomer?.id || '2026'}-01`,
+                documentId: targetBatchReference || `INV-${selectedCustomer?.id || '2026'}-01`,
                 clientName: selectedCustomer?.name || 'Selected Client',
                 paymentTerms: "Monthly (12 Months Schedule)",
                 overallTotal: 36000.00,
@@ -221,7 +230,7 @@ const CustomerManagement = () => {
                     { id: 1, name: "Signed_Service_Contract.pdf", type: "pdf", url: "#" }
                 ],
                 schedule: [
-                    { id: 1, period: "Month 1 (Jan 2026)", dueDate: "2026-01-31", amount: 3000, status: "Paid", paidDate: "2026-01-28", reference: "OR-8821" },
+                    { id: 1, period: "Month 1 (Jan 2026)", dueDate: "2026-01-31", amount: 3000, status: "Paid", paidDate: "2026-01-28", reference: targetBatchReference || "OR-8821" },
                 ]
             });
             setIsLedgerOpen(true);
@@ -485,9 +494,19 @@ const CustomerManagement = () => {
                                                                                     handleOpenLedger();
                                                                                 }}
                                                                                 disabled={loadingLedger}
-                                                                                className="inline-flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-sm font-medium px-4 py-2 rounded-lg shadow-sm transition-all cursor-pointer"
+                                                                                className="btn btn-primary d-inline-flex align-items-center gap-2 px-3 py-2 shadow-sm"
                                                                             >
-                                                                                {loadingLedger ? "Loading Ledger..." : "View Ledger"}
+                                                                                {loadingLedger ? (
+                                                                                    <>
+                                                                                        <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                                                                        Loading Ledger...
+                                                                                    </>
+                                                                                ) : (
+                                                                                    <>
+                                                                                        <i className="fas fa-file-invoice-dollar"></i>
+                                                                                        View Ledger
+                                                                                    </>
+                                                                                )}
                                                                             </button>
                                                                         </div>
 
@@ -753,12 +772,12 @@ const CustomerManagement = () => {
                     </div>
                 </div>
             )}
-{/* --- MASTER FINANCIAL LEDGER MODAL --- */}
+            {/* --- MASTER FINANCIAL LEDGER MODAL --- */}
             {isLedgerOpen && ledgerData && (
                 <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}>
                     <div className="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
                         <div className="modal-content border-0 shadow-lg">
-                            
+
                             {/* Modal Header */}
                             <div className="modal-header bg-dark text-white px-4 py-3">
                                 <h5 className="modal-title fw-bold d-flex align-items-center gap-2">
@@ -777,7 +796,7 @@ const CustomerManagement = () => {
 
                             {/* Modal Body */}
                             <div className="modal-body p-4 bg-light">
-                                
+
                                 {/* Financial KPI Summary Cards */}
                                 <div className="row g-3 mb-4">
                                     <div className="col-md-4">
