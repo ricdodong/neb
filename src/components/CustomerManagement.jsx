@@ -129,20 +129,16 @@ const CustomerManagement = () => {
 
         setLoadingLedger(true);
         try {
-            const res = await axios.get(`${BASE_URL}/api/customers/${selectedCustomer.id}/history`);
+            // Use the dedicated batch endpoint if a target batch is specified, otherwise fall back to history
+            const endpoint = targetBatchReference
+                ? `${BASE_URL}/api/customers/${selectedCustomer.id}/${targetBatchReference}/ledger`
+                : `${BASE_URL}/api/customers/${selectedCustomer.id}/history`;
+
+            const res = await axios.get(endpoint);
             const historyData = res.data;
 
             if (!Array.isArray(historyData) || historyData.length === 0) {
-                throw new Error("No purchase history found for this customer.");
-            }
-
-            // Filter history items if a specific batchReference was provided
-            const filteredHistory = targetBatchReference
-                ? historyData.filter(item => item.batch_reference === targetBatchReference)
-                : historyData; // Fallback to all if none specified
-
-            if (filteredHistory.length === 0) {
-                throw new Error("No items found for this specific batch reference.");
+                throw new Error("No transaction records found for this selection.");
             }
 
             let overallTotal = 0;
@@ -151,8 +147,8 @@ const CustomerManagement = () => {
             let scheduleItems = [];
             let attachmentsMap = new Map();
 
-            // Loop through each item in the filtered history
-            filteredHistory.forEach((item, index) => {
+            // Loop through each item in the fetched data
+            historyData.forEach((item, index) => {
                 const amount = Number(item.srp_amount) || 0;
                 overallTotal += amount;
 
@@ -206,7 +202,7 @@ const CustomerManagement = () => {
             });
 
             setLedgerData({
-                documentId: targetBatchReference || filteredHistory[0]?.batch_reference || `INV-${selectedCustomer.id}`,
+                documentId: targetBatchReference || historyData[0]?.batch_reference || `INV-${selectedCustomer.id}`,
                 clientName: selectedCustomer.name || 'Client',
                 paymentTerms: "Mixed Terms & Cash Schedule",
                 overallTotal: overallTotal,
@@ -218,7 +214,7 @@ const CustomerManagement = () => {
 
             setIsLedgerOpen(true);
         } catch (err) {
-            console.error("Error loading master ledger, using fallback", err);
+            console.error("Error loading ledger, using fallback", err);
             setLedgerData({
                 documentId: targetBatchReference || `INV-${selectedCustomer?.id || '2026'}-01`,
                 clientName: selectedCustomer?.name || 'Selected Client',
