@@ -776,7 +776,7 @@ const CustomerManagement = () => {
                     </div>
                 </div>
             )}
-            {/* --- MASTER FINANCIAL LEDGER MODAL --- */}
+     {/* --- MASTER FINANCIAL LEDGER MODAL --- */}
             {isLedgerOpen && ledgerData && (
                 <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}>
                     <div className="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
@@ -798,8 +798,21 @@ const CustomerManagement = () => {
                                 ></button>
                             </div>
 
-                            {/* Modal Body */}
-                            <div className="modal-body p-4 bg-light">
+                            {/* Modal Body - Wrapped in an ID for targeted window printing */}
+                            <div className="modal-body p-4 bg-light" id="printable-ledger-content">
+                                {/* Print-only CSS injection to preserve background colors, badge pills, and exact layout styles */}
+                                <style type="text/css" media="print">
+                                    {`
+                                        @page { size: landscape; margin: 10mm; }
+                                        body { -webkit-print-color-adjust: exact; print-color-adjust: exact; background-color: #ffffff !important; }
+                                        .modal-body { background-color: #ffffff !important; padding: 0 !important; }
+                                        .card { border: 1px solid #dee2e6 !important; box-shadow: none !important; margin-bottom: 1rem !important; }
+                                        .bg-light { background-color: #f8f9fa !important; }
+                                        .bg-dark { background-color: #212529 !important; color: #fff !important; }
+                                        .badge { border: 1px solid rgba(0,0,0,0.1); }
+                                        button, .btn { display: none !important; }
+                                    `}
+                                </style>
 
                                 {/* Financial KPI Summary Cards */}
                                 <div className="row g-3 mb-4">
@@ -896,7 +909,21 @@ const CustomerManagement = () => {
                             </div>
 
                             {/* Modal Footer */}
-                            <div className="modal-footer bg-white px-4 py-3">
+                            <div className="modal-footer bg-white px-4 py-3 d-flex justify-content-between">
+                                <button
+                                    type="button"
+                                    className="btn btn-outline-dark px-4 d-flex align-items-center gap-2"
+                                    onClick={() => {
+                                        const printContent = document.getElementById('printable-ledger-content').innerHTML;
+                                        const originalContent = document.body.innerHTML;
+                                        document.body.innerHTML = `<div style="padding: 20px;">${printContent}</div>`;
+                                        window.print();
+                                        document.body.innerHTML = originalContent;
+                                        window.location.reload(); // Restores full React event listeners safely after print DOM swap
+                                    }}
+                                >
+                                    <i className="fas fa-print"></i> Print / Save as PDF
+                                </button>
                                 <button
                                     type="button"
                                     className="btn btn-secondary px-4"
