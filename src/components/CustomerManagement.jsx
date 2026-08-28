@@ -120,7 +120,7 @@ const CustomerManagement = () => {
         }
     };
 
-    // Open ledger modal and compute summary totals safely from transaction_ledger rows
+   // Open ledger modal and compute summary totals safely from transaction_ledger rows including documents
     const handleOpenLedger = async (targetBatchReference = null) => {
         if (!selectedCustomer) {
             alert("Please select a customer first.");
@@ -146,7 +146,7 @@ const CustomerManagement = () => {
             let overallBalance = 0;
             let attachmentsMap = new Map();
 
-            // 1. Calculate overall totals directly from the schedule rows
+            // 1. Calculate overall totals and collect all attachments (DR, CI, SI, and reference_document)
             ledgerRows.forEach((row) => {
                 const amountDue = Number(row.amount_due) || 0;
                 overallTotal += amountDue;
@@ -158,7 +158,7 @@ const CustomerManagement = () => {
                     overallBalance += amountDue;
                 }
 
-                // Collect attachments returned from the query subselects
+                // Collect transaction attachments if available
                 if (row.dr_attachment && !attachmentsMap.has('dr')) {
                     attachmentsMap.set('dr', { id: 'dr', name: 'Delivery Receipt (DR)', type: 'image', url: `${FILE_URL}${row.dr_attachment.replace(/^\/+/, '')}` });
                 }
@@ -167,6 +167,16 @@ const CustomerManagement = () => {
                 }
                 if (row.si_attachment && !attachmentsMap.has('si')) {
                     attachmentsMap.set('si', { id: 'si', name: 'Sales Invoice (SI)', type: 'image', url: `${FILE_URL}${row.si_attachment.replace(/^\/+/, '')}` });
+                }
+
+                // Collect ledger reference document if available
+                if (row.reference_document && !attachmentsMap.has('reference_document')) {
+                    attachmentsMap.set('reference_document', { 
+                        id: 'reference_document', 
+                        name: 'Reference Document', 
+                        type: 'image', 
+                        url: `${FILE_URL}${row.reference_document.replace(/^\/+/, '')}` 
+                    });
                 }
             });
 
@@ -845,7 +855,7 @@ const CustomerManagement = () => {
                                                     <th className="py-3">Amount Due</th>
                                                     <th className="py-3">Status</th>
                                                     <th className="py-3">Paid Date</th>
-                                                    <th className="py-3 pe-3">Reference No.</th>
+                                                    <th className="py-3 pe-3">Payment Proof</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
