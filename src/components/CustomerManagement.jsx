@@ -195,7 +195,7 @@ const CustomerManagement = () => {
             setLedgerData({
                 documentId: targetBatchReference,
                 clientName: selectedCustomer.name || 'Client',
-                paymentTerms: `Unified Batch Schedule (${maxDuration} ${termTypeLabel})`,
+                paymentTerms: ` (${maxDuration} ${termTypeLabel})`,
                 overallTotal,
                 overallPaid,
                 overallBalance,
@@ -833,7 +833,7 @@ const CustomerManagement = () => {
                                         <table className="table table-hover align-middle mb-0">
                                             <thead className="table-light text-uppercase small text-muted">
                                                 <tr>
-                                                    <th className="py-3 ps-3">Billing Term / Batch Reference</th>
+                                                    <th className="py-3 ps-3">Billing Term</th>
                                                     <th className="py-3">Due Date</th>
                                                     <th className="py-3">Amount Due</th>
                                                     <th className="py-3">Status</th>
