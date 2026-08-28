@@ -452,33 +452,39 @@ const CustomerManagement = () => {
                                                     .sort((a, b) => {
                                                         const getEffectiveStatus = (grp) => {
                                                             const items = grp.items || [];
-                                                            const hasPaid = items.some(i => (i.payment_status || i.status || '').toLowerCase() === 'paid') || Number(grp.paid_amount || 0) > 0;
+                                                            const termSchedules = grp.terms || grp.installments || grp.schedules || []; // Adjust based on your JSON structure
+
+                                                            const hasPaid = items.some(i => (i.payment_status || i.status || '').toLowerCase() === 'paid') ||
+                                                                termSchedules.some(t => (t.status || '').toLowerCase() === 'paid') ||
+                                                                Number(grp.paid_amount || 0) > 0;
+
                                                             const isFullyPaid = (grp.payment_status || '').toLowerCase() === 'paid';
 
                                                             if (!isFullyPaid && hasPaid) return 'balance';
-                                                            return (grp.payment_status || '').toLowerCase();
+                                                            return (grp.payment_status || '').toLowerCase() || (hasPaid ? 'balance' : 'unpaid');
                                                         };
 
                                                         const statusA = getEffectiveStatus(a);
                                                         const statusB = getEffectiveStatus(b);
 
-                                                        // Push 'unpaid' and 'balance' to the top
                                                         if ((statusA === 'unpaid' || statusA === 'balance') && (statusB !== 'unpaid' && statusB !== 'balance')) return -1;
                                                         if ((statusA !== 'unpaid' && statusA !== 'balance') && (statusB === 'unpaid' || statusB === 'balance')) return 1;
                                                         return 0;
                                                     })
                                                     .map((group) => {
-                                                        // Determine dynamic display status based on sub-items/payments for this batch reference
                                                         const items = group.items || [];
+                                                        const termSchedules = group.terms || group.installments || group.schedules || [];
+
                                                         const hasPaidSubItem = items.some(item =>
                                                             (item.payment_status || item.status || '').toLowerCase() === 'paid' ||
                                                             Number(item.paid_amount || 0) > 0
-                                                        );
+                                                        ) || termSchedules.some(term => (term.status || '').toLowerCase() === 'paid');
+
                                                         const isFullyPaid = (group.payment_status || '').toLowerCase() === 'paid';
 
-                                                        let displayStatus = group.payment_status;
+                                                        let displayStatus = group.payment_status || 'Unpaid';
                                                         if (!isFullyPaid && (hasPaidSubItem || Number(group.paid_amount || 0) > 0)) {
-                                                            displayStatus = 'balance';
+                                                            displayStatus = 'Balance'; // Or 'Partial'
                                                         }
 
                                                         return (
@@ -517,7 +523,6 @@ const CustomerManagement = () => {
                                                                                             }
 
                                                                                             const batchRef = group.batch_reference;
-
                                                                                             if (!batchRef || batchRef === 'N/A') {
                                                                                                 alert("Batch reference is missing for this transaction group.");
                                                                                                 return;
