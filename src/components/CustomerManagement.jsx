@@ -875,8 +875,8 @@ const CustomerManagement = () => {
                                                                 <button
                                                                     type="button"
                                                                     onClick={() => setSelectedImage(row.referenceDocument)}
-                                                                    className="btn btn-sm btn-outline-primary py-0 px-2 text-xs font-monospace"
-                                                                    style={{ textDecoration: 'none' }}
+                                                                    className="btn btn-sm btn-outline-primary py-0 px-2 text-xs font-monospace border-0 bg-transparent text-primary text-start p-0"
+                                                                    style={{ textDecoration: 'underline' }}
                                                                 >
                                                                     <i className="bi bi-file-earmark-text me-1"></i>View Proof
                                                                 </button>
@@ -896,40 +896,42 @@ const CustomerManagement = () => {
                                     <div className="card-header bg-white py-3 d-flex justify-content-between align-items-center">
                                         <h6 className="fw-bold text-dark mb-0 text-uppercase small">Linked Supporting Documents & Receipts</h6>
                                         <div className="d-flex gap-2">
-                                            <span className={`badge ${ledgerData.attachments?.some(f => f.id === 'dr') ? 'bg-success' : 'bg-secondary opacity-50'} d-flex align-items-center gap-1`}>
-                                                DR {ledgerData.attachments?.some(f => f.id === 'dr') && <i className="fas fa-check"></i>}
+                                            <span className={`badge ${ledgerData.attachments?.some(f => f.id === 'dr' || f.type?.toLowerCase() === 'dr') ? 'bg-success' : 'bg-secondary opacity-50'} d-flex align-items-center gap-1`}>
+                                                DR {ledgerData.attachments?.some(f => f.id === 'dr' || f.type?.toLowerCase() === 'dr') && <i className="fas fa-check"></i>}
                                             </span>
-                                            <span className={`badge ${ledgerData.attachments?.some(f => f.id === 'ci') ? 'bg-success' : 'bg-secondary opacity-50'} d-flex align-items-center gap-1`}>
-                                                CI {ledgerData.attachments?.some(f => f.id === 'ci') && <i className="fas fa-check"></i>}
+                                            <span className={`badge ${ledgerData.attachments?.some(f => f.id === 'ci' || f.type?.toLowerCase() === 'ci') ? 'bg-success' : 'bg-secondary opacity-50'} d-flex align-items-center gap-1`}>
+                                                CI {ledgerData.attachments?.some(f => f.id === 'ci' || f.type?.toLowerCase() === 'ci') && <i className="fas fa-check"></i>}
                                             </span>
-                                            <span className={`badge ${ledgerData.attachments?.some(f => f.id === 'si') ? 'bg-success' : 'bg-secondary opacity-50'} d-flex align-items-center gap-1`}>
-                                                SI {ledgerData.attachments?.some(f => f.id === 'si') && <i className="fas fa-check"></i>}
+                                            <span className={`badge ${ledgerData.attachments?.some(f => f.id === 'si' || f.type?.toLowerCase() === 'si') ? 'bg-success' : 'bg-secondary opacity-50'} d-flex align-items-center gap-1`}>
+                                                SI {ledgerData.attachments?.some(f => f.id === 'si' || f.type?.toLowerCase() === 'si') && <i className="fas fa-check"></i>}
                                             </span>
                                         </div>
                                     </div>
                                     <div className="card-body">
-                                        {ledgerData.attachments && ledgerData.attachments.length > 0 ? (
+                                        {ledgerData.attachments && ledgerData.attachments.filter(file => file.type?.toLowerCase() !== 'reference' && file.name?.toLowerCase() !== 'reference document').length > 0 ? (
                                             <div className="row g-2">
-                                                {ledgerData.attachments.filter(file => file.type?.toLowerCase() !== 'reference').map((file) => (
-                                                    <div className="col-md-6" key={file.id}>
-                                                        <div className="p-3 border rounded d-flex justify-content-between align-items-center bg-white shadow-2xs">
-                                                            <div className="d-flex align-items-center gap-2">
-                                                                <i className="fas fa-check-circle text-success fs-5"></i>
-                                                                <div>
-                                                                    <p className="fw-bold text-dark mb-0 small">{file.name}</p>
-                                                                    <span className="text-muted text-uppercase" style={{ fontSize: '10px' }}>{file.type} document</span>
+                                                {ledgerData.attachments
+                                                    .filter(file => file.type?.toLowerCase() !== 'reference' && file.name?.toLowerCase() !== 'reference document')
+                                                    .map((file) => (
+                                                        <div className="col-md-6" key={file.id}>
+                                                            <div className="p-3 border rounded d-flex justify-content-between align-items-center bg-white shadow-2xs">
+                                                                <div className="d-flex align-items-center gap-2">
+                                                                    <i className="fas fa-check-circle text-success fs-5"></i>
+                                                                    <div>
+                                                                        <p className="fw-bold text-dark mb-0 small">{file.name}</p>
+                                                                        <span className="text-muted text-uppercase" style={{ fontSize: '10px' }}>{file.type} document</span>
+                                                                    </div>
                                                                 </div>
+                                                                <button
+                                                                    type="button"
+                                                                    className="btn btn-outline-primary btn-sm"
+                                                                    onClick={() => setSelectedImage(file.url)}
+                                                                >
+                                                                    Preview
+                                                                </button>
                                                             </div>
-                                                            <button
-                                                                type="button"
-                                                                className="btn btn-outline-primary btn-sm"
-                                                                onClick={() => setSelectedImage(file.url)}
-                                                            >
-                                                                Preview
-                                                            </button>
                                                         </div>
-                                                    </div>
-                                                ))}
+                                                    ))}
                                             </div>
                                         ) : (
                                             <p className="text-muted italic small mb-0">No document attachments found for this transaction batch.</p>
