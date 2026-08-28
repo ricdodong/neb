@@ -120,7 +120,7 @@ const CustomerManagement = () => {
         }
     };
 
-    // Open ledger modal and compute summary totals safely using exact database columns
+    // Open ledger modal and compute summary totals safely from transaction_ledger rows
     const handleOpenLedger = async (targetBatchReference = null) => {
         if (!selectedCustomer) {
             alert("Please select a customer first.");
@@ -135,9 +135,9 @@ const CustomerManagement = () => {
         setLoadingLedger(true);
         try {
             const res = await axios.get(`${BASE_URL}/api/customers/${selectedCustomer.id}/${targetBatchReference}/ledger`);
-            const scheduleData = res.data;
+            const ledgerRows = res.data;
 
-            if (!Array.isArray(scheduleData) || scheduleData.length === 0) {
+            if (!Array.isArray(ledgerRows) || ledgerRows.length === 0) {
                 throw new Error("No transaction ledger records found for this batch reference.");
             }
 
@@ -146,8 +146,8 @@ const CustomerManagement = () => {
             let overallBalance = 0;
             let attachmentsMap = new Map();
 
-            // 1. Calculate overall metrics directly from the transaction_ledger rows
-            scheduleData.forEach((row) => {
+            // 1. Calculate overall totals directly from the schedule rows
+            ledgerRows.forEach((row) => {
                 const amountDue = Number(row.amount_due) || 0;
                 overallTotal += amountDue;
 
@@ -158,23 +158,25 @@ const CustomerManagement = () => {
                     overallBalance += amountDue;
                 }
 
-                // If reference_document contains paths or documents, handle them safely
-                if (row.reference_document && !attachmentsMap.has('ref')) {
-                    attachmentsMap.set('ref', { 
-                        id: 'ref', 
-                        name: 'Reference Document', 
-                        type: 'image', 
-                        url: `${FILE_URL}${row.reference_document.replace(/^\/+/, '')}` 
-                    });
+                // Collect attachments returned from the query subselects
+                if (row.dr_attachment && !attachmentsMap.has('dr')) {
+                    attachmentsMap.set('dr', { id: 'dr', name: 'Delivery Receipt (DR)', type: 'image', url: `${FILE_URL}${row.dr_attachment.replace(/^\/+/, '')}` });
+                }
+                if (row.ci_attachment && !attachmentsMap.has('ci')) {
+                    attachmentsMap.set('ci', { id: 'ci', name: 'Charge Invoice (CI)', type: 'image', url: `${FILE_URL}${row.ci_attachment.replace(/^\/+/, '')}` });
+                }
+                if (row.si_attachment && !attachmentsMap.has('si')) {
+                    attachmentsMap.set('si', { id: 'si', name: 'Sales Invoice (SI)', type: 'image', url: `${FILE_URL}${row.si_attachment.replace(/^\/+/, '')}` });
                 }
             });
 
-            const firstRow = scheduleData[0];
-            const maxDuration = Number(firstRow.term_duration) || scheduleData.length;
-            const termTypeLabel = firstRow.term_type ? firstRow.term_type.charAt(0).toUpperCase() + firstRow.term_type.slice(1) : 'Periods';
+            // 2. Extract term configuration directly from the first ledger entry
+            const firstRow = ledgerRows[0];
+            const maxDuration = Number(firstRow.term_duration) || ledgerRows.length;
+            const termTypeLabel = firstRow.term_type ? firstRow.term_type.charAt(0).toUpperCase() + firstRow.term_type.slice(1) : 'Months';
 
-            // 2. Map database schedule rows directly to frontend UI display format
-            let scheduleItems = scheduleData.map((row, index) => ({
+            // 3. Map direct database schedule items to the frontend ledger table UI
+            let scheduleItems = ledgerRows.map((row, index) => ({
                 id: row.id,
                 period: `${termTypeLabel} ${index + 1} of ${maxDuration}`,
                 dueDate: row.due_date ? row.due_date.split(' ')[0] : 'N/A',
