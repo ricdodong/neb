@@ -450,98 +450,128 @@ const CustomerManagement = () => {
                                             {groupedTransactions.length > 0 ? (
                                                 [...groupedTransactions]
                                                     .sort((a, b) => {
-                                                        const statusA = (a.payment_status || '').toLowerCase();
-                                                        const statusB = (b.payment_status || '').toLowerCase();
+                                                        // Derive or evaluate dynamic statuses for sorting
+                                                        const getDynamicStatus = (grp) => {
+                                                            const subRows = grp.schedule || grp.items || [];
+                                                            if (subRows.length === 0) return (grp.payment_status || '').toLowerCase();
 
-                                                        // Push 'unpaid' to the top (return -1 if a is unpaid and b is not)
+                                                            const hasUnpaid = subRows.some(r => (r.status || '').toLowerCase() === 'unpaid' || (r.status || '').toLowerCase() === 'pending');
+                                                            const hasPaid = subRows.some(r => (r.status || '').toLowerCase() === 'paid');
+
+                                                            if (hasPaid && hasUnpaid) return 'balance';
+                                                            if (hasPaid && !hasUnpaid) return 'paid';
+                                                            return 'unpaid';
+                                                        };
+
+                                                        const statusA = getDynamicStatus(a);
+                                                        const statusB = getDynamicStatus(b);
+
                                                         if (statusA === 'unpaid' && statusB !== 'unpaid') return -1;
                                                         if (statusA !== 'unpaid' && statusB === 'unpaid') return 1;
                                                         return 0;
                                                     })
-                                                    .map((group) => (
-                                                        <React.Fragment key={group.displayId}>
-                                                            <tr onClick={() => toggleRow(group.displayId)} style={{ cursor: 'pointer' }} className={expandedRow === group.displayId ? 'table-primary-subtle' : ''}>
-                                                                <td className="fw-bold py-3 ps-4">
-                                                                    <i className={`fas fa-caret-${expandedRow === group.displayId ? 'down' : 'right'} me-2 text-primary`}></i>
-                                                                    <span className="badge bg-light text-dark border me-2">{group.batch_reference}</span>
-                                                                </td>
-                                                                <td className="py-3">
-                                                                    {group.purchase_date ? new Date(group.purchase_date).toLocaleDateString() : 'N/A'}
-                                                                </td>
-                                                                <td className="text-center py-3 pe-4">
-                                                                    <span className={`badge ${getStatusBadgeClass(group.payment_status)}`}>
-                                                                        {group.payment_status}
-                                                                    </span>
-                                                                </td>
-                                                            </tr>
+                                                    .map((group) => {
+                                                        // Compute dynamic payment status for the current batch_reference group
+                                                        const subRows = group.schedule || group.items || [];
+                                                        let displayStatus = group.payment_status;
 
-                                                            {expandedRow === group.displayId && (
-                                                                <tr>
-                                                                    <td colSpan="3" className="p-0 border-start border-primary border-4">
-                                                                        <div className="bg-light p-4">
-                                                                            <div className="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between pb-3 mb-3 border-bottom gap-3">
-                                                                                <div>
-                                                                                    <h3 className="h5 fw-bold text-dark mb-1">ITEMS IN THIS TRANSACTION</h3>
-                                                                                    <p className="text-muted small mb-0">Click a row for full details or access the master ledger account.</p>
-                                                                                </div>
+                                                        if (subRows.length > 0) {
+                                                            const hasUnpaid = subRows.some(r => (r.status || '').toLowerCase() === 'unpaid' || (r.status || '').toLowerCase() === 'pending');
+                                                            const hasPaid = subRows.some(r => (r.status || '').toLowerCase() === 'paid');
 
-                                                                                <button
-                                                                                    type="button"
-                                                                                    onClick={() => {
-                                                                                        if (!selectedCustomer || !selectedCustomer.id) {
-                                                                                            alert("Please select a customer first.");
-                                                                                            return;
-                                                                                        }
+                                                            if (hasPaid && hasUnpaid) {
+                                                                displayStatus = 'balance';
+                                                            } else if (hasPaid && !hasUnpaid) {
+                                                                displayStatus = 'Paid';
+                                                            } else {
+                                                                displayStatus = 'Unpaid';
+                                                            }
+                                                        }
 
-                                                                                        const batchRef = group.batch_reference;
-
-                                                                                        if (!batchRef || batchRef === 'N/A') {
-                                                                                            alert("Batch reference is missing for this transaction group.");
-                                                                                            return;
-                                                                                        }
-
-                                                                                        handleOpenLedger(batchRef);
-                                                                                    }}
-                                                                                    disabled={loadingLedger}
-                                                                                    className="btn btn-primary d-inline-flex align-items-center justify-content-center gap-2 px-3 py-2 shadow-sm"
-                                                                                >
-                                                                                    {loadingLedger ? (
-                                                                                        <>
-                                                                                            <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                                                                                            Loading Ledger...
-                                                                                        </>
-                                                                                    ) : (
-                                                                                        <>
-                                                                                            <i className="fas fa-file-invoice-dollar"></i>
-                                                                                            View Ledger
-                                                                                        </>
-                                                                                    )}
-                                                                                </button>
-                                                                            </div>
-                                                                            <table className="table table-sm table-bordered table-hover bg-white mb-0 shadow-sm rounded">
-                                                                                <thead className="table-secondary tiny text-uppercase">
-                                                                                    <tr>
-                                                                                        <th className="ps-2">Item Description</th>
-                                                                                        <th className="text-center">Qty</th>
-                                                                                        <th>Unit Price</th>
-                                                                                    </tr>
-                                                                                </thead>
-                                                                                <tbody>
-                                                                                    {group.items.map((item) => (
-                                                                                        <tr key={item.id} onClick={() => handleRowClick(item)} style={{ cursor: 'pointer' }}>
-                                                                                            <td className="ps-2 fw-semibold text-primary">{item.item_name}</td>
-                                                                                            <td className="text-center"><span className="badge bg-secondary rounded-pill">{item.qty}</span></td>
-                                                                                            <td>₱{Number(item.srp_amount || 0).toLocaleString()}</td>
-                                                                                        </tr>
-                                                                                    ))}
-                                                                                </tbody>
-                                                                            </table>
-                                                                        </div>
+                                                        return (
+                                                            <React.Fragment key={group.displayId}>
+                                                                <tr onClick={() => toggleRow(group.displayId)} style={{ cursor: 'pointer' }} className={expandedRow === group.displayId ? 'table-primary-subtle' : ''}>
+                                                                    <td className="fw-bold py-3 ps-4">
+                                                                        <i className={`fas fa-caret-${expandedRow === group.displayId ? 'down' : 'right'} me-2 text-primary`}></i>
+                                                                        <span className="badge bg-light text-dark border me-2">{group.batch_reference}</span>
+                                                                    </td>
+                                                                    <td className="py-3">
+                                                                        {group.purchase_date ? new Date(group.purchase_date).toLocaleDateString() : 'N/A'}
+                                                                    </td>
+                                                                    <td className="text-center py-3 pe-4">
+                                                                        <span className={`badge ${getStatusBadgeClass(displayStatus)}`}>
+                                                                            {displayStatus}
+                                                                        </span>
                                                                     </td>
                                                                 </tr>
-                                                            )}
-                                                        </React.Fragment>
-                                                    ))
+
+                                                                {expandedRow === group.displayId && (
+                                                                    <tr>
+                                                                        <td colSpan="3" className="p-0 border-start border-primary border-4">
+                                                                            <div className="bg-light p-4">
+                                                                                <div className="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between pb-3 mb-3 border-bottom gap-3">
+                                                                                    <div>
+                                                                                        <h3 className="h5 fw-bold text-dark mb-1">ITEMS IN THIS TRANSACTION</h3>
+                                                                                        <p className="text-muted small mb-0">Click a row for full details or access the master ledger account.</p>
+                                                                                    </div>
+
+                                                                                    <button
+                                                                                        type="button"
+                                                                                        onClick={() => {
+                                                                                            if (!selectedCustomer || !selectedCustomer.id) {
+                                                                                                alert("Please select a customer first.");
+                                                                                                return;
+                                                                                            }
+
+                                                                                            const batchRef = group.batch_reference;
+
+                                                                                            if (!batchRef || batchRef === 'N/A') {
+                                                                                                alert("Batch reference is missing for this transaction group.");
+                                                                                                return;
+                                                                                            }
+
+                                                                                            handleOpenLedger(batchRef);
+                                                                                        }}
+                                                                                        disabled={loadingLedger}
+                                                                                        className="btn btn-primary d-inline-flex align-items-center justify-content-center gap-2 px-3 py-2 shadow-sm"
+                                                                                    >
+                                                                                        {loadingLedger ? (
+                                                                                            <>
+                                                                                                <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                                                                                Loading Ledger...
+                                                                                            </>
+                                                                                        ) : (
+                                                                                            <>
+                                                                                                <i className="fas fa-file-invoice-dollar"></i>
+                                                                                                View Ledger
+                                                                                            </>
+                                                                                        )}
+                                                                                    </button>
+                                                                                </div>
+                                                                                <table className="table table-sm table-bordered table-hover bg-white mb-0 shadow-sm rounded">
+                                                                                    <thead className="table-secondary tiny text-uppercase">
+                                                                                        <tr>
+                                                                                            <th className="ps-2">Item Description</th>
+                                                                                            <th className="text-center">Qty</th>
+                                                                                            <th>Unit Price</th>
+                                                                                        </tr>
+                                                                                    </thead>
+                                                                                    <tbody>
+                                                                                        {group.items.map((item) => (
+                                                                                            <tr key={item.id} onClick={() => handleRowClick(item)} style={{ cursor: 'pointer' }}>
+                                                                                                <td className="ps-2 fw-semibold text-primary">{item.item_name}</td>
+                                                                                                <td className="text-center"><span className="badge bg-secondary rounded-pill">{item.qty}</span></td>
+                                                                                                <td>₱{Number(item.srp_amount || 0).toLocaleString()}</td>
+                                                                                            </tr>
+                                                                                        ))}
+                                                                                    </tbody>
+                                                                                </table>
+                                                                            </div>
+                                                                        </td>
+                                                                    </tr>
+                                                                )}
+                                                            </React.Fragment>
+                                                        ))
                                             ) : (
                                                 <tr><td colSpan="3" className="text-center py-5 text-muted">No records found.</td></tr>
                                             )}
