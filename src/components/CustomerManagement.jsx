@@ -120,7 +120,7 @@ const CustomerManagement = () => {
         }
     };
 
-   // Open ledger modal and compute summary totals safely from transaction_ledger rows including documents
+    // Open ledger modal and compute summary totals safely from transaction_ledger rows including documents
     const handleOpenLedger = async (targetBatchReference = null) => {
         if (!selectedCustomer) {
             alert("Please select a customer first.");
@@ -171,11 +171,11 @@ const CustomerManagement = () => {
 
                 // Collect ledger reference document if available
                 if (row.reference_document && !attachmentsMap.has('reference_document')) {
-                    attachmentsMap.set('reference_document', { 
-                        id: 'reference_document', 
-                        name: 'Reference Document', 
-                        type: 'image', 
-                        url: `${FILE_URL}${row.reference_document.replace(/^\/+/, '')}` 
+                    attachmentsMap.set('reference_document', {
+                        id: 'reference_document',
+                        name: 'Reference Document',
+                        type: 'image',
+                        url: `${FILE_URL}${row.reference_document.replace(/^\/+/, '')}`
                     });
                 }
             });
@@ -870,7 +870,20 @@ const CustomerManagement = () => {
                                                             </span>
                                                         </td>
                                                         <td className="text-muted font-monospace small">{row.paidDate}</td>
-                                                        <td className="pe-3 text-muted font-monospace small">{row.reference}</td>
+                                                        <td className="pe-3">
+                                                            {row.referenceDocument ? (
+                                                                <a
+                                                                    href={row.referenceDocument}
+                                                                    target="_blank"
+                                                                    rel="noopener noreferrer"
+                                                                    className="btn btn-sm btn-outline-primary py-0 px-2 text-xs font-monospace"
+                                                                >
+                                                                    <i className="bi bi-file-earmark-text me-1"></i>View Proof
+                                                                </a>
+                                                            ) : (
+                                                                <span className="text-muted font-monospace small">-</span>
+                                                            )}
+                                                        </td>
                                                     </tr>
                                                 ))}
                                             </tbody>
@@ -955,29 +968,29 @@ const CustomerManagement = () => {
                 </div>
             )}
 
-                    {/* --- DOCUMENT LIGHTBOX MODAL --- */}
-                    {selectedImage && (
-                        <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.8)', zIndex: 1060 }}>
-                            <div className="modal-dialog modal-dialog-centered modal-lg">
-                                <div className="modal-content border-0 shadow-lg bg-dark text-white">
-                                    <div className="modal-header border-secondary py-2">
-                                        <h6 className="modal-title small uppercase fw-bold">Document Lightbox Preview</h6>
-                                        <button
-                                            type="button"
-                                            className="btn-close btn-close-white"
-                                            onClick={() => setSelectedImage(null)}
-                                        ></button>
-                                    </div>
-                                    <div className="modal-body text-center p-3 bg-black">
-                                        <img src={selectedImage} alt="Attachment Preview" className="img-fluid rounded max-h-[70vh]" />
-                                    </div>
-                                </div>
+            {/* --- DOCUMENT LIGHTBOX MODAL --- */}
+            {selectedImage && (
+                <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.8)', zIndex: 1060 }}>
+                    <div className="modal-dialog modal-dialog-centered modal-lg">
+                        <div className="modal-content border-0 shadow-lg bg-dark text-white">
+                            <div className="modal-header border-secondary py-2">
+                                <h6 className="modal-title small uppercase fw-bold">Document Lightbox Preview</h6>
+                                <button
+                                    type="button"
+                                    className="btn-close btn-close-white"
+                                    onClick={() => setSelectedImage(null)}
+                                ></button>
+                            </div>
+                            <div className="modal-body text-center p-3 bg-black">
+                                <img src={selectedImage} alt="Attachment Preview" className="img-fluid rounded max-h-[70vh]" />
                             </div>
                         </div>
-                    )}
-
+                    </div>
                 </div>
-            );
+            )}
+
+        </div>
+    );
 };
 
-            export default CustomerManagement;
+export default CustomerManagement;
