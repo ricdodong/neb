@@ -792,7 +792,10 @@ const CustomerManagement = () => {
                                     <i className="fas fa-file-invoice-dollar text-primary"></i>
                                     Statement of Account
                                     <span className="text-muted fs-6 fw-normal ms-2">
-                                        (Batch ID: <strong className="text-info"><strong className="text-light"> Ref #: </strong>{ledgerData.documentId}</strong> • Client: <strong className="text-light">{ledgerData.clientName}</strong>)
+                                        (Batch ID: <strong className="text-info"><strong className="text-light"> Ref #: </strong>{ledgerData.documentId}</strong>)
+                                    </span>
+                                    <span className="text-muted fs-6 fw-normal ms-2">
+                                        (Client: <strong className="text-light">{ledgerData.clientName}</strong>)
                                     </span>
                                 </h5>
                                 <button
