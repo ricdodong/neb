@@ -193,7 +193,7 @@ const CustomerManagement = () => {
                 amount: Number(row.amount_due) || 0,
                 status: row.status,
                 paidDate: row.paid_date ? row.paid_date.split(' ')[0] : '-',
-                reference: row.batch_reference
+                referenceDocument: row.reference_document ? `${FILE_URL}${row.reference_document.replace(/^\/+/, '')}` : null
             }));
 
             setLedgerData({
