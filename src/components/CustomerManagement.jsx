@@ -783,7 +783,7 @@ const CustomerManagement = () => {
                     </div>
                 </div>
             )}
-            {/* --- MASTER FINANCIAL LEDGER MODAL --- */}
+ {/* --- MASTER FINANCIAL LEDGER MODAL --- */}
             {isLedgerOpen && ledgerData && (
                 <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}>
                     <div className="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
@@ -840,12 +840,12 @@ const CustomerManagement = () => {
                                         <table className="table table-hover align-middle mb-0">
                                             <thead className="table-light text-uppercase small text-muted">
                                                 <tr>
-                                                    <th className="py-3 ps-3">Billing Period / Item</th>
+                                                    <th className="py-3 ps-3">Billing Term / Batch Reference</th>
                                                     <th className="py-3">Due Date</th>
                                                     <th className="py-3">Amount Due</th>
                                                     <th className="py-3">Status</th>
                                                     <th className="py-3">Paid Date</th>
-                                                    <th className="py-3 pe-3">Batch Reference</th>
+                                                    <th className="py-3 pe-3">Reference No.</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
