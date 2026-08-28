@@ -179,7 +179,8 @@ const CustomerManagement = () => {
                     for (let i = 1; i <= duration; i++) {
                         scheduleItems.push({
                             id: `${item.transaction_id || index}-${i}`,
-                            period: `${item.item_name || 'Item'} - ${termTypeLabel} ${i} of ${duration}`,
+                            // Removed item.item_name here to show only "Months 1 of 3" etc.
+                            period: `${termTypeLabel} ${i} of ${duration} (${item.item_name || 'Item'})`,
                             dueDate: item.purchase_date ? item.purchase_date.split(' ')[0] : 'N/A',
                             amount: installmentAmount,
                             status: isPaid ? 'Paid' : 'Unpaid',
@@ -191,7 +192,7 @@ const CustomerManagement = () => {
                     // Standard Cash or Full Settlement Row
                     scheduleItems.push({
                         id: item.transaction_id || index,
-                        period: `${item.item_name || 'Item'} (Cash / Full Payment)`,
+                        period: `Full Payment (${item.item_name || 'Item'})`,
                         dueDate: item.purchase_date ? item.purchase_date.split(' ')[0] : 'N/A',
                         amount: amount,
                         status: isPaid ? 'Paid' : 'Unpaid',
@@ -226,7 +227,7 @@ const CustomerManagement = () => {
                     { id: 1, name: "Signed_Service_Contract.pdf", type: "pdf", url: "#" }
                 ],
                 schedule: [
-                    { id: 1, period: "Month 1 (Jan 2026)", dueDate: "2026-01-31", amount: 3000, status: "Paid", paidDate: "2026-01-28", reference: targetBatchReference || "OR-8821" },
+                    { id: 1, period: "Months 1 of 12 (Epson Printer)", dueDate: "2026-01-31", amount: 3000, status: "Paid", paidDate: "2026-01-28", reference: targetBatchReference || "OR-8821" },
                 ]
             });
             setIsLedgerOpen(true);
@@ -783,7 +784,7 @@ const CustomerManagement = () => {
                     </div>
                 </div>
             )}
- {/* --- MASTER FINANCIAL LEDGER MODAL --- */}
+            {/* --- MASTER FINANCIAL LEDGER MODAL --- */}
             {isLedgerOpen && ledgerData && (
                 <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}>
                     <div className="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
