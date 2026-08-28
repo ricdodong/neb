@@ -179,8 +179,7 @@ const CustomerManagement = () => {
                     for (let i = 1; i <= duration; i++) {
                         scheduleItems.push({
                             id: `${item.transaction_id || index}-${i}`,
-                            // Removed item.item_name here to show only "Months 1 of 3" etc.
-                            period: `${termTypeLabel} ${i} of ${duration} (${item.item_name || 'Item'})`,
+                            period: `${termTypeLabel} ${i} of ${duration}`,
                             dueDate: item.purchase_date ? item.purchase_date.split(' ')[0] : 'N/A',
                             amount: installmentAmount,
                             status: isPaid ? 'Paid' : 'Unpaid',
@@ -191,10 +190,10 @@ const CustomerManagement = () => {
                 } else {
                     // Standard Cash or Full Settlement Row
                     scheduleItems.push({
-                        id: `${item.transaction_id || index}-${i}`,
-                        period: `${termTypeLabel} ${i} of ${duration}`,
+                        id: item.transaction_id || index,
+                        period: `Full Payment`,
                         dueDate: item.purchase_date ? item.purchase_date.split(' ')[0] : 'N/A',
-                        amount: installmentAmount,
+                        amount: amount,
                         status: isPaid ? 'Paid' : 'Unpaid',
                         paidDate: isPaid ? (item.purchase_date ? item.purchase_date.split(' ')[0] : '-') : '-',
                         reference: item.batch_reference || targetBatchReference
@@ -227,7 +226,7 @@ const CustomerManagement = () => {
                     { id: 1, name: "Signed_Service_Contract.pdf", type: "pdf", url: "#" }
                 ],
                 schedule: [
-                    { id: 1, period: "Months 1 of 12 (Epson Printer)", dueDate: "2026-01-31", amount: 3000, status: "Paid", paidDate: "2026-01-28", reference: targetBatchReference || "OR-8821" },
+                    { id: 1, period: "Months 1 of 12", dueDate: "2026-01-31", amount: 3000, status: "Paid", paidDate: "2026-01-28", reference: targetBatchReference || "OR-8821" },
                 ]
             });
             setIsLedgerOpen(true);
