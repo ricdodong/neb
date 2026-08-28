@@ -827,7 +827,7 @@ const CustomerManagement = () => {
                                 <div className="card border-0 shadow-sm mb-4">
                                     <div className="card-header bg-white py-3 d-flex justify-content-between align-items-center">
                                         <h6 className="fw-bold text-dark mb-0 text-uppercase small">Payment Schedule & Terms Breakdown</h6>
-                                        <span className="fw-bold text-danger">Terms:<span className="badge bg-danger"> {ledgerData.paymentTerms}</span></span>
+                                        <span className="fw-bold text-danger">Terms: <span className="badge bg-danger"> {ledgerData.paymentTerms}</span></span>
                                     </div>
                                     <div className="table-responsive mb-0">
                                         <table className="table table-hover align-middle mb-0">
