@@ -776,7 +776,7 @@ const CustomerManagement = () => {
                     </div>
                 </div>
             )}
-     {/* --- MASTER FINANCIAL LEDGER MODAL --- */}
+            {/* --- MASTER FINANCIAL LEDGER MODAL --- */}
             {isLedgerOpen && ledgerData && (
                 <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}>
                     <div className="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
@@ -876,8 +876,19 @@ const CustomerManagement = () => {
 
                                 {/* Document Attachments Viewer Section */}
                                 <div className="card border-0 shadow-sm">
-                                    <div className="card-header bg-white py-3">
+                                    <div className="card-header bg-white py-3 d-flex justify-content-between align-items-center">
                                         <h6 className="fw-bold text-dark mb-0 text-uppercase small">Linked Supporting Documents & Receipts</h6>
+                                        <div className="d-flex gap-2">
+                                            <span className={`badge ${ledgerData.attachments?.some(f => f.id === 'dr') ? 'bg-success' : 'bg-secondary opacity-50'} d-flex align-items-center gap-1`}>
+                                                DR {ledgerData.attachments?.some(f => f.id === 'dr') && <i className="fas fa-check"></i>}
+                                            </span>
+                                            <span className={`badge ${ledgerData.attachments?.some(f => f.id === 'ci') ? 'bg-success' : 'bg-secondary opacity-50'} d-flex align-items-center gap-1`}>
+                                                CI {ledgerData.attachments?.some(f => f.id === 'ci') && <i className="fas fa-check"></i>}
+                                            </span>
+                                            <span className={`badge ${ledgerData.attachments?.some(f => f.id === 'si') ? 'bg-success' : 'bg-secondary opacity-50'} d-flex align-items-center gap-1`}>
+                                                SI {ledgerData.attachments?.some(f => f.id === 'si') && <i className="fas fa-check"></i>}
+                                            </span>
+                                        </div>
                                     </div>
                                     <div className="card-body">
                                         {ledgerData.attachments && ledgerData.attachments.length > 0 ? (
@@ -885,9 +896,12 @@ const CustomerManagement = () => {
                                                 {ledgerData.attachments.map((file) => (
                                                     <div className="col-md-6" key={file.id}>
                                                         <div className="p-3 border rounded d-flex justify-content-between align-items-center bg-white shadow-2xs">
-                                                            <div>
-                                                                <p className="fw-bold text-dark mb-0 small">{file.name}</p>
-                                                                <span className="text-muted text-uppercase" style={{ fontSize: '10px' }}>{file.type} document</span>
+                                                            <div className="d-flex align-items-center gap-2">
+                                                                <i className="fas fa-check-circle text-success fs-5"></i>
+                                                                <div>
+                                                                    <p className="fw-bold text-dark mb-0 small">{file.name}</p>
+                                                                    <span className="text-muted text-uppercase" style={{ fontSize: '10px' }}>{file.type} document</span>
+                                                                </div>
                                                             </div>
                                                             <button
                                                                 type="button"
@@ -906,61 +920,60 @@ const CustomerManagement = () => {
                                     </div>
                                 </div>
 
-                            </div>
+                                {/* Modal Footer */}
+                                <div className="modal-footer bg-white px-4 py-3 d-flex justify-content-between">
+                                    <button
+                                        type="button"
+                                        className="btn btn-outline-dark px-4 d-flex align-items-center gap-2"
+                                        onClick={() => {
+                                            const printContent = document.getElementById('printable-ledger-content').innerHTML;
+                                            const originalContent = document.body.innerHTML;
+                                            document.body.innerHTML = `<div style="padding: 20px;">${printContent}</div>`;
+                                            window.print();
+                                            document.body.innerHTML = originalContent;
+                                            window.location.reload(); // Restores full React event listeners safely after print DOM swap
+                                        }}
+                                    >
+                                        <i className="fas fa-print"></i> Print / Save as PDF
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="btn btn-secondary px-4"
+                                        onClick={() => setIsLedgerOpen(false)}
+                                    >
+                                        Close Ledger
+                                    </button>
+                                </div>
 
-                            {/* Modal Footer */}
-                            <div className="modal-footer bg-white px-4 py-3 d-flex justify-content-between">
-                                <button
-                                    type="button"
-                                    className="btn btn-outline-dark px-4 d-flex align-items-center gap-2"
-                                    onClick={() => {
-                                        const printContent = document.getElementById('printable-ledger-content').innerHTML;
-                                        const originalContent = document.body.innerHTML;
-                                        document.body.innerHTML = `<div style="padding: 20px;">${printContent}</div>`;
-                                        window.print();
-                                        document.body.innerHTML = originalContent;
-                                        window.location.reload(); // Restores full React event listeners safely after print DOM swap
-                                    }}
-                                >
-                                    <i className="fas fa-print"></i> Print / Save as PDF
-                                </button>
-                                <button
-                                    type="button"
-                                    className="btn btn-secondary px-4"
-                                    onClick={() => setIsLedgerOpen(false)}
-                                >
-                                    Close Ledger
-                                </button>
-                            </div>
-
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* --- DOCUMENT LIGHTBOX MODAL --- */}
-            {selectedImage && (
-                <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.8)', zIndex: 1060 }}>
-                    <div className="modal-dialog modal-dialog-centered modal-lg">
-                        <div className="modal-content border-0 shadow-lg bg-dark text-white">
-                            <div className="modal-header border-secondary py-2">
-                                <h6 className="modal-title small uppercase fw-bold">Document Lightbox Preview</h6>
-                                <button
-                                    type="button"
-                                    className="btn-close btn-close-white"
-                                    onClick={() => setSelectedImage(null)}
-                                ></button>
-                            </div>
-                            <div className="modal-body text-center p-3 bg-black">
-                                <img src={selectedImage} alt="Attachment Preview" className="img-fluid rounded max-h-[70vh]" />
                             </div>
                         </div>
                     </div>
                 </div>
             )}
 
-        </div>
-    );
+                    {/* --- DOCUMENT LIGHTBOX MODAL --- */}
+                    {selectedImage && (
+                        <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.8)', zIndex: 1060 }}>
+                            <div className="modal-dialog modal-dialog-centered modal-lg">
+                                <div className="modal-content border-0 shadow-lg bg-dark text-white">
+                                    <div className="modal-header border-secondary py-2">
+                                        <h6 className="modal-title small uppercase fw-bold">Document Lightbox Preview</h6>
+                                        <button
+                                            type="button"
+                                            className="btn-close btn-close-white"
+                                            onClick={() => setSelectedImage(null)}
+                                        ></button>
+                                    </div>
+                                    <div className="modal-body text-center p-3 bg-black">
+                                        <img src={selectedImage} alt="Attachment Preview" className="img-fluid rounded max-h-[70vh]" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                </div>
+            );
 };
 
-export default CustomerManagement;
+            export default CustomerManagement;
