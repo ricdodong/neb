@@ -875,8 +875,8 @@ const CustomerManagement = () => {
                                                                 <button
                                                                     type="button"
                                                                     onClick={() => setSelectedImage(row.referenceDocument)}
-                                                                    className="btn btn-sm btn-outline-primary py-0 px-2 text-xs font-monospace border-0 bg-transparent text-primary text-start p-0"
-                                                                    style={{ textDecoration: 'underline' }}
+                                                                    className="btn btn-sm btn-outline-primary py-0 px-2 text-xs font-monospace"
+                                                                    style={{ textDecoration: 'none' }}
                                                                 >
                                                                     <i className="bi bi-file-earmark-text me-1"></i>View Proof
                                                                 </button>
