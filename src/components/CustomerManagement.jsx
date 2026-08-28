@@ -281,7 +281,7 @@ const CustomerManagement = () => {
                     displayId: `txn-${index}`,
                     batch_reference: item.batch_reference || 'N/A',
                     purchase_date: item.purchase_date,
-                    payment_status: item.payment_status || 'Unpaid',
+                    payment_status: 'Unpaid', // Will be determined dynamically below
                     items: []
                 };
             }
@@ -293,9 +293,24 @@ const CustomerManagement = () => {
                 serial_number: item.serial_number,
                 srp_amount: item.srp_amount,
                 batch_reference: item.batch_reference || 'N/A',
-                payment_status: item.payment_status,
+                payment_status: item.status || item.payment_status || 'Unpaid', // Fixed mapping to look at item.status
                 warranty_period: item.warranty_period
             });
+        });
+
+        // Post-process groups to accurately evaluate aggregate payment status
+        Object.values(groups).forEach(group => {
+            const statuses = group.items.map(i => (i.payment_status || '').toLowerCase());
+            const hasPaid = statuses.some(s => s === 'paid');
+            const allPaid = statuses.length > 0 && statuses.every(s => s === 'paid');
+
+            if (allPaid) {
+                group.payment_status = 'Paid';
+            } else if (hasPaid) {
+                group.payment_status = 'Balance'; // Partial payment exists
+            } else {
+                group.payment_status = 'Unpaid';
+            }
         });
 
         // Convert to array and sort (Unpaid/Balance first, then Latest Date)
