@@ -486,10 +486,11 @@ const CustomerManagement = () => {
                                                                                         return;
                                                                                     }
 
-                                                                                    const batchRef = selectedItemDetail?.batch_reference;
+                                                                                    // Correctly target the group's batch_reference directly from the mapped iteration
+                                                                                    const batchRef = group.batch_reference;
 
-                                                                                    if (!batchRef) {
-                                                                                        alert("Batch reference is missing for this transaction item.");
+                                                                                    if (!batchRef || batchRef === 'N/A') {
+                                                                                        alert("Batch reference is missing for this transaction group.");
                                                                                         return;
                                                                                     }
 
