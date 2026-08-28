@@ -120,7 +120,7 @@ const CustomerManagement = () => {
         }
     };
 
-    // Open ledger modal and compute summary totals safely
+    // Open ledger modal and compute summary totals safely using exact database columns
     const handleOpenLedger = async (targetBatchReference = null) => {
         if (!selectedCustomer) {
             alert("Please select a customer first.");
@@ -135,10 +135,10 @@ const CustomerManagement = () => {
         setLoadingLedger(true);
         try {
             const res = await axios.get(`${BASE_URL}/api/customers/${selectedCustomer.id}/${targetBatchReference}/ledger`);
-            const historyData = res.data;
+            const scheduleData = res.data;
 
-            if (!Array.isArray(historyData) || historyData.length === 0) {
-                throw new Error("No transaction records found for this batch reference.");
+            if (!Array.isArray(scheduleData) || scheduleData.length === 0) {
+                throw new Error("No transaction ledger records found for this batch reference.");
             }
 
             let overallTotal = 0;
@@ -146,56 +146,48 @@ const CustomerManagement = () => {
             let overallBalance = 0;
             let attachmentsMap = new Map();
 
-            // 1. Calculate overall totals across all items in the batch
-            historyData.forEach((item) => {
-                const amount = Number(item.srp_amount) || 0;
-                overallTotal += amount;
+            // 1. Calculate overall metrics directly from the transaction_ledger rows
+            scheduleData.forEach((row) => {
+                const amountDue = Number(row.amount_due) || 0;
+                overallTotal += amountDue;
 
-                const isPaid = (item.payment_status || '').toLowerCase() === 'paid';
+                const isPaid = (row.status || '').toLowerCase() === 'paid';
                 if (isPaid) {
-                    overallPaid += amount;
+                    overallPaid += amountDue;
                 } else {
-                    overallBalance += amount;
+                    overallBalance += amountDue;
                 }
 
-                // Collect unique document attachments from the stream
-                if (item.dr_attachment && !attachmentsMap.has('dr')) {
-                    attachmentsMap.set('dr', { id: 'dr', name: 'Delivery Receipt (DR)', type: 'image', url: `${FILE_URL}${item.dr_attachment.replace(/^\/+/, '')}` });
-                }
-                if (item.ci_attachment && !attachmentsMap.has('ci')) {
-                    attachmentsMap.set('ci', { id: 'ci', name: 'Charge Invoice (CI)', type: 'image', url: `${FILE_URL}${item.ci_attachment.replace(/^\/+/, '')}` });
-                }
-                if (item.si_attachment && !attachmentsMap.has('si')) {
-                    attachmentsMap.set('si', { id: 'si', name: 'Sales Invoice (SI)', type: 'image', url: `${FILE_URL}${item.si_attachment.replace(/^\/+/, '')}` });
+                // If reference_document contains paths or documents, handle them safely
+                if (row.reference_document && !attachmentsMap.has('ref')) {
+                    attachmentsMap.set('ref', { 
+                        id: 'ref', 
+                        name: 'Reference Document', 
+                        type: 'image', 
+                        url: `${FILE_URL}${row.reference_document.replace(/^\/+/, '')}` 
+                    });
                 }
             });
 
-            // 2. Determine maximum term duration across all items in the batch to generate a single unified schedule
-            const maxDuration = Math.max(...historyData.map(item => Number(item.term_duration) || 1));
-            const firstItem = historyData[0];
-            const termTypeLabel = firstItem.term_type ? firstItem.term_type.charAt(0).toUpperCase() + firstItem.term_type.slice(1) : 'Months';
+            const firstRow = scheduleData[0];
+            const maxDuration = Number(firstRow.term_duration) || scheduleData.length;
+            const termTypeLabel = firstRow.term_type ? firstRow.term_type.charAt(0).toUpperCase() + firstRow.term_type.slice(1) : 'Periods';
 
-            // Total installment amount for a single period across all items combined
-            const installmentAmountPerPeriod = overallTotal / maxDuration;
-            const isBatchPaid = overallBalance === 0;
-
-            let scheduleItems = [];
-            for (let i = 1; i <= maxDuration; i++) {
-                scheduleItems.push({
-                    id: `${targetBatchReference}-${i}`,
-                    period: `${termTypeLabel} ${i} of ${maxDuration}`,
-                    dueDate: firstItem.purchase_date ? firstItem.purchase_date.split(' ')[0] : 'N/A',
-                    amount: installmentAmountPerPeriod,
-                    status: isBatchPaid ? 'Paid' : 'Unpaid',
-                    paidDate: isBatchPaid && firstItem.purchase_date ? firstItem.purchase_date.split(' ')[0] : '-',
-                    reference: targetBatchReference
-                });
-            }
+            // 2. Map database schedule rows directly to frontend UI display format
+            let scheduleItems = scheduleData.map((row, index) => ({
+                id: row.id,
+                period: `${termTypeLabel} ${index + 1} of ${maxDuration}`,
+                dueDate: row.due_date ? row.due_date.split(' ')[0] : 'N/A',
+                amount: Number(row.amount_due) || 0,
+                status: row.status,
+                paidDate: row.paid_date ? row.paid_date.split(' ')[0] : '-',
+                reference: row.batch_reference
+            }));
 
             setLedgerData({
                 documentId: targetBatchReference,
                 clientName: selectedCustomer.name || 'Client',
-                paymentTerms: ` ${maxDuration} ${termTypeLabel}`,
+                paymentTerms: `${maxDuration} ${termTypeLabel}`,
                 overallTotal,
                 overallPaid,
                 overallBalance,
