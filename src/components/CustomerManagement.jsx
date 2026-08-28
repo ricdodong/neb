@@ -450,42 +450,35 @@ const CustomerManagement = () => {
                                             {groupedTransactions.length > 0 ? (
                                                 [...groupedTransactions]
                                                     .sort((a, b) => {
-                                                        // Derive or evaluate dynamic statuses for sorting
-                                                        const getDynamicStatus = (grp) => {
-                                                            const subRows = grp.schedule || grp.items || [];
-                                                            if (subRows.length === 0) return (grp.payment_status || '').toLowerCase();
+                                                        const getEffectiveStatus = (grp) => {
+                                                            const items = grp.items || [];
+                                                            const hasPaid = items.some(i => (i.payment_status || i.status || '').toLowerCase() === 'paid') || Number(grp.paid_amount || 0) > 0;
+                                                            const isFullyPaid = (grp.payment_status || '').toLowerCase() === 'paid';
 
-                                                            const hasUnpaid = subRows.some(r => (r.status || '').toLowerCase() === 'unpaid' || (r.status || '').toLowerCase() === 'pending');
-                                                            const hasPaid = subRows.some(r => (r.status || '').toLowerCase() === 'paid');
-
-                                                            if (hasPaid && hasUnpaid) return 'balance';
-                                                            if (hasPaid && !hasUnpaid) return 'paid';
-                                                            return 'unpaid';
+                                                            if (!isFullyPaid && hasPaid) return 'balance';
+                                                            return (grp.payment_status || '').toLowerCase();
                                                         };
 
-                                                        const statusA = getDynamicStatus(a);
-                                                        const statusB = getDynamicStatus(b);
+                                                        const statusA = getEffectiveStatus(a);
+                                                        const statusB = getEffectiveStatus(b);
 
-                                                        if (statusA === 'unpaid' && statusB !== 'unpaid') return -1;
-                                                        if (statusA !== 'unpaid' && statusB === 'unpaid') return 1;
+                                                        // Push 'unpaid' and 'balance' to the top
+                                                        if ((statusA === 'unpaid' || statusA === 'balance') && (statusB !== 'unpaid' && statusB !== 'balance')) return -1;
+                                                        if ((statusA !== 'unpaid' && statusA !== 'balance') && (statusB === 'unpaid' || statusB === 'balance')) return 1;
                                                         return 0;
                                                     })
                                                     .map((group) => {
-                                                        // Compute dynamic payment status for the current batch_reference group
-                                                        const subRows = group.schedule || group.items || [];
+                                                        // Determine dynamic display status based on sub-items/payments for this batch reference
+                                                        const items = group.items || [];
+                                                        const hasPaidSubItem = items.some(item =>
+                                                            (item.payment_status || item.status || '').toLowerCase() === 'paid' ||
+                                                            Number(item.paid_amount || 0) > 0
+                                                        );
+                                                        const isFullyPaid = (group.payment_status || '').toLowerCase() === 'paid';
+
                                                         let displayStatus = group.payment_status;
-
-                                                        if (subRows.length > 0) {
-                                                            const hasUnpaid = subRows.some(r => (r.status || '').toLowerCase() === 'unpaid' || (r.status || '').toLowerCase() === 'pending');
-                                                            const hasPaid = subRows.some(r => (r.status || '').toLowerCase() === 'paid');
-
-                                                            if (hasPaid && hasUnpaid) {
-                                                                displayStatus = 'balance';
-                                                            } else if (hasPaid && !hasUnpaid) {
-                                                                displayStatus = 'Paid';
-                                                            } else {
-                                                                displayStatus = 'Unpaid';
-                                                            }
+                                                        if (!isFullyPaid && (hasPaidSubItem || Number(group.paid_amount || 0) > 0)) {
+                                                            displayStatus = 'balance';
                                                         }
 
                                                         return (
@@ -571,7 +564,8 @@ const CustomerManagement = () => {
                                                                     </tr>
                                                                 )}
                                                             </React.Fragment>
-                                                        ))
+                                                        );
+                                                    })
                                             ) : (
                                                 <tr><td colSpan="3" className="text-center py-5 text-muted">No records found.</td></tr>
                                             )}
