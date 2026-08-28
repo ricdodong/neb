@@ -195,7 +195,7 @@ const CustomerManagement = () => {
             setLedgerData({
                 documentId: targetBatchReference,
                 clientName: selectedCustomer.name || 'Client',
-                paymentTerms: ` (${maxDuration} ${termTypeLabel})`,
+                paymentTerms: ` ${maxDuration} ${termTypeLabel}`,
                 overallTotal,
                 overallPaid,
                 overallBalance,
