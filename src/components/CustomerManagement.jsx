@@ -910,7 +910,7 @@ const CustomerManagement = () => {
                                     <div className="card-body">
                                         {ledgerData.attachments && ledgerData.attachments.length > 0 ? (
                                             <div className="row g-2">
-                                                {ledgerData.attachments.map((file) => (
+                                                {ledgerData.attachments.filter(file => file.type?.toLowerCase() !== 'reference').map((file) => (
                                                     <div className="col-md-6" key={file.id}>
                                                         <div className="p-3 border rounded d-flex justify-content-between align-items-center bg-white shadow-2xs">
                                                             <div className="d-flex align-items-center gap-2">
