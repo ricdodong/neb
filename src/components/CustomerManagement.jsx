@@ -790,8 +790,8 @@ const CustomerManagement = () => {
                             <div className="modal-header bg-dark text-white px-4 py-3">
                                 <h5 className="modal-title fw-bold d-flex align-items-center gap-2">
                                     <i className="fas fa-file-invoice-dollar text-primary"></i>
-                                    Master Financial Ledger
-                                    <span className="text-muted fs-6 fw-normal ms-2">
+                                    Statement of Account
+                                    <span className="text-muted fs-6 fw-normal ms-2"><strong className="text-light"> Ref #:</strong>
                                         (Batch ID: <strong className="text-info">{ledgerData.documentId}</strong> • Client: <strong className="text-light">{ledgerData.clientName}</strong>)
                                     </span>
                                 </h5>
