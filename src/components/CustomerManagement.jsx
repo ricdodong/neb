@@ -301,7 +301,7 @@ const CustomerManagement = () => {
         // Post-process groups to accurately evaluate aggregate payment status
         Object.values(groups).forEach(group => {
             const statuses = group.items.map(i => (i.payment_status || '').toLowerCase());
-            const hasPaid = statuses.some(s => s === 'paid');
+            const hasPaid = statuses.some(s => s === 'Paid');
             const allPaid = statuses.length > 0 && statuses.every(s => s === 'paid');
 
             if (allPaid) {
