@@ -191,10 +191,10 @@ const CustomerManagement = () => {
                 } else {
                     // Standard Cash or Full Settlement Row
                     scheduleItems.push({
-                        id: item.transaction_id || index,
-                        period: `Full Payment (${item.item_name || 'Item'})`,
+                        id: `${item.transaction_id || index}-${i}`,
+                        period: `${termTypeLabel} ${i} of ${duration}`,
                         dueDate: item.purchase_date ? item.purchase_date.split(' ')[0] : 'N/A',
-                        amount: amount,
+                        amount: installmentAmount,
                         status: isPaid ? 'Paid' : 'Unpaid',
                         paidDate: isPaid ? (item.purchase_date ? item.purchase_date.split(' ')[0] : '-') : '-',
                         reference: item.batch_reference || targetBatchReference
