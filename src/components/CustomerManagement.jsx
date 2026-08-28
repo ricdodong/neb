@@ -144,11 +144,10 @@ const CustomerManagement = () => {
             let overallTotal = 0;
             let overallPaid = 0;
             let overallBalance = 0;
-            let scheduleItems = [];
             let attachmentsMap = new Map();
 
-            // Loop through each item in the fetched batch data
-            historyData.forEach((item, index) => {
+            // 1. Calculate overall totals across all items in the batch
+            historyData.forEach((item) => {
                 const amount = Number(item.srp_amount) || 0;
                 overallTotal += amount;
 
@@ -169,42 +168,34 @@ const CustomerManagement = () => {
                 if (item.si_attachment && !attachmentsMap.has('si')) {
                     attachmentsMap.set('si', { id: 'si', name: 'Sales Invoice (SI)', type: 'image', url: `${FILE_URL}${item.si_attachment.replace(/^\/+/, '')}` });
                 }
-
-                // Generate Schedule Breakdown based on Term Type and Duration
-                if (item.payment_method === 'Terms' && Number(item.term_duration) > 0) {
-                    const duration = Number(item.term_duration);
-                    const termTypeLabel = item.term_type ? item.term_type.charAt(0).toUpperCase() + item.term_type.slice(1) : 'Periods';
-                    const installmentAmount = amount / duration;
-
-                    for (let i = 1; i <= duration; i++) {
-                        scheduleItems.push({
-                            id: `${item.transaction_id || index}-${i}`,
-                            period: `${termTypeLabel} ${i} of ${duration}`,
-                            dueDate: item.purchase_date ? item.purchase_date.split(' ')[0] : 'N/A',
-                            amount: installmentAmount,
-                            status: isPaid ? 'Paid' : 'Unpaid',
-                            paidDate: isPaid ? (item.purchase_date ? item.purchase_date.split(' ')[0] : '-') : '-',
-                            reference: item.batch_reference || targetBatchReference
-                        });
-                    }
-                } else {
-                    // Standard Cash or Full Settlement Row
-                    scheduleItems.push({
-                        id: item.transaction_id || index,
-                        period: `Full Payment`,
-                        dueDate: item.purchase_date ? item.purchase_date.split(' ')[0] : 'N/A',
-                        amount: amount,
-                        status: isPaid ? 'Paid' : 'Unpaid',
-                        paidDate: isPaid ? (item.purchase_date ? item.purchase_date.split(' ')[0] : '-') : '-',
-                        reference: item.batch_reference || targetBatchReference
-                    });
-                }
             });
+
+            // 2. Determine maximum term duration across all items in the batch to generate a single unified schedule
+            const maxDuration = Math.max(...historyData.map(item => Number(item.term_duration) || 1));
+            const firstItem = historyData[0];
+            const termTypeLabel = firstItem.term_type ? firstItem.term_type.charAt(0).toUpperCase() + firstItem.term_type.slice(1) : 'Months';
+
+            // Total installment amount for a single period across all items combined
+            const installmentAmountPerPeriod = overallTotal / maxDuration;
+            const isBatchPaid = overallBalance === 0;
+
+            let scheduleItems = [];
+            for (let i = 1; i <= maxDuration; i++) {
+                scheduleItems.push({
+                    id: `${targetBatchReference}-${i}`,
+                    period: `${termTypeLabel} ${i} of ${maxDuration}`,
+                    dueDate: firstItem.purchase_date ? firstItem.purchase_date.split(' ')[0] : 'N/A',
+                    amount: installmentAmountPerPeriod,
+                    status: isBatchPaid ? 'Paid' : 'Unpaid',
+                    paidDate: isBatchPaid && firstItem.purchase_date ? firstItem.purchase_date.split(' ')[0] : '-',
+                    reference: targetBatchReference
+                });
+            }
 
             setLedgerData({
                 documentId: targetBatchReference,
                 clientName: selectedCustomer.name || 'Client',
-                paymentTerms: "Mixed Terms & Cash Schedule",
+                paymentTerms: `Unified Batch Schedule (${maxDuration} ${termTypeLabel})`,
                 overallTotal,
                 overallPaid,
                 overallBalance,
@@ -218,15 +209,17 @@ const CustomerManagement = () => {
             setLedgerData({
                 documentId: targetBatchReference || `INV-${selectedCustomer?.id || '2026'}-01`,
                 clientName: selectedCustomer?.name || 'Selected Client',
-                paymentTerms: "Monthly (12 Months Schedule)",
-                overallTotal: 36000.00,
-                overallPaid: 15000.00,
-                overallBalance: 21000.00,
+                paymentTerms: "Monthly (3 Months Schedule)",
+                overallTotal: 15000.00,
+                overallPaid: 5000.00,
+                overallBalance: 10000.00,
                 attachments: [
                     { id: 1, name: "Signed_Service_Contract.pdf", type: "pdf", url: "#" }
                 ],
                 schedule: [
-                    { id: 1, period: "Months 1 of 12", dueDate: "2026-01-31", amount: 3000, status: "Paid", paidDate: "2026-01-28", reference: targetBatchReference || "OR-8821" },
+                    { id: 1, period: "Months 1 of 3", dueDate: "2026-08-27", amount: 5000, status: "Paid", paidDate: "2026-08-27", reference: targetBatchReference || "TRX-1" },
+                    { id: 2, period: "Months 2 of 3", dueDate: "2026-09-27", amount: 5000, status: "Unpaid", paidDate: "-", reference: targetBatchReference || "TRX-1" },
+                    { id: 3, period: "Months 3 of 3", dueDate: "2026-10-27", amount: 5000, status: "Unpaid", paidDate: "-", reference: targetBatchReference || "TRX-1" }
                 ]
             });
             setIsLedgerOpen(true);
