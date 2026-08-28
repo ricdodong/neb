@@ -780,7 +780,7 @@ const CustomerManagement = () => {
             {isLedgerOpen && ledgerData && (
                 <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}>
                     <div className="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
-                        <div className="modal-content border-0 shadow-lg">
+                        <div className="modal-content border-0 shadow-lg" id="printable-ledger-content">
 
                             {/* Modal Header */}
                             <div className="modal-header bg-dark text-white px-4 py-3">
@@ -799,7 +799,7 @@ const CustomerManagement = () => {
                             </div>
 
                             {/* Modal Body - Wrapped in an ID for targeted window printing */}
-                            <div className="modal-body p-4 bg-light" id="printable-ledger-content">
+                            <div className="modal-body p-4 bg-light" >
                                 {/* Print-only CSS injection to preserve background colors, badge pills, and exact layout styles */}
                                 <style type="text/css" media="print">
                                     {`
