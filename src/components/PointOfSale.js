@@ -241,7 +241,7 @@ const PointOfSale = ({ triggerToast }) => {
         if (window.innerWidth < 992) triggerToast(`Added ${product.name}`, "success");
     };
 
-    const handleCheckout = async () => {
+  const handleCheckout = async () => {
         if (!selectedCustomerId) return triggerToast("Please select a customer", "warning");
 
         const isCash = paymentMethod === 'Cash' || paymentMethod === 'Cash Settlement';
@@ -250,34 +250,32 @@ const PointOfSale = ({ triggerToast }) => {
         }
 
         const customer = customers.find(c => String(c.id) === String(selectedCustomerId));
-
-        // Use the existing autoBatchRef state safely
         const currentBatchRef = autoBatchRef || `TRX-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
         try {
-            // Inside your handleCheckout file loop or batch mapping:
-            const salePromises = cart.map(async (item) => {
-                return await axios.post(`${BASE_URL}/api/sales`, {
-                    customer_id: selectedCustomerId,
+            // Send the entire cart payload in ONE single request instead of looping
+            await axios.post(`${BASE_URL}/api/sales`, {
+                customer_id: selectedCustomerId,
+                payment_method: paymentMethod,
+                payment_status: paymentMethod === 'Terms' ? 'Unpaid' : 'Paid',
+                amount_paid: paymentMethod === 'Terms' ? 0 : amountTendered,
+                name: customer?.name || "Guest",
+                address: customer?.address || "POS Terminal",
+                batch_reference: currentBatchRef,
+                term_type: paymentMethod === 'Terms' ? termType : null,
+                term_duration: paymentMethod === 'Terms' ? termDuration : null,
+                
+                // Pass the entire array of cart items safely
+                items: cart.map(item => ({
                     item_id: item.id,
-                    serial_number: item.selectedSN,
-                    payment_status: paymentMethod === 'Terms' ? 'Unpaid' : 'Paid',
-                    payment_method: paymentMethod,
-                    amount_paid: paymentMethod === 'Terms' ? 0 : amountTendered,
-                    name: customer?.name || "Guest",
-                    address: customer?.address || "POS Terminal",
-                    batch_reference: currentBatchRef,
-                    term_type: paymentMethod === 'Terms' ? termType : null,
-                    term_duration: paymentMethod === 'Terms' ? termDuration : null,
+                    serial_number: item.selectedSN
+                })),
 
-                    // --- Pass your attachment paths here ---
-                    dr_attachment: uploadedDR ? `/uploads/receipts/sales/dr/${uploadedDR}` : null,
-                    si_attachment: paymentMethod === 'Cash' ? (uploadedSI ? `/uploads/receipts/sales/si/${uploadedSI}` : null) : null,
-                    ci_attachment: paymentMethod === 'Terms' ? (uploadedCI ? `/uploads/receipts/sales/ci/${uploadedCI}` : null) : null,
-                });
+                // Documents
+                dr_attachment: uploadedDR ? `/uploads/receipts/sales/dr/${uploadedDR}` : null,
+                si_attachment: paymentMethod === 'Cash' ? (uploadedSI ? `/uploads/receipts/sales/si/${uploadedSI}` : null) : null,
+                ci_attachment: paymentMethod === 'Terms' ? (uploadedCI ? `/uploads/receipts/sales/ci/${uploadedCI}` : null) : null,
             });
-
-            await Promise.all(salePromises);
 
             triggerToast(`Transaction Recorded: ${currentBatchRef}`, "success");
 
@@ -289,7 +287,7 @@ const PointOfSale = ({ triggerToast }) => {
             setSelectedCustomerId('');
             setIsCheckoutView(false);
             setAmountTendered('');
-            setAutoBatchRef(''); // Reset for next transaction
+            setAutoBatchRef('');
             setPaymentMethod('Cash');
             setUploadedDR(null);
             setUploadedSI(null);
