@@ -795,7 +795,7 @@ const CustomerManagement = () => {
                                         <strong className="text-info"><strong className="text-light">Ref #: </strong>{ledgerData.documentId}</strong>
                                     </span>
                                     <span className="text-muted fs-6 fw-normal ms-2">
-                                        <strong className="text-info text-uppercase"><strong className="text-light">Client: </strong>{ledgerData.clientName}</strong>
+                                        <strong className="text-info text-uppercase"><strong className="text-light text-lowercase">Client: </strong>{ledgerData.clientName}</strong>
                                     </span>
                                 </h5>
                                 <button
