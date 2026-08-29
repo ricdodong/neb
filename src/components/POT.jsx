@@ -193,6 +193,46 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
         }
     };
 
+    // ==========================================
+    // 9. FILTER & FORMATTING HELPERS
+    // ==========================================
+
+    const handleSerialResearch = (e) => {
+        setSerialSearchQuery(e.target.value);
+    };
+
+    const filteredLogs = serviceLogs.filter(log => {
+        const matchesGeneral = searchQuery === '' ||
+            Object.values(log).some(val =>
+                String(val).toLowerCase().includes(searchQuery.toLowerCase())
+            );
+        const matchesSerial = serialSearchQuery === '' ||
+            String(log.machine || '').toLowerCase().includes(serialSearchQuery.toLowerCase());
+        return matchesGeneral && matchesSerial;
+    });
+
+    const getStatusBadgeStyle = (statusVal) => {
+        switch (statusVal) {
+            case 'Done': return 'badge bg-success';
+            case 'Stuck': return 'badge bg-danger';
+            default: return 'badge bg-warning text-dark';
+        }
+    };
+
+    const getPriorityBadgeStyle = (priorityVal) => {
+        switch (priorityVal) {
+            case 'High': return 'badge bg-danger text-white';
+            case 'Low': return 'badge bg-info text-dark';
+            default: return 'badge bg-secondary text-white';
+        }
+    };
+
+    const formatLocalDateTime = (dateString) => {
+        if (!dateString) return '—';
+        const date = new Date(dateString);
+        return isNaN(date.getTime()) ? dateString : date.toLocaleString();
+    };
+
     return (
         <div className="animate-fade-in text-white container-fluid px-0">
             {/* Monday.com Style Board Header Toolbar */}
