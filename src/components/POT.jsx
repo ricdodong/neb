@@ -406,12 +406,12 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
 
             {/* Monday.com Style New Item Modal / Drawer Form */}
             {showModal && (
-                <div className="modal show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(5, 7, 10, 0.8)', backdropFilter: 'blur(8px)' }}>
-                    <div className="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-                        <div className="modal-content bg-dark border border-secondary border-opacity-25 text-white rounded-4 shadow-2xl overflow-hidden">
+                <div className="modal show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(5, 7, 10, 0.85)', backdropFilter: 'blur(8px)', overflowY: 'auto' }}>
+                    <div className="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable m-2 m-sm-auto">
+                        <div className="modal-content bg-dark border border-secondary border-opacity-25 text-white rounded-4 shadow-2xl overflow-hidden" style={{ maxHeight: '90vh' }}>
 
                             {/* Modal Header */}
-                            <div className="modal-header border-bottom border-secondary border-opacity-15 px-4 py-3 bg-black bg-opacity-75">
+                            <div className="modal-header border-bottom border-secondary border-opacity-15 px-3 px-md-4 py-3 bg-black bg-opacity-75 sticky-top">
                                 <h5 className="modal-title fw-bold tiny-text tracking-widest text-uppercase d-flex align-items-center gap-2 m-0 text-light">
                                     <span style={{ color: '#00c875', fontSize: '0.85rem' }}>●</span> Create Monday Board Item
                                 </h5>
@@ -419,11 +419,11 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
                             </div>
 
                             {/* Modal Body */}
-                            <div className="modal-body p-4" style={{ backgroundColor: '#121418' }}>
+                            <div className="modal-body p-3 p-md-4" style={{ backgroundColor: '#121418', overflowY: 'visible' }}>
                                 <form onSubmit={handleSubmit} id="productivityForm">
 
                                     {/* MONDAY.COM COLUMN: CLIENT & MACHINES */}
-                                    <div className="p-4 mb-4 rounded-3 bg-black bg-opacity-30 border border-secondary border-opacity-15 shadow-sm">
+                                    <div className="p-3 p-md-4 mb-3 mb-md-4 rounded-3 bg-black bg-opacity-30 border border-secondary border-opacity-15 shadow-sm">
                                         <div className="tiny-text text-uppercase fw-bold text-secondary mb-3 tracking-wider d-flex align-items-center gap-2">
                                             <span className="text-info">🏢</span> Client & Equipment Column
                                         </div>
@@ -454,7 +454,7 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
                                             </div>
                                             {selectedMachines.map((m, index) => (
                                                 <div key={index} className="input-group mb-2">
-                                                    <span className="input-group-text bg-dark border-secondary border-opacity-25 text-secondary tiny-text px-3">#{index + 1}</span>
+                                                    <span className="input-group-text bg-dark border-secondary border-opacity-25 text-secondary tiny-text px-2 px-md-3">#{index + 1}</span>
                                                     <input
                                                         type="text"
                                                         className="form-control bg-dark text-white border-secondary border-opacity-25 rounded-end shadow-none font-monospace small py-2 px-3"
@@ -464,7 +464,7 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
                                                         required={index === 0}
                                                     />
                                                     {selectedMachines.length > 1 && (
-                                                        <button type="button" className="btn btn-outline-danger border-opacity-25 text-danger px-3 ms-2 rounded-3 hover-danger" onClick={() => handleRemoveMachineField(index)}>
+                                                        <button type="button" className="btn btn-outline-danger border-opacity-25 text-danger px-2 px-md-3 ms-2 rounded-3" onClick={() => handleRemoveMachineField(index)}>
                                                             <i className="fa-solid fa-trash-can tiny-text"></i>
                                                         </button>
                                                     )}
@@ -474,7 +474,7 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
                                     </div>
 
                                     {/* MONDAY.COM COLUMN: STATUS & PRIORITY SELECTORS */}
-                                    <div className="p-4 mb-4 rounded-3 bg-black bg-opacity-30 border border-secondary border-opacity-15 shadow-sm">
+                                    <div className="p-3 p-md-4 mb-3 mb-md-4 rounded-3 bg-black bg-opacity-30 border border-secondary border-opacity-15 shadow-sm">
                                         <div className="tiny-text text-uppercase fw-bold text-secondary mb-3 tracking-wider d-flex align-items-center gap-2">
                                             <span className="text-warning">📊</span> Status & Priority Labels
                                         </div>
@@ -507,7 +507,7 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
                                     </div>
 
                                     {/* MONDAY.COM COLUMN: TIMELINE / TIMING */}
-                                    <div className="p-4 mb-4 rounded-3 bg-black bg-opacity-30 border border-secondary border-opacity-15 shadow-sm">
+                                    <div className="p-3 p-md-4 mb-3 mb-md-4 rounded-3 bg-black bg-opacity-30 border border-secondary border-opacity-15 shadow-sm">
                                         <div className="tiny-text text-uppercase fw-bold text-secondary mb-3 tracking-wider d-flex align-items-center gap-2">
                                             <span className="text-success">⏱️</span> Timeline & Duration
                                         </div>
@@ -546,7 +546,7 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
                                     </div>
 
                                     {/* MONDAY.COM COLUMN: FSR DOCUMENT & UPDATES */}
-                                    <div className="p-4 mb-0 rounded-3 bg-black bg-opacity-30 border border-secondary border-opacity-15 shadow-sm">
+                                    <div className="p-3 p-md-4 mb-0 rounded-3 bg-black bg-opacity-30 border border-secondary border-opacity-15 shadow-sm">
                                         <div className="tiny-text text-uppercase fw-bold text-secondary mb-3 tracking-wider d-flex align-items-center gap-2">
                                             <span className="text-primary">📝</span> FSR & Updates Column
                                         </div>
@@ -609,14 +609,14 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
                             </div>
 
                             {/* Modal Footer */}
-                            <div className="modal-footer border-top border-secondary border-opacity-15 px-4 py-3 bg-black bg-opacity-75">
-                                <button type="button" className="btn btn-outline-secondary border-opacity-25 px-4 py-2 tiny-text rounded-3 text-white shadow-none" onClick={() => setShowModal(false)}>
+                            <div className="modal-footer border-top border-secondary border-opacity-15 px-3 px-md-4 py-3 bg-black bg-opacity-75 sticky-bottom">
+                                <button type="button" className="btn btn-outline-secondary border-opacity-25 px-3 px-md-4 py-2 tiny-text rounded-3 text-white shadow-none" onClick={() => setShowModal(false)}>
                                     Cancel
                                 </button>
                                 <button
                                     type="submit"
                                     form="productivityForm"
-                                    className="btn px-4 py-2 fw-bold tiny-text tracking-widest text-dark rounded-3 d-flex align-items-center gap-2 shadow-none"
+                                    className="btn px-3 px-md-4 py-2 fw-bold tiny-text tracking-widest text-dark rounded-3 d-flex align-items-center gap-2 shadow-none"
                                     style={{ backgroundColor: '#00c875', transition: 'opacity 0.2s' }}
                                     disabled={isSubmitting}
                                 >
