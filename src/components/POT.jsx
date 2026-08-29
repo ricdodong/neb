@@ -211,7 +211,7 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
                         <span className="text-muted small">/ Technical Operations Board</span>
                     </div>
                     <h3 className="fw-900 tracking-tighter text-white m-0 d-flex align-items-center gap-2">
-                        Productivity & FSR Pipeline <span className="jade-accent fs-6">⚡ Monday View</span>
+                        Productivity & FSR Pipeline <span className="jade-accent fs-6">⚡ Dexterous Printing Services</span>
                     </h3>
                 </div>
 
