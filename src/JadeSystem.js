@@ -8,7 +8,7 @@ import StockManagement from './components/StockManagement';
 import CallLogs from './components/CallLogs';
 import PointOfSale from './components/PointOfSale';
 import ServiceCenter from './components/ServiceCenter';
-import POReceives from './components/poReceives'; 
+import POReceives from './components/poReceives';
 
 const BASE_URL = 'https://dpsapi.ricalgen.eu.org'; // Use your actual Worker URL here
 
@@ -77,7 +77,7 @@ const DashboardHome = ({ userRole, setActivePage, activities, dashboardStats, us
             const response = await axios.post(`${BASE_URL}/api/generate-report`, {
                 stats: dashboardStats,
                 username: username,
-                inventory: inventoryData 
+                inventory: inventoryData
             }, {
                 responseType: 'blob'
             });
@@ -117,7 +117,7 @@ const DashboardHome = ({ userRole, setActivePage, activities, dashboardStats, us
             <div className="row g-3 mb-5">
                 {stats.map((stat, i) => (
                     <div className="col-12 col-sm-6 col-xl-3" key={i}>
-                        <div 
+                        <div
                             onClick={() => stat.isClickable && setShowSalesModal(true)}
                             className={`p-4 rounded-4 h-100 border border-white border-opacity-10 position-relative overflow-hidden ${stat.isClickable ? 'sidebar-user-box hover-lift' : 'sidebar-user-box'}`}
                             style={{ cursor: stat.isClickable ? 'pointer' : 'default' }}
@@ -146,25 +146,31 @@ const DashboardHome = ({ userRole, setActivePage, activities, dashboardStats, us
                     </h5>
                     <div className="row g-3">
                         {[
-                            { title: 'New Transaction', desc: 'Launch POS Terminal', icon: 'fa-cart-plus', target: 'pos' },
-                            { title: 'Inventory Log', desc: 'Add/Update Hardware', icon: 'fa-boxes-stacked', target: 'stocks' },
-                            { title: 'Suppliers File', desc: 'Supplier Directory & Ledger', icon: 'fa-truck', target: 'suppliers' },
-                            { title: 'Call Logs', desc: 'Broken Unit Service', icon: 'fa-headset', target: 'call logs' },
-                            { title: 'Customer File', desc: 'CRM & History', icon: 'fa-address-card', target: 'customers' },
-                            { title: 'PO Receives', desc: 'Log Inbound Logistics', icon: 'fa-file-import', target: 'po receives' }
-                        ].map((box, i) => (
-                            <div className="col-12 col-sm-6" key={i}>
-                                <button onClick={() => setActivePage(box.target)} className="w-100 p-4 rounded-4 sidebar-btn text-start d-flex align-items-center gap-4 h-100 border border-white border-opacity-5">
-                                    <div className="icon-box-neon p-3 rounded-4 bg-dark border border-white border-opacity-10">
-                                        <i className={`fa-solid ${box.icon} jade-accent fs-3`}></i>
-                                    </div>
-                                    <div>
-                                        <div className="fw-900 text-white">{box.title}</div>
-                                        <div className="text-muted small lh-sm">{box.desc}</div>
-                                    </div>
-                                </button>
-                            </div>
-                        ))}
+                            { title: 'New Transaction', desc: 'Launch POS Terminal', icon: 'fa-cart-plus', target: 'pos', allowedRoles: ['admin', 'sales'] },
+                            { title: 'Inventory Log', desc: 'Add/Update Hardware', icon: 'fa-boxes-stacked', target: 'stocks', allowedRoles: ['admin', 'technical'] },
+                            { title: 'Suppliers File', desc: 'Supplier Directory & Ledger', icon: 'fa-truck', target: 'suppliers', allowedRoles: ['admin', 'accounting'] },
+                            { title: 'Call Logs', desc: 'Broken Unit Service', icon: 'fa-headset', target: 'call logs', allowedRoles: ['admin', 'technical'] },
+                            { title: 'Customer File', desc: 'CRM & History', icon: 'fa-address-card', target: 'customers', allowedRoles: ['admin', 'sales', 'technical'] },
+                            { title: 'PO Receives', desc: 'Log Inbound Logistics', icon: 'fa-file-import', target: 'po receives', allowedRoles: ['admin', 'accounting', 'technical'] }
+                        ]
+                            .filter(box => {
+                                // Assumes your active user role is stored in a variable like currentUser.role or userRole
+                                const role = (currentUser?.role || 'admin').toLowerCase();
+                                return role === 'admin' || box.allowedRoles.includes(role);
+                            })
+                            .map((box, i) => (
+                                <div className="col-12 col-sm-6" key={i}>
+                                    <button onClick={() => setActivePage(box.target)} className="w-100 p-4 rounded-4 sidebar-btn text-start d-flex align-items-center gap-4 h-100 border border-white border-opacity-5">
+                                        <div className="icon-box-neon p-3 rounded-4 bg-dark border border-white border-opacity-10">
+                                            <i className={`fa-solid ${box.icon} jade-accent fs-3`}></i>
+                                        </div>
+                                        <div>
+                                            <div className="fw-900 text-white">{box.title}</div>
+                                            <div className="text-muted small lh-sm">{box.desc}</div>
+                                        </div>
+                                    </button>
+                                </div>
+                            ))}
                     </div>
                 </div>
 
@@ -272,7 +278,7 @@ const JadeSystem = ({ userRole, onLogout, username }) => {
                 const statRes = await axios.get(`${BASE_URL}/api/dashboard-stats`);
                 setDashboardStats(statRes.data);
 
-                const invRes = await axios.get(`${BASE_URL}/api/inventory`); 
+                const invRes = await axios.get(`${BASE_URL}/api/inventory`);
                 setInventoryData(invRes.data);
 
             } catch (err) {
@@ -291,7 +297,7 @@ const JadeSystem = ({ userRole, onLogout, username }) => {
 
     const triggerToast = (message, type = 'success') => {
         const bg = type === 'success' ? 'success' : type === 'error' ? 'danger' : 'info';
-        setToastConfig({ message, bg }); 
+        setToastConfig({ message, bg });
         setShowToast(true);
     };
 
@@ -316,7 +322,7 @@ const JadeSystem = ({ userRole, onLogout, username }) => {
             <div className="mb-4 px-3 brand-section">
                 {/* Full Brand View */}
                 <h3 className="fw-900 tracking-tighter text-white mb-0 fst-italic sidebar-logo-text">DPS<span className="jade-accent fst-normal">system</span></h3>
-                
+
                 {/* Compact Centered DPS / System view for Collapsed Mode */}
                 <div className="brand-icon-view text-center fw-900 fst-italic lh-sm w-100">
                     <a href="/" className="text-decoration-none text-white d-block mb-1">
@@ -374,7 +380,7 @@ const JadeSystem = ({ userRole, onLogout, username }) => {
                 </Offcanvas.Body>
             </Offcanvas>
 
-            <main className="main-content container-fluid" onClick={() => {}}>
+            <main className="main-content container-fluid" onClick={() => { }}>
                 <section className="page-container mt-0 p-2 p-md-3 animate-fade-in">
                     <div className="d-flex justify-content-between align-items-center mb-2">
                         <h2 className="fw-900 text-white text-uppercase tracking-widest m-0 h4">
@@ -391,7 +397,7 @@ const JadeSystem = ({ userRole, onLogout, username }) => {
                                 userRole={userRole}
                                 setActivePage={setActivePage}
                                 dashboardStats={dashboardStats}
-                                username={username} 
+                                username={username}
                                 inventoryData={inventoryData}
                             />
                         )}
@@ -401,7 +407,7 @@ const JadeSystem = ({ userRole, onLogout, username }) => {
                         {activePage === 'call logs' && <CallLogs triggerToast={triggerToast} userRole={userRole} />}
                         {activePage === 'pos' && <PointOfSale triggerToast={triggerToast} userRole={userRole} />}
                         {activePage === 'services' && <ServiceCenter triggerToast={triggerToast} userRole={userRole} />}
-                        {activePage === 'po receives' && <POReceives triggerToast={triggerToast} userRole={userRole} />} 
+                        {activePage === 'po receives' && <POReceives triggerToast={triggerToast} userRole={userRole} />}
                     </div>
                 </section>
             </main>
