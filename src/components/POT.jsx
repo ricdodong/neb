@@ -435,7 +435,7 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
                                                 value={selectedClient}
                                                 onChange={(e) => {
                                                     setSelectedClient(e.target.value);
-                                                    setSelectedMachines(['']); // Reset machines when client changes
+                                                    setSelectedMachines(['']); // Reset selections when client changes
                                                 }}
                                                 required
                                             >
@@ -461,40 +461,31 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
                                                 )}
                                             </div>
                                             {selectedMachines.map((m, index) => {
-                                                // Find current client object to get their repairable machines/units
+                                                // Find current client object to pull availed/repairable machines/units
                                                 const activeClientObj = clients.find(c => (c.name || c.client_name) === selectedClient);
-                                                // Assuming client object might have a list of machines under properties like `machines`, `units`, or `repairable_units`
-                                                const clientMachines = activeClientObj?.machines || activeClientObj?.units || activeClientObj?.repairable_units || [];
+                                                const availedMachines = activeClientObj?.machines || activeClientObj?.units || activeClientObj?.repairable_units || [];
 
                                                 return (
                                                     <div key={index} className="input-group mb-2">
                                                         <span className="input-group-text bg-dark border-secondary border-opacity-25 text-secondary tiny-text px-2 px-md-3">#{index + 1}</span>
 
-                                                        {clientMachines.length > 0 ? (
-                                                            <select
-                                                                className="form-select bg-dark text-white border-secondary border-opacity-25 rounded-end shadow-none font-monospace small py-2 px-3"
-                                                                value={m}
-                                                                onChange={(e) => handleMachineChange(index, e.target.value)}
-                                                                required={index === 0}
-                                                            >
-                                                                <option value="" className="text-muted">-- Select Machine / Serial --</option>
-                                                                {clientMachines.map((mach, mi) => {
-                                                                    const machVal = typeof mach === 'string' ? mach : (mach.serial || mach.machine_name || mach.serial_number);
-                                                                    return (
-                                                                        <option key={mi} value={machVal}>{machVal}</option>
-                                                                    );
-                                                                })}
-                                                            </select>
-                                                        ) : (
-                                                            <input
-                                                                type="text"
-                                                                className="form-control bg-dark text-white border-secondary border-opacity-25 rounded-end shadow-none font-monospace small py-2 px-3"
-                                                                placeholder={selectedClient ? "Enter machine serial / ID..." : "Select client first..."}
-                                                                value={m}
-                                                                onChange={(e) => handleMachineChange(index, e.target.value)}
-                                                                required={index === 0}
-                                                            />
-                                                        )}
+                                                        <select
+                                                            className="form-select bg-dark text-white border-secondary border-opacity-25 rounded-end shadow-none font-monospace small py-2 px-3"
+                                                            value={m}
+                                                            onChange={(e) => handleMachineChange(index, e.target.value)}
+                                                            required={index === 0}
+                                                            disabled={!selectedClient}
+                                                        >
+                                                            <option value="" className="text-muted">
+                                                                {selectedClient ? "-- Select Availed Machine / Serial --" : "-- Select client first --"}
+                                                            </option>
+                                                            {availedMachines.map((mach, mi) => {
+                                                                const machVal = typeof mach === 'string' ? mach : (mach.serial || mach.machine_name || mach.serial_number);
+                                                                return (
+                                                                    <option key={mi} value={machVal}>{machVal}</option>
+                                                                );
+                                                            })}
+                                                        </select>
 
                                                         {selectedMachines.length > 1 && (
                                                             <button type="button" className="btn btn-outline-danger border-opacity-25 text-danger px-2 px-md-3 ms-2 rounded-3" onClick={() => handleRemoveMachineField(index)}>
