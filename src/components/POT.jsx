@@ -396,7 +396,7 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
                 </div>
             </div>
 
-            {/* Monday.com Style New Item Modal / Drawer Form */}
+ {/* Monday.com Style New Item Modal / Drawer Form */}
             {showModal && (
                 <div className="modal show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(5, 7, 10, 0.85)', backdropFilter: 'blur(8px)', position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', overflowY: 'auto', zIndex: 1050, padding: '1rem 0' }}>
                     <div className="modal-dialog modal-lg mx-auto my-0" style={{ maxWidth: '800px', width: '100%' }}>
@@ -426,21 +426,28 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
                                                 className="form-select bg-dark text-white border-secondary border-opacity-25 rounded-3 shadow-none py-2 px-3 small"
                                                 value={selectedClient}
                                                 onChange={(e) => {
-                                                    setSelectedClient(e.target.value);
-                                                    setSelectedMachines(['']); // Reset selections when client changes
+                                                    const selectedOption = e.target.selectedOptions[0];
+                                                    const clientName = e.target.value;
+                                                    const clientId = selectedOption.getAttribute('data-id');
+
+                                                    setSelectedClient(clientName);
+                                                    setSelectedClientId(clientId); // Triggers repairable machines fetch via useEffect
+                                                    setSelectedMachines(['']); // Reset machine selections
                                                 }}
                                                 required
                                             >
                                                 <option value="" className="text-muted">-- Choose Customer / Client --</option>
                                                 {clients.map((c, i) => (
-                                                    <option key={i} value={c.name || c.client_name}>{c.name || c.client_name}</option>
+                                                    <option key={i} value={c.name || c.client_name} data-id={c.id || c.customer_id}>
+                                                        {c.name || c.client_name}
+                                                    </option>
                                                 ))}
                                             </select>
                                         </div>
 
                                         <div>
                                             <div className="d-flex justify-content-between align-items-center mb-1">
-                                                <label className="form-label tiny-text text-uppercase fw-bold text-secondary m-0">Machine / Serial Number *</label>
+                                                <label className="form-label tiny-text text-uppercase fw-bold text-secondary m-0">Machine / Exact Serial Number *</label>
                                                 {selectedMachines.length < 2 && (
                                                     <button
                                                         type="button"
@@ -453,10 +460,6 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
                                                 )}
                                             </div>
                                             {selectedMachines.map((m, index) => {
-                                                // Find current client object to pull availed/repairable machines/units
-                                                const activeClientObj = clients.find(c => (c.name || c.client_name) === selectedClient);
-                                                const availedMachines = activeClientObj?.machines || activeClientObj?.units || activeClientObj?.repairable_units || [];
-
                                                 return (
                                                     <div key={index} className="input-group mb-2">
                                                         <span className="input-group-text bg-dark border-secondary border-opacity-25 text-secondary tiny-text px-2 px-md-3">#{index + 1}</span>
@@ -469,12 +472,17 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
                                                             disabled={!selectedClient}
                                                         >
                                                             <option value="" className="text-muted">
-                                                                {selectedClient ? "-- Select Availed Machine / Serial --" : "-- Select client first --"}
+                                                                {selectedClient ? "-- Select Machine & Serial Number --" : "-- Select client first --"}
                                                             </option>
-                                                            {availedMachines.map((mach, mi) => {
-                                                                const machVal = typeof mach === 'string' ? mach : (mach.serial || mach.machine_name || mach.serial_number);
+                                                            {repairableMachines.map((mach, mi) => {
+                                                                const itemName = mach.item_name || 'Item';
+                                                                const serialNum = mach.serial_number || 'No Serial';
+                                                                const optionLabel = `${itemName} — Serial: ${serialNum}`;
+
                                                                 return (
-                                                                    <option key={mi} value={machVal}>{machVal}</option>
+                                                                    <option key={mi} value={serialNum}>
+                                                                        {optionLabel}
+                                                                    </option>
                                                                 );
                                                             })}
                                                         </select>
