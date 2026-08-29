@@ -3,7 +3,7 @@ import axios from 'axios';
 
 const BASE_URL = 'https://dpsapi.ricalgen.eu.org';
 
-const ProductivtyOfTechnical = ({ triggerToast, username }) => {
+const ProductivityOfTechnical = ({ triggerToast, username }) => {
     const [clients, setClients] = useState([]);
     const [machines, setMachines] = useState([]);
     const [serviceLogs, setServiceLogs] = useState([]);
