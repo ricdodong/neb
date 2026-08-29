@@ -914,33 +914,65 @@ const CustomerManagement = () => {
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                {ledgerData.schedule?.map((row) => (
-                                                    <tr key={row.id}>
-                                                        <td className="ps-3 fw-semibold text-dark">{row.period}</td>
-                                                        <td className="text-muted">{row.dueDate}</td>
-                                                        <td className="font-monospace fw-bold text-dark">₱{Number(row.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                                                        <td>
-                                                            <span className={`badge ${row.status === 'Paid' ? 'bg-success' : 'bg-warning text-dark'}`}>
-                                                                {row.status}
-                                                            </span>
-                                                        </td>
-                                                        <td className="text-muted font-monospace small">{row.paidDate}</td>
-                                                        <td className="pe-3">
-                                                            {row.referenceDocument ? (
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => setSelectedImage(row.referenceDocument)}
-                                                                    className="btn btn-sm btn-outline-primary py-0 px-2 text-xs font-monospace"
-                                                                    style={{ textDecoration: 'none' }}
-                                                                >
-                                                                    <i className="bi bi-file-earmark-text me-1"></i>View Proof
-                                                                </button>
-                                                            ) : (
-                                                                <span className="text-muted font-monospace small">-</span>
-                                                            )}
-                                                        </td>
-                                                    </tr>
-                                                ))}
+                                                {ledgerData.schedule?.map((row) => {
+                                                    const todayStr = new Date().toISOString().split('T')[0];
+                                                    const isPaid = (row.status || '').toLowerCase() === 'paid';
+
+                                                    // Calculate due status dynamically if not already paid
+                                                    let statusText = row.status;
+                                                    let badgeClass = 'bg-danger';
+
+                                                    if (isPaid) {
+                                                        statusText = 'Paid';
+                                                        badgeClass = 'bg-success';
+                                                    } else if (row.dueDate && row.dueDate !== 'N/A') {
+                                                        const dueDateTime = new Date(row.dueDate).setHours(0, 0, 0, 0);
+                                                        const todayDateTime = new Date(todayStr).setHours(0, 0, 0, 0);
+                                                        const diffDays = Math.round((dueDateTime - todayDateTime) / (1000 * 60 * 60 * 24));
+
+                                                        if (diffDays === 0) {
+                                                            statusText = 'Due Today';
+                                                            badgeClass = 'bg-danger text-light';
+                                                        } else if (diffDays > 0 && diffDays <= 3) {
+                                                            statusText = 'Due Soon';
+                                                            badgeClass = 'bg-warning text-dark';
+                                                        } else {
+                                                            statusText = 'Unpaid';
+                                                            badgeClass = 'bg-danger';
+                                                        }
+                                                    } else {
+                                                        statusText = 'Unpaid';
+                                                        badgeClass = 'bg-danger';
+                                                    }
+
+                                                    return (
+                                                        <tr key={row.id}>
+                                                            <td className="ps-3 fw-semibold text-dark">{row.period}</td>
+                                                            <td className="text-muted">{row.dueDate}</td>
+                                                            <td className="font-monospace fw-bold text-dark">₱{Number(row.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                                                            <td>
+                                                                <span className={`badge ${badgeClass}`}>
+                                                                    {statusText}
+                                                                </span>
+                                                            </td>
+                                                            <td className="text-muted font-monospace small">{row.paidDate}</td>
+                                                            <td className="pe-3">
+                                                                {row.referenceDocument ? (
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => setSelectedImage(row.referenceDocument)}
+                                                                        className="btn btn-sm btn-outline-primary py-0 px-2 text-xs font-monospace"
+                                                                        style={{ textDecoration: 'none' }}
+                                                                    >
+                                                                        <i className="bi bi-file-earmark-text me-1"></i>View Proof
+                                                                    </button>
+                                                                ) : (
+                                                                    <span className="text-muted font-monospace small">-</span>
+                                                                )}
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })}
                                             </tbody>
                                         </table>
                                     </div>
