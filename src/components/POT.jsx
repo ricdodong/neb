@@ -5,7 +5,7 @@ const BASE_URL = 'https://dpsapi.ricalgen.eu.org';
 
 const ProductivityOfTechnical = ({ triggerToast, username }) => {
     const [clients, setClients] = useState([]);
-    const [machines, setMachines] = useState([]);
+    const [repairableMachines, setRepairableMachines] = useState([]);
     const [serviceLogs, setServiceLogs] = useState([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -15,6 +15,7 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
 
     // Form States (Monday.com board-style columns)
     const [selectedClient, setSelectedClient] = useState('');
+    const [selectedClientId, setSelectedClientId] = useState('');
     const [selectedMachines, setSelectedMachines] = useState(['']);
     const [timeIn, setTimeIn] = useState('');
     const [timeOut, setTimeOut] = useState('');
@@ -34,19 +35,36 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
         fetchInitialData();
     }, []);
 
+    // Fetch repairable items whenever selectedClientId changes
+    useEffect(() => {
+        if (selectedClientId) {
+            fetchRepairableMachines(selectedClientId);
+        } else {
+            setRepairableMachines([]);
+        }
+    }, [selectedClientId]);
+
     const fetchInitialData = async () => {
         try {
-            const [clientRes, machineRes, logsRes] = await Promise.all([
+            const [clientRes, logsRes] = await Promise.all([
                 axios.get(`${BASE_URL}/api/customers`),
-                axios.get(`${BASE_URL}/api/inventory`),
                 axios.get(`${BASE_URL}/api/productivity-technical`)
             ]);
             setClients(clientRes.data || []);
-            setMachines(machineRes.data || []);
             setServiceLogs(logsRes.data || []);
         } catch (err) {
             console.error("Error fetching productivity data", err);
             triggerToast("Failed to load board records", "error");
+        }
+    };
+
+    const fetchRepairableMachines = async (customerId) => {
+        try {
+            const res = await axios.get(`${BASE_URL}/api/customers/${customerId}/repairable`);
+            setRepairableMachines(res.data || []);
+        } catch (err) {
+            console.error("Error fetching repairable items", err);
+            setRepairableMachines([]);
         }
     };
 
@@ -90,30 +108,11 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
         }
     };
 
-    const handleSerialResearch = (serial) => {
-        setSerialSearchQuery(serial);
-        if (!serial) {
-            setSerialSearchResult(null);
-            return;
-        }
-        const foundLog = serviceLogs.find(log =>
-            log.serial_number?.toLowerCase().includes(serial.toLowerCase()) ||
-            log.machine?.toLowerCase().includes(serial.toLowerCase())
-        );
-        if (foundLog) {
-            setSerialSearchResult({
-                client: foundLog.client_name || foundLog.client || 'Unknown Client',
-                machine: foundLog.machine || 'N/A',
-                date: foundLog.created_at || 'Recent'
-            });
-        } else {
-            setSerialSearchResult({ client: 'No prior record found for this serial/machine.', machine: serial });
-        }
-    };
-
     const resetForm = () => {
         setSelectedClient('');
+        setSelectedClientId('');
         setSelectedMachines(['']);
+        setRepairableMachines([]);
         setTimeIn('');
         setTimeOut('');
         setFsrSeries('');
@@ -158,46 +157,6 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
             triggerToast("Failed to save board update", "error");
         } finally {
             setIsSubmitting(false);
-        }
-    };
-
-    const filteredLogs = serviceLogs.filter(log =>
-        (log.client_name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (log.machine || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (log.fsr_series || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (log.technician || '').toLowerCase().includes(searchQuery.toLowerCase())
-    );
-
-    const getStatusBadgeStyle = (stat) => {
-        switch (stat) {
-            case 'Done':
-            case 'OK': return { bg: '#00c875', text: '#fff' };
-            case 'Working on it': return { bg: '#fdab3d', text: '#fff' };
-            case 'Stuck': return { bg: '#e2445c', text: '#fff' };
-            default: return { bg: '#579bfc', text: '#fff' };
-        }
-    };
-
-    const getPriorityBadgeStyle = (prio) => {
-        switch (prio) {
-            case 'High': return { bg: '#e2445c', text: '#fff' };
-            case 'Medium': return { bg: '#a25ddc', text: '#fff' };
-            case 'Low': return { bg: '#579bfc', text: '#fff' };
-            default: return { bg: '#c4c4c4', text: '#fff' };
-        }
-    };
-
-    const formatLocalDateTime = (dateStr) => {
-        if (!dateStr) return '—';
-        try {
-            return new Date(dateStr).toLocaleString('en-US', {
-                month: 'short',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-            });
-        } catch (e) {
-            return dateStr;
         }
     };
 
