@@ -188,19 +188,16 @@ const CustomerManagement = () => {
                 ? 'Cash / Paid'
                 : (firstRow.term_type ? firstRow.term_type.charAt(0).toUpperCase() + firstRow.term_type.slice(1) : 'Months');
 
-            // 3. Map direct database schedule items to the frontend ledger table UI
-            let scheduleItems = ledgerRows.map((row, index) => {
-                const isRowPaid = (row.status || '').toLowerCase() === 'paid';
-                return {
-                    id: row.id,
-                    period: isCash || isRowPaid ? 'Cash / Paid' : `${termTypeLabel} ${index + 1} of ${maxDuration}`,
-                    dueDate: row.due_date ? row.due_date.split(' ')[0] : 'N/A',
-                    amount: Number(row.amount_due) || 0,
-                    status: row.status,
-                    paidDate: row.paid_date ? row.paid_date.split(' ')[0] : '-',
-                    referenceDocument: row.reference_document ? `${FILE_URL}${row.reference_document.replace(/^\/+/, '')}` : null
-                };
-            });
+            // 3. Map direct database schedule items to the frontend ledger table UI using strict sequence terms
+            let scheduleItems = ledgerRows.map((row, index) => ({
+                id: row.id,
+                period: `${termTypeLabel} ${index + 1} of ${maxDuration}`,
+                dueDate: row.due_date ? row.due_date.split(' ')[0] : 'N/A',
+                amount: Number(row.amount_due) || 0,
+                status: row.status,
+                paidDate: row.paid_date ? row.paid_date.split(' ')[0] : '-',
+                referenceDocument: row.reference_document ? `${FILE_URL}${row.reference_document.replace(/^\/+/, '')}` : null
+            }));
 
             setLedgerData({
                 documentId: targetBatchReference,
