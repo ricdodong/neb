@@ -154,8 +154,7 @@ const DashboardHome = ({ userRole, setActivePage, activities, dashboardStats, us
                             { title: 'PO Receives', desc: 'Log Inbound Logistics', icon: 'fa-file-import', target: 'po receives', allowedRoles: ['admin', 'accounting', 'technical'] }
                         ]
                             .filter(box => {
-                                // Assumes your active user role is stored in a variable like currentUser.role or userRole
-                                const role = (currentUser?.role || 'admin').toLowerCase();
+                                const role = (userRole || 'admin').toLowerCase();
                                 return role === 'admin' || box.allowedRoles.includes(role);
                             })
                             .map((box, i) => (
@@ -304,12 +303,12 @@ const JadeSystem = ({ userRole, onLogout, username }) => {
     const menuItems = [
         { id: 'dashboard', label: 'Mainframe', icon: 'fa-microchip', roles: ['admin', 'sales', 'technical'] },
         { id: 'pos', label: 'Point of Sale', icon: 'fa-cash-register', roles: ['admin', 'sales'] },
-        { id: 'stocks', label: 'Inventory', icon: 'fa-laptop-code', roles: ['admin'] },
-        { id: 'suppliers', label: 'Suppliers', icon: 'fa-truck', roles: ['admin'] },
-        { id: 'customers', label: 'Clients', icon: 'fa-users-gear', roles: ['admin', 'technical', 'sales'] },
+        { id: 'stocks', label: 'Inventory', icon: 'fa-laptop-code', roles: ['admin', 'technical'] },
+        { id: 'suppliers', label: 'Suppliers', icon: 'fa-truck', roles: ['admin', 'accounting'] },
+        { id: 'customers', label: 'Clients', icon: 'fa-users-gear', roles: ['admin', 'sales', 'technical'] },
         { id: 'services', label: 'Repair Lab', icon: 'fa-screwdriver-wrench', roles: ['admin', 'technical'] },
         { id: 'call logs', label: 'Call Logs', icon: 'fa-headset', roles: ['admin', 'technical', 'sales'] },
-        { id: 'po receives', label: 'PO Receives', icon: 'fa-file-import', roles: ['admin'] },
+        { id: 'po receives', label: 'PO Receives', icon: 'fa-file-import', roles: ['admin', 'accounting', 'technical'] },
     ];
 
     const handleNavClick = (id) => {
