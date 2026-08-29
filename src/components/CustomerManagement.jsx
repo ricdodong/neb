@@ -180,26 +180,32 @@ const CustomerManagement = () => {
                 }
             });
 
-            // 2. Extract term configuration directly from the first ledger entry
+            // 2. Extract term configuration and format payment terms label safely
             const firstRow = ledgerRows[0];
+            const isCash = (firstRow.payment_method || '').toLowerCase() === 'cash' || ledgerRows.length === 1;
             const maxDuration = Number(firstRow.term_duration) || ledgerRows.length;
-            const termTypeLabel = firstRow.term_type ? firstRow.term_type.charAt(0).toUpperCase() + firstRow.term_type.slice(1) : 'Months';
+            const termTypeLabel = isCash
+                ? 'Cash / Paid'
+                : (firstRow.term_type ? firstRow.term_type.charAt(0).toUpperCase() + firstRow.term_type.slice(1) : 'Months');
 
             // 3. Map direct database schedule items to the frontend ledger table UI
-            let scheduleItems = ledgerRows.map((row, index) => ({
-                id: row.id,
-                period: `${termTypeLabel} ${index + 1} of ${maxDuration}`,
-                dueDate: row.due_date ? row.due_date.split(' ')[0] : 'N/A',
-                amount: Number(row.amount_due) || 0,
-                status: row.status,
-                paidDate: row.paid_date ? row.paid_date.split(' ')[0] : '-',
-                referenceDocument: row.reference_document ? `${FILE_URL}${row.reference_document.replace(/^\/+/, '')}` : null
-            }));
+            let scheduleItems = ledgerRows.map((row, index) => {
+                const isRowPaid = (row.status || '').toLowerCase() === 'paid';
+                return {
+                    id: row.id,
+                    period: isCash || isRowPaid ? 'Cash / Paid' : `${termTypeLabel} ${index + 1} of ${maxDuration}`,
+                    dueDate: row.due_date ? row.due_date.split(' ')[0] : 'N/A',
+                    amount: Number(row.amount_due) || 0,
+                    status: row.status,
+                    paidDate: row.paid_date ? row.paid_date.split(' ')[0] : '-',
+                    referenceDocument: row.reference_document ? `${FILE_URL}${row.reference_document.replace(/^\/+/, '')}` : null
+                };
+            });
 
             setLedgerData({
                 documentId: targetBatchReference,
                 clientName: selectedCustomer.name || 'Client',
-                paymentTerms: `${maxDuration} ${termTypeLabel}`,
+                paymentTerms: isCash ? 'Cash / Paid' : `${maxDuration} ${termTypeLabel}`,
                 overallTotal,
                 overallPaid,
                 overallBalance,
@@ -269,66 +275,66 @@ const CustomerManagement = () => {
     }, [customers, searchTerm]);
 
     // Group purchase history by Transaction / Batch Reference & Date + Auto-sort
-const groupedTransactions = useMemo(() => {
-    const groups = {};
-    purchaseHistory.forEach((item, index) => {
-        const batchRef = item.batch_reference || `BR-UNKNOWN-${index}`;
-        const dateStr = item.purchase_date ? new Date(item.purchase_date).toISOString().split('T')[0] : 'no-date';
-        const groupKey = `${batchRef}-${dateStr}`;
+    const groupedTransactions = useMemo(() => {
+        const groups = {};
+        purchaseHistory.forEach((item, index) => {
+            const batchRef = item.batch_reference || `BR-UNKNOWN-${index}`;
+            const dateStr = item.purchase_date ? new Date(item.purchase_date).toISOString().split('T')[0] : 'no-date';
+            const groupKey = `${batchRef}-${dateStr}`;
 
-        if (!groups[groupKey]) {
-            groups[groupKey] = {
-                displayId: `txn-${index}`,
-                batch_reference: item.batch_reference || 'N/A',
+            if (!groups[groupKey]) {
+                groups[groupKey] = {
+                    displayId: `txn-${index}`,
+                    batch_reference: item.batch_reference || 'N/A',
+                    purchase_date: item.purchase_date,
+                    payment_status: item.payment_status || 'Unpaid',
+                    items: []
+                };
+            }
+            groups[groupKey].items.push({
+                id: item.id || `row-${index}`,
+                item_name: item.item_name || 'Unknown Item',
+                qty: item.qty || 1,
                 purchase_date: item.purchase_date,
-                payment_status: item.payment_status || 'Unpaid',
-                items: []
-            };
-        }
-        groups[groupKey].items.push({
-            id: item.id || `row-${index}`,
-            item_name: item.item_name || 'Unknown Item',
-            qty: item.qty || 1,
-            purchase_date: item.purchase_date,
-            serial_number: item.serial_number,
-            srp_amount: item.srp_amount,
-            batch_reference: item.batch_reference || 'N/A',
-            payment_status: item.payment_status || item.status || 'Unpaid',
-            warranty_period: item.warranty_period
+                serial_number: item.serial_number,
+                srp_amount: item.srp_amount,
+                batch_reference: item.batch_reference || 'N/A',
+                payment_status: item.payment_status || item.status || 'Unpaid',
+                warranty_period: item.warranty_period
+            });
         });
-    });
 
-    // Post-process groups to accurately evaluate aggregate payment status case-insensitively
-    Object.values(groups).forEach(group => {
-        const statuses = group.items.map(i => (i.payment_status || '').toLowerCase());
-        const hasPaid = statuses.some(s => s === 'paid' || s === 'balance');
-        const allPaid = statuses.length > 0 && statuses.every(s => s === 'paid');
+        // Post-process groups to accurately evaluate aggregate payment status case-insensitively
+        Object.values(groups).forEach(group => {
+            const statuses = group.items.map(i => (i.payment_status || '').toLowerCase());
+            const hasPaid = statuses.some(s => s === 'paid' || s === 'balance');
+            const allPaid = statuses.length > 0 && statuses.every(s => s === 'paid');
 
-        if (allPaid) {
-            group.payment_status = 'Paid';
-        } else if (hasPaid) {
-            group.payment_status = 'Balance'; // Partial payment exists
-        } else {
-            group.payment_status = 'Unpaid';
-        }
-    });
+            if (allPaid) {
+                group.payment_status = 'Paid';
+            } else if (hasPaid) {
+                group.payment_status = 'Balance'; // Partial payment exists
+            } else {
+                group.payment_status = 'Unpaid';
+            }
+        });
 
-    // Convert to array and sort (Unpaid/Balance first, then Latest Date)
-    return Object.values(groups).sort((a, b) => {
-        const statusA = (a.payment_status || '').toLowerCase();
-        const statusB = (b.payment_status || '').toLowerCase();
+        // Convert to array and sort (Unpaid/Balance first, then Latest Date)
+        return Object.values(groups).sort((a, b) => {
+            const statusA = (a.payment_status || '').toLowerCase();
+            const statusB = (b.payment_status || '').toLowerCase();
 
-        const isUnpaidA = statusA === 'unpaid' || statusA === 'balance';
-        const isUnpaidB = statusB === 'unpaid' || statusB === 'balance';
+            const isUnpaidA = statusA === 'unpaid' || statusA === 'balance';
+            const isUnpaidB = statusB === 'unpaid' || statusB === 'balance';
 
-        if (isUnpaidA && !isUnpaidB) return -1;
-        if (!isUnpaidA && isUnpaidB) return 1;
+            if (isUnpaidA && !isUnpaidB) return -1;
+            if (!isUnpaidA && isUnpaidB) return 1;
 
-        const dateA = a.purchase_date ? new Date(a.purchase_date).getTime() : 0;
-        const dateB = b.purchase_date ? new Date(b.purchase_date).getTime() : 0;
-        return dateB - dateA;
-    });
-}, [purchaseHistory]);
+            const dateA = a.purchase_date ? new Date(a.purchase_date).getTime() : 0;
+            const dateB = b.purchase_date ? new Date(b.purchase_date).getTime() : 0;
+            return dateB - dateA;
+        });
+    }, [purchaseHistory]);
 
     return (
         <div className="container-fluid py-4 bg-light min-vh-100 rounded">
