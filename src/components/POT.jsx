@@ -31,7 +31,7 @@ const ProductivtyOfTechnical = ({ triggerToast, username }) => {
         try {
             const [clientRes, machineRes, logsRes] = await Promise.all([
                 axios.get(`${BASE_URL}/api/customers`),
-                axios.get(`${BASE_URL}/api/inventory`), // Assuming machines/items are pulled from inventory or machine records
+                axios.get(`${BASE_URL}/api/inventory`), 
                 axios.get(`${BASE_URL}/api/call-logs`)
             ]);
             setClients(clientRes.data || []);
@@ -72,7 +72,6 @@ const ProductivtyOfTechnical = ({ triggerToast, username }) => {
             setSerialSearchResult(null);
             return;
         }
-        // Research logic: find which client owns/associated with this machine serial
         const foundLog = serviceLogs.find(log => 
             log.serial_number?.toLowerCase().includes(serial.toLowerCase()) || 
             log.machine?.toLowerCase().includes(serial.toLowerCase())
@@ -106,7 +105,7 @@ const ProductivtyOfTechnical = ({ triggerToast, username }) => {
                 trouble_found: troubleFound,
                 work_done: workDone,
                 technician: username || 'Technical Staff',
-                status: 'OK' // Automatically log to Call Logs as OK
+                status: 'OK'
             };
 
             await axios.post(`${BASE_URL}/api/call-logs`, payload);
@@ -131,8 +130,24 @@ const ProductivtyOfTechnical = ({ triggerToast, username }) => {
     const filteredLogs = serviceLogs.filter(log => 
         (log.client_name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
         (log.machine || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (log.fsr_series || '').toLowerCase().includes(searchQuery.toLowerCase())
+        (log.fsr_series || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (log.technician || '').toLowerCase().includes(searchQuery.toLowerCase())
     );
+
+    const formatLocalDateTime = (dateStr) => {
+        if (!dateStr) return '—';
+        try {
+            return new Date(dateStr).toLocaleString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        } catch (e) {
+            return dateStr;
+        }
+    };
 
     return (
         <div className="animate-fade-in text-white">
@@ -151,7 +166,7 @@ const ProductivtyOfTechnical = ({ triggerToast, username }) => {
                             <div className="mb-3">
                                 <label className="form-label tiny-text text-uppercase fw-bold text-muted">Select Client</label>
                                 <select 
-                                    className="form-select bg-dark text-white border-secondary border-opacity-25 rounded-3"
+                                    className="form-select bg-dark text-white border-secondary border-opacity-25 rounded-3 shadow-none"
                                     value={selectedClient}
                                     onChange={(e) => setSelectedClient(e.target.value)}
                                     required
@@ -176,7 +191,7 @@ const ProductivtyOfTechnical = ({ triggerToast, username }) => {
                                     <div key={index} className="input-group mb-2">
                                         <input 
                                             type="text" 
-                                            className="form-control bg-dark text-white border-secondary border-opacity-25 rounded-3"
+                                            className="form-control bg-dark text-white border-secondary border-opacity-25 rounded-3 shadow-none font-monospace"
                                             placeholder={`Machine / Serial #${index + 1}`}
                                             value={m}
                                             onChange={(e) => handleMachineChange(index, e.target.value)}
@@ -191,7 +206,7 @@ const ProductivtyOfTechnical = ({ triggerToast, username }) => {
                                     <label className="form-label tiny-text text-uppercase fw-bold text-muted">Time In</label>
                                     <input 
                                         type="datetime-local" 
-                                        className="form-control bg-dark text-white border-secondary border-opacity-25 rounded-3"
+                                        className="form-control bg-dark text-white border-secondary border-opacity-25 rounded-3 shadow-none"
                                         value={timeIn}
                                         onChange={(e) => setTimeIn(e.target.value)}
                                         required
@@ -201,7 +216,7 @@ const ProductivtyOfTechnical = ({ triggerToast, username }) => {
                                     <label className="form-label tiny-text text-uppercase fw-bold text-muted">Time Out</label>
                                     <input 
                                         type="datetime-local" 
-                                        className="form-control bg-dark text-white border-secondary border-opacity-25 rounded-3"
+                                        className="form-control bg-dark text-white border-secondary border-opacity-25 rounded-3 shadow-none"
                                         value={timeOut}
                                         onChange={(e) => setTimeOut(e.target.value)}
                                         required
@@ -213,7 +228,7 @@ const ProductivtyOfTechnical = ({ triggerToast, username }) => {
                                 <label className="form-label tiny-text text-uppercase fw-bold text-muted">FSR Series Number</label>
                                 <input 
                                     type="text" 
-                                    className="form-control bg-dark text-white border-secondary border-opacity-25 rounded-3 font-monospace"
+                                    className="form-control bg-dark text-white border-secondary border-opacity-25 rounded-3 shadow-none font-monospace"
                                     placeholder="Enter FSR series code..."
                                     value={fsrSeries}
                                     onChange={(e) => setFsrSeries(e.target.value)}
@@ -226,7 +241,7 @@ const ProductivtyOfTechnical = ({ triggerToast, username }) => {
                                 <input 
                                     type="file" 
                                     accept="image/*"
-                                    className="form-control bg-dark text-white border-secondary border-opacity-25 rounded-3"
+                                    className="form-control bg-dark text-white border-secondary border-opacity-25 rounded-3 shadow-none"
                                     onChange={handleImageUpload}
                                 />
                                 {fsrImage && <div className="mt-2 text-success tiny-text">✓ Image attached successfully</div>}
@@ -235,7 +250,7 @@ const ProductivtyOfTechnical = ({ triggerToast, username }) => {
                             <div className="mb-3">
                                 <label className="form-label tiny-text text-uppercase fw-bold text-muted">Trouble Found</label>
                                 <textarea 
-                                    className="form-control bg-dark text-white border-secondary border-opacity-25 rounded-3"
+                                    className="form-control bg-dark text-white border-secondary border-opacity-25 rounded-3 shadow-none"
                                     rows="2"
                                     placeholder="Describe diagnostic findings..."
                                     value={troubleFound}
@@ -246,7 +261,7 @@ const ProductivtyOfTechnical = ({ triggerToast, username }) => {
                             <div className="mb-4">
                                 <label className="form-label tiny-text text-uppercase fw-bold text-muted">Work Done</label>
                                 <textarea 
-                                    className="form-control bg-dark text-white border-secondary border-opacity-25 rounded-3"
+                                    className="form-control bg-dark text-white border-secondary border-opacity-25 rounded-3 shadow-none"
                                     rows="2"
                                     placeholder="Describe remediation / actions taken..."
                                     value={workDone}
@@ -270,7 +285,7 @@ const ProductivtyOfTechnical = ({ triggerToast, username }) => {
                         </h6>
                         <input 
                             type="text" 
-                            className="form-control bg-dark text-white border-secondary border-opacity-25 rounded-3 mb-3 font-monospace"
+                            className="form-control bg-dark text-white border-secondary border-opacity-25 rounded-3 shadow-none mb-3 font-monospace"
                             placeholder="Enter serial to check client owner..."
                             value={serialSearchQuery}
                             onChange={(e) => handleSerialResearch(e.target.value)}
@@ -284,7 +299,7 @@ const ProductivtyOfTechnical = ({ triggerToast, username }) => {
                         )}
                     </div>
 
-                    {/* RECENT OK LOGS & SEARCH TAB */}
+                    {/* LIVE CALL LOGS LIST */}
                     <div className="p-4 rounded-4 sidebar-user-box border border-white border-opacity-10">
                         <div className="d-flex justify-content-between align-items-center mb-3">
                             <h6 className="fw-900 text-white mb-0 uppercase tiny-text tracking-widest">
@@ -293,8 +308,8 @@ const ProductivtyOfTechnical = ({ triggerToast, username }) => {
                         </div>
                         <input 
                             type="text" 
-                            className="form-control bg-dark text-white border-secondary border-opacity-25 rounded-3 mb-3"
-                            placeholder="Search logs by client/FSR..."
+                            className="form-control bg-dark text-white border-secondary border-opacity-25 rounded-3 shadow-none mb-3"
+                            placeholder="Search logs by client/FSR/tech..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />
@@ -306,10 +321,68 @@ const ProductivtyOfTechnical = ({ triggerToast, username }) => {
                                         <span className="badge bg-success tiny-text">OK</span>
                                     </div>
                                     <div className="tiny-text text-muted mt-1">Machine: {log.machine}</div>
-                                    <div className="tiny-text text-info">FSR: {log.fsr_series || 'N/A'}</div>
+                                    <div className="tiny-text text-info">FSR: {log.fsr_series || 'N/A'} | Tech: {log.technician || 'Staff'}</div>
                                     <div className="tiny-text text-secondary mt-1">{log.work_done || log.trouble_found}</div>
                                 </div>
                             )) : <div className="text-muted small text-center py-3">No matching logs found.</div>}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* PRODUCTIVITY LEDGER DATA TABLE SECTION */}
+            <div className="row mt-4">
+                <div className="col-12">
+                    <div className="p-4 rounded-4 sidebar-user-box border border-white border-opacity-10">
+                        <div className="d-flex justify-content-between align-items-center mb-4">
+                            <h5 className="fw-900 text-white m-0 text-uppercase tiny-text tracking-widest">
+                                <span className="jade-accent me-2">●</span> Entered Technical Productivity Ledger
+                            </h5>
+                            <button onClick={fetchInitialData} className="btn btn-sm border-white border-opacity-10 text-muted hover-lift rounded-3 shadow-none">
+                                <i className="fa-solid fa-rotate"></i>
+                            </button>
+                        </div>
+
+                        <div className="table-responsive">
+                            <table className="table table-dark table-hover align-middle mb-0" style={{ backgroundColor: 'transparent' }}>
+                                <thead>
+                                    <tr className="text-muted tiny-text text-uppercase border-bottom border-white border-opacity-10">
+                                        <th className="py-3 bg-transparent">Time In / Out</th>
+                                        <th className="py-3 bg-transparent">Technician</th>
+                                        <th className="py-3 bg-transparent">Client</th>
+                                        <th className="py-3 bg-transparent">Machine / Serial</th>
+                                        <th className="py-3 bg-transparent">FSR Series</th>
+                                        <th className="py-3 bg-transparent">Trouble Found</th>
+                                        <th className="py-3 bg-transparent">Work Done</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {serviceLogs.length > 0 ? (
+                                        serviceLogs.map((item, idx) => (
+                                            <tr key={item.id || idx} className="border-bottom border-white border-opacity-5">
+                                                <td className="py-3 bg-transparent tiny-text text-muted">
+                                                    <div>In: {formatLocalDateTime(item.time_in)}</div>
+                                                    <div>Out: {formatLocalDateTime(item.time_out)}</div>
+                                                </td>
+                                                <td className="py-3 bg-transparent fw-bold text-white small">{item.technician || username || 'Staff'}</td>
+                                                <td className="py-3 bg-transparent text-white small">{item.client_name || item.client}</td>
+                                                <td className="py-3 bg-transparent font-monospace text-info small">{item.machine || '—'}</td>
+                                                <td className="py-3 bg-transparent font-monospace small">
+                                                    <span className="tiny-text px-2 py-1 rounded bg-white bg-opacity-10 jade-accent">
+                                                        {item.fsr_series || 'N/A'}
+                                                    </span>
+                                                </td>
+                                                <td className="py-3 bg-transparent text-muted small">{item.trouble_found || '—'}</td>
+                                                <td className="py-3 bg-transparent text-muted small">{item.work_done || '—'}</td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td colSpan="7" className="text-center text-muted py-4 italic small">No productivity records found.</td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
