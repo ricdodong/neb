@@ -298,12 +298,12 @@ const JadeSystem = ({ userRole, onLogout, username }) => {
     const menuItems = [
         { id: 'dashboard', label: 'Mainframe', icon: 'fa-microchip', roles: ['admin', 'sales', 'technical'] },
         { id: 'pos', label: 'Point of Sale', icon: 'fa-cash-register', roles: ['admin', 'sales'] },
-        { id: 'stocks', label: 'Inventory', icon: 'fa-laptop-code', roles: ['admin', 'technical', 'sales'] },
-        { id: 'suppliers', label: 'Suppliers', icon: 'fa-truck', roles: ['admin', 'technical', 'sales'] },
-        { id: 'customers', label: 'Clients', icon: 'fa-users-gear', roles: ['admin', 'sales'] },
+        { id: 'stocks', label: 'Inventory', icon: 'fa-laptop-code', roles: ['admin'] },
+        { id: 'suppliers', label: 'Suppliers', icon: 'fa-truck', roles: ['admin'] },
+        { id: 'customers', label: 'Clients', icon: 'fa-users-gear', roles: ['admin', 'technical', 'sales'] },
         { id: 'services', label: 'Repair Lab', icon: 'fa-screwdriver-wrench', roles: ['admin', 'technical'] },
         { id: 'call logs', label: 'Call Logs', icon: 'fa-headset', roles: ['admin', 'technical', 'sales'] },
-        { id: 'po receives', label: 'PO Receives', icon: 'fa-file-import', roles: ['admin', 'technical', 'sales'] },
+        { id: 'po receives', label: 'PO Receives', icon: 'fa-file-import', roles: ['admin'] },
     ];
 
     const handleNavClick = (id) => {
