@@ -406,12 +406,12 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
 
             {/* Monday.com Style New Item Modal / Drawer Form */}
             {showModal && (
-                <div className="modal show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(5, 7, 10, 0.85)', backdropFilter: 'blur(8px)', position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', overflowY: 'auto', zIndex: 1050 }}>
-                    <div className="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable mx-auto my-3" style={{ minHeight: 'calc(100% - 3.5rem)', maxWidth: '800px' }}>
+                <div className="modal show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(5, 7, 10, 0.85)', backdropFilter: 'blur(8px)', position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', overflowY: 'auto', zIndex: 1050, padding: '1rem 0' }}>
+                    <div className="modal-dialog modal-lg mx-auto my-0" style={{ maxWidth: '800px', width: '100%' }}>
                         <div className="modal-content bg-dark border border-secondary border-opacity-25 text-white rounded-4 shadow-2xl overflow-hidden">
 
                             {/* Modal Header */}
-                            <div className="modal-header border-bottom border-secondary border-opacity-15 px-3 px-md-4 py-3 bg-black bg-opacity-75">
+                            <div className="modal-header border-bottom border-secondary border-opacity-15 px-3 px-md-4 py-3 bg-black bg-opacity-75 sticky-top" style={{ zIndex: 10 }}>
                                 <h5 className="modal-title fw-bold tiny-text tracking-widest text-uppercase d-flex align-items-center gap-2 m-0 text-light">
                                     <span style={{ color: '#00c875', fontSize: '0.85rem' }}>●</span> Create Monday Board Item
                                 </h5>
@@ -609,7 +609,7 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
                             </div>
 
                             {/* Modal Footer */}
-                            <div className="modal-footer border-top border-secondary border-opacity-15 px-3 px-md-4 py-3 bg-black bg-opacity-75">
+                            <div className="modal-footer border-top border-secondary border-opacity-15 px-3 px-md-4 py-3 bg-black bg-opacity-75 sticky-bottom" style={{ zIndex: 10 }}>
                                 <button type="button" className="btn btn-outline-secondary border-opacity-25 px-3 px-md-4 py-2 tiny-text rounded-3 text-white shadow-none" onClick={() => setShowModal(false)}>
                                     Cancel
                                 </button>
