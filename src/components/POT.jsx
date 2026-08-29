@@ -7,9 +7,9 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
     // ==========================================
     // 1. DATA & CORE STATES
     // ==========================================
-    const [clients, setClients] = useState([]);                     // Stores list of customers from API
+    const [clients, setClients] = useState([]);                      // Stores list of customers from API
     const [repairableMachines, setRepairableMachines] = useState([]); // Stores dynamic machines/units for selected client
-    const [serviceLogs, setServiceLogs] = useState([]);             // Stores all board records/logs
+    const [serviceLogs, setServiceLogs] = useState([]);              // Stores all board records/logs
     const [isSubmitting, setIsSubmitting] = useState(false);        // Tracks API submission loader state
 
     // ==========================================
@@ -27,7 +27,7 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
     const [timeIn, setTimeIn] = useState('');                       // Service start timestamp
     const [timeOut, setTimeOut] = useState('');                     // Service end timestamp
     const [fsrSeries, setFsrSeries] = useState('');                 // FSR Document code/series number
-    const [fsrImage, setFsrImage] = useState('');                   // Base64 string for image attachment preview
+    const [fsrFile, setFsrFile] = useState(null);                   // Raw File object for R2 upload
     const [troubleFound, setTroubleFound] = useState('');           // Diagnosed issue / description
     const [workDone, setWorkDone] = useState('');                   // Actions taken / remediation
     const [status, setStatus] = useState('Working on it');          // Board item status (Working on it / Done / Stuck)
@@ -121,15 +121,11 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
         setSelectedMachines(updated);
     };
 
-    // Processes uploaded document/image files via FileReader into Base64 format
+    // Captures the raw file object for multipart/form-data Cloudflare R2 upload
     const handleImageUpload = (e) => {
         const file = e.target.files[0];
         if (file) {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setFsrImage(reader.result);
-            };
-            reader.readAsDataURL(file);
+            setFsrFile(file);
         }
     };
 
@@ -142,7 +138,7 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
         setTimeIn('');
         setTimeOut('');
         setFsrSeries('');
-        setFsrImage('');
+        setFsrFile(null);
         setTroubleFound('');
         setWorkDone('');
         setStatus('Working on it');
@@ -150,7 +146,7 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
     };
 
     // ==========================================
-    // 8. FORM SUBMISSION HANDLER
+    // 8. FORM SUBMISSION HANDLER (Multipart FSR + R2 Integration)
     // ==========================================
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -163,22 +159,30 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
 
         setIsSubmitting(true);
         try {
-            const payload = {
-                client_name: selectedClient,
-                machine: selectedMachines.filter(m => m.trim() !== '').join(', '),
-                time_in: timeIn,
-                time_out: timeOut,
-                fsr_series: fsrSeries,
-                fsr_image: fsrImage,
-                trouble_found: troubleFound,
-                work_done: workDone,
-                technician: username || 'Technical Staff',
-                status: status,
-                priority: priority
-            };
+            const formData = new FormData();
+            formData.append('client_name', selectedClient);
+            formData.append('machine', selectedMachines.filter(m => m.trim() !== '').join(', '));
+            formData.append('time_in', timeIn);
+            formData.append('time_out', timeOut);
+            formData.append('fsr_series', fsrSeries);
+            formData.append('trouble_found', troubleFound);
+            formData.append('work_done', workDone);
+            formData.append('technician', username || 'Technical Staff');
+            formData.append('status', status);
+            formData.append('priority', priority);
 
-            // Post request to backend API endpoint
-            await axios.post(`${BASE_URL}/api/call-logs`, payload);
+            // Append raw file for Cloudflare R2 bucket storage if selected
+            if (fsrFile) {
+                formData.append('file', fsrFile);
+            }
+
+            // Post multipart request to backend API endpoint
+            await axios.post(`${BASE_URL}/api/call-logs`, formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+
             triggerToast("Board item created & synced!", "success");
 
             // Clean up UI state post-success
@@ -436,7 +440,7 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
                 </div>
             </div>
 
-            {/* Monday.com Style New Item Modal / Drawer Form */}
+            {/*Style New Item Modal / Drawer Form */}
             {showModal && (
                 <div className="modal show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(5, 7, 10, 0.85)', backdropFilter: 'blur(8px)', position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', overflowY: 'auto', zIndex: 1050, padding: '1rem 0' }}>
                     <div className="modal-dialog modal-lg mx-auto my-0" style={{ maxWidth: '800px', width: '100%' }}>
@@ -639,9 +643,9 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
                                             {fsrImage && (
                                                 <div className="mt-2 d-flex align-items-center justify-content-between p-2.5 rounded-3 bg-dark border border-success border-opacity-25">
                                                     <span className="text-success tiny-text d-flex align-items-center gap-2 fw-bold">
-                                                        <i className="fa-solid fa-check-circle"></i> File uploaded successfully
+                                                        <i className="fa-solid fa-check-circle"></i> File selected for upload
                                                     </span>
-                                                    <button type="button" className="btn btn-sm btn-link text-danger p-0 tiny-text text-decoration-none" onClick={() => setFsrImage('')}>
+                                                    <button type="button" className="btn btn-sm btn-link text-danger p-0 tiny-text text-decoration-none" onClick={() => setFsrImage(null)}>
                                                         Remove
                                                     </button>
                                                 </div>
