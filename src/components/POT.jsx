@@ -190,7 +190,7 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
                     <p className="text-muted small m-0 mt-1">Track service tickets, FSR records, and sync field tasks effortlessly.</p>
                 </div>
                 <button 
-                    onClick={() => setShowModal(true)} 
+                    onClick={() => { resetForm(); setShowModal(true); }} 
                     className="btn px-4 py-2.5 fw-bold tiny-text tracking-widest text-dark d-flex align-items-center justify-content-center gap-2 shadow-sm transition-all"
                     style={{ backgroundColor: 'var(--jade)' }}
                 >
@@ -470,7 +470,16 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
                                                 className="form-control bg-dark text-white border-secondary border-opacity-25 rounded-3 shadow-none py-2 small"
                                                 onChange={handleImageUpload}
                                             />
-                                            {fsrImage && <div className="mt-1.5 text-success tiny-text d-flex align-items-center gap-1">✓ FSR image attached</div>}
+                                            {fsrImage && (
+                                                <div className="mt-2 d-flex align-items-center justify-content-between p-2 rounded-3 bg-dark border border-success border-opacity-25">
+                                                    <span className="text-success tiny-text d-flex align-items-center gap-1.5 fw-bold">
+                                                        <i className="fa-solid fa-check-circle"></i> FSR image attached & optimized
+                                                    </span>
+                                                    <button type="button" className="btn btn-sm btn-link text-danger p-0 tiny-text text-decoration-none" onClick={() => setFsrImage('')}>
+                                                        Remove
+                                                    </button>
+                                                </div>
+                                            )}
                                         </div>
 
                                         <div className="mb-3">
