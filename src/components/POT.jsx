@@ -86,7 +86,7 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
     // ==========================================
     // 7. FORM UTILITY & INTERACTION HELPERS
     // ==========================================
-    
+
     // Auto-populates 'Time In' input with the current local timestamp
     const handleSetNowTimeIn = () => {
         const now = new Date();
@@ -154,7 +154,7 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
     // ==========================================
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
+
         // Form Validation check
         if (!selectedClient || selectedMachines.length === 0 || !fsrSeries) {
             triggerToast("Please fill in required fields (Client, Machine, FSR Series)", "error");
@@ -396,7 +396,7 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
                 </div>
             </div>
 
- {/* Monday.com Style New Item Modal / Drawer Form */}
+            {/* Monday.com Style New Item Modal / Drawer Form */}
             {showModal && (
                 <div className="modal show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(5, 7, 10, 0.85)', backdropFilter: 'blur(8px)', position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', overflowY: 'auto', zIndex: 1050, padding: '1rem 0' }}>
                     <div className="modal-dialog modal-lg mx-auto my-0" style={{ maxWidth: '800px', width: '100%' }}>
