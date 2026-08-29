@@ -9,6 +9,7 @@ import CallLogs from './components/CallLogs';
 import PointOfSale from './components/PointOfSale';
 import ServiceCenter from './components/ServiceCenter';
 import POReceives from './components/poReceives';
+import ProductivtyOfTechnical from './components/POT';
 
 const BASE_URL = 'https://dpsapi.ricalgen.eu.org'; // Use your actual Worker URL here
 
@@ -152,7 +153,8 @@ const DashboardHome = ({ userRole, setActivePage, activities, dashboardStats, us
                             { title: 'Repair Lab', desc: 'Broken Unit Service', icon: 'fa-wrench', target: 'services', allowedRoles: ['admin', 'technical'] },
                             { title: 'Call Logs', desc: 'Call Logs', icon: 'fa-headset', target: 'call logs', allowedRoles: ['admin', 'technical'] },
                             { title: 'Customer File', desc: 'CRM & History', icon: 'fa-address-card', target: 'customers', allowedRoles: ['admin', 'sales', 'technical'] },
-                            { title: 'PO Receives', desc: 'Log Inbound Logistics', icon: 'fa-file-import', target: 'po receives', allowedRoles: ['admin', 'accounting'] }
+                            { title: 'PO Receives', desc: 'Log Inbound Logistics', icon: 'fa-file-import', target: 'po receives', allowedRoles: ['admin', 'accounting'] },
+                            { title: 'Productivity Tech', desc: 'Service Logs & FSR Tracking', icon: 'fa-clipboard-user', target: 'pot', allowedRoles: ['admin', 'technical'] }
                         ]
                             .filter(box => {
                                 const role = (userRole || 'admin').toLowerCase();
@@ -310,6 +312,7 @@ const JadeSystem = ({ userRole, onLogout, username }) => {
         { id: 'services', label: 'Repair Lab', icon: 'fa-screwdriver-wrench', roles: ['admin', 'technical'] },
         { id: 'call logs', label: 'Call Logs', icon: 'fa-headset', roles: ['admin', 'technical', 'sales'] },
         { id: 'po receives', label: 'PO Receives', icon: 'fa-file-import', roles: ['admin', 'accounting'] },
+        { id: 'pot', label: 'Productivity Tech', icon: 'fa-clipboard-user', roles: ['admin', 'technical'] },
     ];
 
     const handleNavClick = (id) => {
@@ -384,7 +387,7 @@ const JadeSystem = ({ userRole, onLogout, username }) => {
                 <section className="page-container mt-0 p-2 p-md-3 animate-fade-in">
                     <div className="d-flex justify-content-between align-items-center mb-2">
                         <h2 className="fw-900 text-white text-uppercase tracking-widest m-0 h4">
-                            {activePage === 'po receives' ? 'PO Receives' : activePage === 'suppliers' ? 'Suppliers' : activePage.replace('call logs', 'Call Logs')}
+                            {activePage === 'po receives' ? 'PO Receives' : activePage === 'suppliers' ? 'Suppliers' : activePage === 'pot' ? 'Productivity of Technical' : activePage.replace('call logs', 'Call Logs')}
                         </h2>
                         <div className="status-badge px-3 py-1 rounded-pill d-none d-md-block border border-white border-opacity-10">
                             <span className="jade-accent tiny-text">Simple System For a Simple Company</span>
@@ -408,6 +411,7 @@ const JadeSystem = ({ userRole, onLogout, username }) => {
                         {activePage === 'pos' && <PointOfSale triggerToast={triggerToast} userRole={userRole} />}
                         {activePage === 'services' && <ServiceCenter triggerToast={triggerToast} userRole={userRole} />}
                         {activePage === 'po receives' && <POReceives triggerToast={triggerToast} userRole={userRole} />}
+                        {activePage === 'pot' && <ProductivtyOfTechnical triggerToast={triggerToast} username={username} />}
                     </div>
                 </section>
             </main>
