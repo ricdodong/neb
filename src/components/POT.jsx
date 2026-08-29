@@ -8,7 +8,7 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
     const [machines, setMachines] = useState([]);
     const [serviceLogs, setServiceLogs] = useState([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    
+
     // Modal & View State
     const [showModal, setShowModal] = useState(false);
     const [activeTab, setActiveTab] = useState('table'); // 'table' | 'kanban'
@@ -24,7 +24,7 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
     const [workDone, setWorkDone] = useState('');
     const [status, setStatus] = useState('Working on it'); // Monday-style status item
     const [priority, setPriority] = useState('Medium'); // Monday-style priority item
-    
+
     // Search & Filter State
     const [searchQuery, setSearchQuery] = useState('');
     const [serialSearchQuery, setSerialSearchQuery] = useState('');
@@ -38,7 +38,7 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
         try {
             const [clientRes, machineRes, logsRes] = await Promise.all([
                 axios.get(`${BASE_URL}/api/customers`),
-                axios.get(`${BASE_URL}/api/inventory`), 
+                axios.get(`${BASE_URL}/api/inventory`),
                 axios.get(`${BASE_URL}/api/productivity-technical`)
             ]);
             setClients(clientRes.data || []);
@@ -96,8 +96,8 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
             setSerialSearchResult(null);
             return;
         }
-        const foundLog = serviceLogs.find(log => 
-            log.serial_number?.toLowerCase().includes(serial.toLowerCase()) || 
+        const foundLog = serviceLogs.find(log =>
+            log.serial_number?.toLowerCase().includes(serial.toLowerCase()) ||
             log.machine?.toLowerCase().includes(serial.toLowerCase())
         );
         if (foundLog) {
@@ -149,7 +149,7 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
 
             await axios.post(`${BASE_URL}/api/call-logs`, payload);
             triggerToast("Board item created & synced!", "success");
-            
+
             resetForm();
             setShowModal(false);
             fetchInitialData();
@@ -161,7 +161,7 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
         }
     };
 
-    const filteredLogs = serviceLogs.filter(log => 
+    const filteredLogs = serviceLogs.filter(log =>
         (log.client_name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
         (log.machine || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
         (log.fsr_series || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -218,13 +218,13 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
                 <div className="d-flex flex-wrap align-items-center gap-2.5">
                     {/* View Switcher Tabs */}
                     <div className="btn-group bg-dark border border-white border-opacity-10 rounded-3 p-1">
-                        <button 
+                        <button
                             className={`btn btn-sm px-3 rounded-2 tiny-text fw-bold transition-all ${activeTab === 'table' ? 'bg-secondary bg-opacity-50 text-white shadow-sm' : 'text-muted border-0'}`}
                             onClick={() => setActiveTab('table')}
                         >
                             <i className="fa-solid fa-table-cells-row-lock me-1"></i> Main Table
                         </button>
-                        <button 
+                        <button
                             className={`btn btn-sm px-3 rounded-2 tiny-text fw-bold transition-all ${activeTab === 'kanban' ? 'bg-secondary bg-opacity-50 text-white shadow-sm' : 'text-muted border-0'}`}
                             onClick={() => setActiveTab('kanban')}
                         >
@@ -232,8 +232,8 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
                         </button>
                     </div>
 
-                    <button 
-                        onClick={() => { resetForm(); setShowModal(true); }} 
+                    <button
+                        onClick={() => { resetForm(); setShowModal(true); }}
                         className="btn px-4 py-2.5 fw-bold tiny-text tracking-widest text-dark d-flex align-items-center justify-content-center gap-2 shadow-sm transition-all rounded-3"
                         style={{ backgroundColor: '#00c875' }}
                     >
@@ -252,8 +252,8 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
                             <h6 className="fw-900 text-white mb-2 text-uppercase tiny-text tracking-widest d-flex align-items-center gap-2">
                                 <span className="jade-accent">🔍</span> Filter Board
                             </h6>
-                            <input 
-                                type="text" 
+                            <input
+                                type="text"
                                 className="form-control bg-dark text-white border-secondary border-opacity-25 rounded-3 shadow-none small"
                                 placeholder="Search client, tech, serial..."
                                 value={searchQuery}
@@ -266,8 +266,8 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
                             <h6 className="fw-900 text-white mb-2 text-uppercase tiny-text tracking-widest d-flex align-items-center gap-2">
                                 <span className="text-info">📌</span> Serial Check
                             </h6>
-                            <input 
-                                type="text" 
+                            <input
+                                type="text"
                                 className="form-control bg-dark text-white border-secondary border-opacity-25 rounded-3 shadow-none font-monospace small"
                                 placeholder="Scan serial number..."
                                 value={serialSearchQuery}
@@ -291,8 +291,8 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
                                 <span className="badge rounded-3 bg-white bg-opacity-10 px-2.5 py-1 tiny-text fw-bold">Active Group</span>
                                 <span className="text-muted tiny-text">({filteredLogs.length} items)</span>
                             </div>
-                            <button 
-                                onClick={fetchInitialData} 
+                            <button
+                                onClick={fetchInitialData}
                                 className="btn btn-sm border-white border-opacity-10 text-muted hover-lift rounded-3 shadow-none d-flex align-items-center gap-1.5 px-3 py-1"
                             >
                                 <i className="fa-solid fa-rotate tiny-text"></i> <span className="tiny-text">Sync Board</span>
@@ -406,33 +406,37 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
 
             {/* Monday.com Style New Item Modal / Drawer Form */}
             {showModal && (
-                <div className="modal show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(4px)' }}>
+                <div className="modal show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(5, 7, 10, 0.8)', backdropFilter: 'blur(8px)' }}>
                     <div className="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-                        <div className="modal-content bg-dark border border-white border-opacity-20 text-white rounded-4 shadow-lg overflow-hidden">
-                            <div className="modal-header border-bottom border-white border-opacity-10 px-4 py-3 bg-black bg-opacity-50">
-                                <h5 className="modal-title fw-900 tiny-text tracking-widest text-uppercase d-flex align-items-center gap-2 m-0">
-                                    <span style={{ color: '#00c875' }}>●</span> Create Monday Board Item
+                        <div className="modal-content bg-dark border border-secondary border-opacity-25 text-white rounded-4 shadow-2xl overflow-hidden">
+
+                            {/* Modal Header */}
+                            <div className="modal-header border-bottom border-secondary border-opacity-15 px-4 py-3 bg-black bg-opacity-75">
+                                <h5 className="modal-title fw-bold tiny-text tracking-widest text-uppercase d-flex align-items-center gap-2 m-0 text-light">
+                                    <span style={{ color: '#00c875', fontSize: '0.85rem' }}>●</span> Create Monday Board Item
                                 </h5>
-                                <button type="button" className="btn-close btn-close-white shadow-none" onClick={() => setShowModal(false)}></button>
+                                <button type="button" className="btn-close btn-close-white shadow-none opacity-75" onClick={() => setShowModal(false)}></button>
                             </div>
-                            <div className="modal-body p-4">
+
+                            {/* Modal Body */}
+                            <div className="modal-body p-4" style={{ backgroundColor: '#121418' }}>
                                 <form onSubmit={handleSubmit} id="productivityForm">
-                                    
+
                                     {/* MONDAY.COM COLUMN: CLIENT & MACHINES */}
-                                    <div className="p-3.5 mb-3.5 rounded-3 bg-black bg-opacity-40 border border-white border-opacity-5">
-                                        <div className="tiny-text text-uppercase fw-bold text-muted mb-3 tracking-wider d-flex align-items-center gap-2">
-                                            <span>🏢</span> Client & Equipment Column
+                                    <div className="p-4 mb-4 rounded-3 bg-black bg-opacity-30 border border-secondary border-opacity-15 shadow-sm">
+                                        <div className="tiny-text text-uppercase fw-bold text-secondary mb-3 tracking-wider d-flex align-items-center gap-2">
+                                            <span className="text-info">🏢</span> Client & Equipment Column
                                         </div>
 
                                         <div className="mb-3">
                                             <label className="form-label tiny-text text-uppercase fw-bold text-secondary mb-1">Client Name *</label>
-                                            <select 
-                                                className="form-select bg-dark text-white border-secondary border-opacity-25 rounded-3 shadow-none py-2"
+                                            <select
+                                                className="form-select bg-dark text-white border-secondary border-opacity-25 rounded-3 shadow-none py-2 px-3 small"
                                                 value={selectedClient}
                                                 onChange={(e) => setSelectedClient(e.target.value)}
                                                 required
                                             >
-                                                <option value="">-- Choose Customer / Client --</option>
+                                                <option value="" className="text-muted">-- Choose Customer / Client --</option>
                                                 {clients.map((c, i) => (
                                                     <option key={i} value={c.name || c.client_name}>{c.name || c.client_name}</option>
                                                 ))}
@@ -443,24 +447,24 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
                                             <div className="d-flex justify-content-between align-items-center mb-1">
                                                 <label className="form-label tiny-text text-uppercase fw-bold text-secondary m-0">Machine / Serial Number *</label>
                                                 {selectedMachines.length < 2 && (
-                                                    <button type="button" onClick={handleAddMachineField} className="btn btn-sm btn-link jade-accent p-0 tiny-text text-decoration-none fw-bold">
+                                                    <button type="button" onClick={handleAddMachineField} className="btn btn-sm btn-link p-0 tiny-text text-decoration-none fw-bold" style={{ color: '#00c875' }}>
                                                         + Add 2nd Machine
                                                     </button>
                                                 )}
                                             </div>
                                             {selectedMachines.map((m, index) => (
                                                 <div key={index} className="input-group mb-2">
-                                                    <span className="input-group-text bg-dark border-secondary border-opacity-25 text-muted tiny-text">#{index + 1}</span>
-                                                    <input 
-                                                        type="text" 
-                                                        className="form-control bg-dark text-white border-secondary border-opacity-25 rounded-end shadow-none font-monospace small py-2"
+                                                    <span className="input-group-text bg-dark border-secondary border-opacity-25 text-secondary tiny-text px-3">#{index + 1}</span>
+                                                    <input
+                                                        type="text"
+                                                        className="form-control bg-dark text-white border-secondary border-opacity-25 rounded-end shadow-none font-monospace small py-2 px-3"
                                                         placeholder="Enter machine serial / ID..."
                                                         value={m}
                                                         onChange={(e) => handleMachineChange(index, e.target.value)}
                                                         required={index === 0}
                                                     />
                                                     {selectedMachines.length > 1 && (
-                                                        <button type="button" className="btn btn-outline-danger border-opacity-25 text-danger px-3 ms-2 rounded-3" onClick={() => handleRemoveMachineField(index)}>
+                                                        <button type="button" className="btn btn-outline-danger border-opacity-25 text-danger px-3 ms-2 rounded-3 hover-danger" onClick={() => handleRemoveMachineField(index)}>
                                                             <i className="fa-solid fa-trash-can tiny-text"></i>
                                                         </button>
                                                     )}
@@ -470,15 +474,15 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
                                     </div>
 
                                     {/* MONDAY.COM COLUMN: STATUS & PRIORITY SELECTORS */}
-                                    <div className="p-3.5 mb-3.5 rounded-3 bg-black bg-opacity-40 border border-white border-opacity-5">
-                                        <div className="tiny-text text-uppercase fw-bold text-muted mb-3 tracking-wider d-flex align-items-center gap-2">
-                                            <span>📊</span> Status & Priority Labels
+                                    <div className="p-4 mb-4 rounded-3 bg-black bg-opacity-30 border border-secondary border-opacity-15 shadow-sm">
+                                        <div className="tiny-text text-uppercase fw-bold text-secondary mb-3 tracking-wider d-flex align-items-center gap-2">
+                                            <span className="text-warning">📊</span> Status & Priority Labels
                                         </div>
                                         <div className="row g-3">
                                             <div className="col-12 col-md-6">
                                                 <label className="form-label tiny-text text-uppercase fw-bold text-secondary mb-1">Board Status</label>
-                                                <select 
-                                                    className="form-select bg-dark text-white border-secondary border-opacity-25 rounded-3 shadow-none py-2 small fw-bold"
+                                                <select
+                                                    className="form-select bg-dark text-white border-secondary border-opacity-25 rounded-3 shadow-none py-2 px-3 small fw-bold"
                                                     value={status}
                                                     onChange={(e) => setStatus(e.target.value)}
                                                 >
@@ -489,8 +493,8 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
                                             </div>
                                             <div className="col-12 col-md-6">
                                                 <label className="form-label tiny-text text-uppercase fw-bold text-secondary mb-1">Priority</label>
-                                                <select 
-                                                    className="form-select bg-dark text-white border-secondary border-opacity-25 rounded-3 shadow-none py-2 small fw-bold"
+                                                <select
+                                                    className="form-select bg-dark text-white border-secondary border-opacity-25 rounded-3 shadow-none py-2 px-3 small fw-bold"
                                                     value={priority}
                                                     onChange={(e) => setPriority(e.target.value)}
                                                 >
@@ -503,9 +507,9 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
                                     </div>
 
                                     {/* MONDAY.COM COLUMN: TIMELINE / TIMING */}
-                                    <div className="p-3.5 mb-3.5 rounded-3 bg-black bg-opacity-40 border border-white border-opacity-5">
-                                        <div className="tiny-text text-uppercase fw-bold text-muted mb-3 tracking-wider d-flex align-items-center gap-2">
-                                            <span>⏱️</span> Timeline & Duration
+                                    <div className="p-4 mb-4 rounded-3 bg-black bg-opacity-30 border border-secondary border-opacity-15 shadow-sm">
+                                        <div className="tiny-text text-uppercase fw-bold text-secondary mb-3 tracking-wider d-flex align-items-center gap-2">
+                                            <span className="text-success">⏱️</span> Timeline & Duration
                                         </div>
                                         <div className="row g-3">
                                             <div className="col-12 col-md-6">
@@ -515,9 +519,9 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
                                                         Set Now
                                                     </button>
                                                 </div>
-                                                <input 
-                                                    type="datetime-local" 
-                                                    className="form-control bg-dark text-white border-secondary border-opacity-25 rounded-3 shadow-none py-2 small"
+                                                <input
+                                                    type="datetime-local"
+                                                    className="form-control bg-dark text-white border-secondary border-opacity-25 rounded-3 shadow-none py-2 px-3 small"
                                                     value={timeIn}
                                                     onChange={(e) => setTimeIn(e.target.value)}
                                                     required
@@ -530,9 +534,9 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
                                                         Set Now
                                                     </button>
                                                 </div>
-                                                <input 
-                                                    type="datetime-local" 
-                                                    className="form-control bg-dark text-white border-secondary border-opacity-25 rounded-3 shadow-none py-2 small"
+                                                <input
+                                                    type="datetime-local"
+                                                    className="form-control bg-dark text-white border-secondary border-opacity-25 rounded-3 shadow-none py-2 px-3 small"
                                                     value={timeOut}
                                                     onChange={(e) => setTimeOut(e.target.value)}
                                                     required
@@ -542,16 +546,16 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
                                     </div>
 
                                     {/* MONDAY.COM COLUMN: FSR DOCUMENT & UPDATES */}
-                                    <div className="p-3.5 rounded-3 bg-black bg-opacity-40 border border-white border-opacity-5">
-                                        <div className="tiny-text text-uppercase fw-bold text-muted mb-3 tracking-wider d-flex align-items-center gap-2">
-                                            <span>📝</span> FSR & Updates Column
+                                    <div className="p-4 mb-0 rounded-3 bg-black bg-opacity-30 border border-secondary border-opacity-15 shadow-sm">
+                                        <div className="tiny-text text-uppercase fw-bold text-secondary mb-3 tracking-wider d-flex align-items-center gap-2">
+                                            <span className="text-primary">📝</span> FSR & Updates Column
                                         </div>
 
                                         <div className="mb-3">
                                             <label className="form-label tiny-text text-uppercase fw-bold text-secondary mb-1">FSR Series Number *</label>
-                                            <input 
-                                                type="text" 
-                                                className="form-control bg-dark text-white border-secondary border-opacity-25 rounded-3 shadow-none font-monospace py-2 small"
+                                            <input
+                                                type="text"
+                                                className="form-control bg-dark text-white border-secondary border-opacity-25 rounded-3 shadow-none font-monospace py-2 px-3 small"
                                                 placeholder="e.g., FSR-2026-00124"
                                                 value={fsrSeries}
                                                 onChange={(e) => setFsrSeries(e.target.value)}
@@ -561,15 +565,15 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
 
                                         <div className="mb-3">
                                             <label className="form-label tiny-text text-uppercase fw-bold text-secondary mb-1">FSR Document Attachment</label>
-                                            <input 
-                                                type="file" 
+                                            <input
+                                                type="file"
                                                 accept="image/*"
-                                                className="form-control bg-dark text-white border-secondary border-opacity-25 rounded-3 shadow-none py-2 small"
+                                                className="form-control bg-dark text-white border-secondary border-opacity-25 rounded-3 shadow-none py-2 px-3 small"
                                                 onChange={handleImageUpload}
                                             />
                                             {fsrImage && (
-                                                <div className="mt-2 d-flex align-items-center justify-content-between p-2 rounded-3 bg-dark border border-success border-opacity-25">
-                                                    <span className="text-success tiny-text d-flex align-items-center gap-1.5 fw-bold">
+                                                <div className="mt-2 d-flex align-items-center justify-content-between p-2.5 rounded-3 bg-dark border border-success border-opacity-25">
+                                                    <span className="text-success tiny-text d-flex align-items-center gap-2 fw-bold">
                                                         <i className="fa-solid fa-check-circle"></i> File uploaded successfully
                                                     </span>
                                                     <button type="button" className="btn btn-sm btn-link text-danger p-0 tiny-text text-decoration-none" onClick={() => setFsrImage('')}>
@@ -581,8 +585,8 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
 
                                         <div className="mb-3">
                                             <label className="form-label tiny-text text-uppercase fw-bold text-secondary mb-1">Trouble Found</label>
-                                            <textarea 
-                                                className="form-control bg-dark text-white border-secondary border-opacity-25 rounded-3 shadow-none small"
+                                            <textarea
+                                                className="form-control bg-dark text-white border-secondary border-opacity-25 rounded-3 shadow-none p-3 small"
                                                 rows="2"
                                                 placeholder="Diagnosed issue..."
                                                 value={troubleFound}
@@ -592,8 +596,8 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
 
                                         <div className="mb-0">
                                             <label className="form-label tiny-text text-uppercase fw-bold text-secondary mb-1">Work Done</label>
-                                            <textarea 
-                                                className="form-control bg-dark text-white border-secondary border-opacity-25 rounded-3 shadow-none small"
+                                            <textarea
+                                                className="form-control bg-dark text-white border-secondary border-opacity-25 rounded-3 shadow-none p-3 small"
                                                 rows="2"
                                                 placeholder="Remediation / actions taken..."
                                                 value={workDone}
@@ -603,15 +607,17 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
                                     </div>
                                 </form>
                             </div>
-                            <div className="modal-footer border-top border-white border-opacity-10 px-4 py-3 bg-black bg-opacity-50">
-                                <button type="button" className="btn btn-outline-secondary border-opacity-25 px-4 py-2 tiny-text rounded-3 text-white" onClick={() => setShowModal(false)}>
+
+                            {/* Modal Footer */}
+                            <div className="modal-footer border-top border-secondary border-opacity-15 px-4 py-3 bg-black bg-opacity-75">
+                                <button type="button" className="btn btn-outline-secondary border-opacity-25 px-4 py-2 tiny-text rounded-3 text-white shadow-none" onClick={() => setShowModal(false)}>
                                     Cancel
                                 </button>
-                                <button 
-                                    type="submit" 
-                                    form="productivityForm" 
-                                    className="btn px-4 py-2.5 fw-bold tiny-text tracking-widest text-dark rounded-3 d-flex align-items-center gap-2"
-                                    style={{ backgroundColor: '#00c875' }}
+                                <button
+                                    type="submit"
+                                    form="productivityForm"
+                                    className="btn px-4 py-2 fw-bold tiny-text tracking-widest text-dark rounded-3 d-flex align-items-center gap-2 shadow-none"
+                                    style={{ backgroundColor: '#00c875', transition: 'opacity 0.2s' }}
                                     disabled={isSubmitting}
                                 >
                                     {isSubmitting ? (
@@ -624,6 +630,7 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
                                     )}
                                 </button>
                             </div>
+
                         </div>
                     </div>
                 </div>
