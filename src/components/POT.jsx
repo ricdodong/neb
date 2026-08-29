@@ -406,12 +406,12 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
 
             {/* Monday.com Style New Item Modal / Drawer Form */}
             {showModal && (
-                <div className="modal show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(5, 7, 10, 0.85)', backdropFilter: 'blur(8px)', overflowY: 'auto' }}>
-                    <div className="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable m-2 m-sm-auto">
-                        <div className="modal-content bg-dark border border-secondary border-opacity-25 text-white rounded-4 shadow-2xl overflow-hidden" style={{ maxHeight: '90vh' }}>
+                <div className="modal show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(5, 7, 10, 0.85)', backdropFilter: 'blur(8px)', position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', overflowY: 'auto', zIndex: 1050 }}>
+                    <div className="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable mx-auto my-3" style={{ minHeight: 'calc(100% - 3.5rem)', maxWidth: '800px' }}>
+                        <div className="modal-content bg-dark border border-secondary border-opacity-25 text-white rounded-4 shadow-2xl overflow-hidden">
 
                             {/* Modal Header */}
-                            <div className="modal-header border-bottom border-secondary border-opacity-15 px-3 px-md-4 py-3 bg-black bg-opacity-75 sticky-top">
+                            <div className="modal-header border-bottom border-secondary border-opacity-15 px-3 px-md-4 py-3 bg-black bg-opacity-75">
                                 <h5 className="modal-title fw-bold tiny-text tracking-widest text-uppercase d-flex align-items-center gap-2 m-0 text-light">
                                     <span style={{ color: '#00c875', fontSize: '0.85rem' }}>●</span> Create Monday Board Item
                                 </h5>
@@ -419,7 +419,7 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
                             </div>
 
                             {/* Modal Body */}
-                            <div className="modal-body p-3 p-md-4" style={{ backgroundColor: '#121418', overflowY: 'visible' }}>
+                            <div className="modal-body p-3 p-md-4" style={{ backgroundColor: '#121418' }}>
                                 <form onSubmit={handleSubmit} id="productivityForm">
 
                                     {/* MONDAY.COM COLUMN: CLIENT & MACHINES */}
@@ -609,7 +609,7 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
                             </div>
 
                             {/* Modal Footer */}
-                            <div className="modal-footer border-top border-secondary border-opacity-15 px-3 px-md-4 py-3 bg-black bg-opacity-75 sticky-bottom">
+                            <div className="modal-footer border-top border-secondary border-opacity-15 px-3 px-md-4 py-3 bg-black bg-opacity-75">
                                 <button type="button" className="btn btn-outline-secondary border-opacity-25 px-3 px-md-4 py-2 tiny-text rounded-3 text-white shadow-none" onClick={() => setShowModal(false)}>
                                     Cancel
                                 </button>
