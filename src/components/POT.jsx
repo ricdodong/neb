@@ -12,7 +12,7 @@ const ProductivtyOfTechnical = ({ triggerToast, username }) => {
     // Modal State
     const [showModal, setShowModal] = useState(false);
 
-    // Form States
+    // Form States (Optimized with smart defaults & quick-helpers)
     const [selectedClient, setSelectedClient] = useState('');
     const [selectedMachines, setSelectedMachines] = useState(['']);
     const [timeIn, setTimeIn] = useState('');
@@ -45,6 +45,20 @@ const ProductivtyOfTechnical = ({ triggerToast, username }) => {
             console.error("Error fetching productivity data", err);
             triggerToast("Failed to load records", "error");
         }
+    };
+
+    // Helper: Set Time In to current local time instantly
+    const handleSetNowTimeIn = () => {
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        setTimeIn(now.toISOString().slice(0, 16));
+    };
+
+    // Helper: Set Time Out to current local time instantly
+    const handleSetNowTimeOut = () => {
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        setTimeOut(now.toISOString().slice(0, 16));
     };
 
     const handleAddMachineField = () => {
@@ -92,7 +106,7 @@ const ProductivtyOfTechnical = ({ triggerToast, username }) => {
                 date: foundLog.created_at || 'Recent'
             });
         } else {
-            setSerialSearchResult({ client: 'No client record found for this serial/machine.', machine: serial });
+            setSerialSearchResult({ client: 'No prior record found for this serial/machine.', machine: serial });
         }
     };
 
@@ -173,14 +187,14 @@ const ProductivtyOfTechnical = ({ triggerToast, username }) => {
                     <h3 className="fw-900 tracking-tighter text-white m-0">
                         PRODUCTIVITY OF <span className="jade-accent">TECHNICAL</span>
                     </h3>
-                    <p className="text-muted small m-0 mt-1">Service logs, FSR tracking, and automated call-log deployment.</p>
+                    <p className="text-muted small m-0 mt-1">Track service tickets, FSR records, and sync field tasks effortlessly.</p>
                 </div>
                 <button 
                     onClick={() => setShowModal(true)} 
                     className="btn px-4 py-2.5 fw-bold tiny-text tracking-widest text-dark d-flex align-items-center justify-content-center gap-2 shadow-sm transition-all"
                     style={{ backgroundColor: 'var(--jade)' }}
                 >
-                    <i className="fa-solid fa-plus-circle"></i> ADD NEW ENTRY
+                    <i className="fa-solid fa-plus-circle"></i> NEW SERVICE ENTRY
                 </button>
             </header>
 
@@ -191,14 +205,15 @@ const ProductivtyOfTechnical = ({ triggerToast, username }) => {
                     <div className="d-flex flex-column gap-4">
                         {/* Serial Number Research Widget */}
                         <div className="p-4 rounded-4 sidebar-user-box border border-white border-opacity-10 shadow-sm">
-                            <h6 className="fw-900 text-white mb-3 text-uppercase tiny-text tracking-widest d-flex align-items-center gap-2">
-                                <span className="jade-accent">🔍</span> Serial Number Research
+                            <h6 className="fw-900 text-white mb-2 text-uppercase tiny-text tracking-widest d-flex align-items-center gap-2">
+                                <span className="jade-accent">🔍</span> Quick Serial Lookup
                             </h6>
+                            <p className="text-muted small mb-3">Instantly find who owns a machine or check its past service history.</p>
                             <div className="input-group">
                                 <input 
                                     type="text" 
                                     className="form-control bg-dark text-white border-secondary border-opacity-25 rounded-3 shadow-none font-monospace small"
-                                    placeholder="Scan or enter serial number..."
+                                    placeholder="Type serial / machine ID..."
                                     value={serialSearchQuery}
                                     onChange={(e) => handleSerialResearch(e.target.value)}
                                 />
@@ -210,7 +225,7 @@ const ProductivtyOfTechnical = ({ triggerToast, username }) => {
                             </div>
                             {serialSearchQuery && (
                                 <div className="p-3 mt-3 rounded-3 bg-black border border-white border-opacity-10 animate-fade-in">
-                                    <div className="tiny-text text-muted text-uppercase tracking-wider">Research Result</div>
+                                    <div className="tiny-text text-muted text-uppercase tracking-wider">Lookup Match</div>
                                     <div className="text-white fw-bold mt-1 small">{serialSearchResult?.client}</div>
                                     <div className="tiny-text text-info font-monospace mt-1">Machine: {serialSearchResult?.machine}</div>
                                 </div>
@@ -219,17 +234,18 @@ const ProductivtyOfTechnical = ({ triggerToast, username }) => {
 
                         {/* Live Sync Feed Widget */}
                         <div className="p-4 rounded-4 sidebar-user-box border border-white border-opacity-10 shadow-sm">
-                            <div className="d-flex justify-content-between align-items-center mb-3">
+                            <div className="d-flex justify-content-between align-items-center mb-2">
                                 <h6 className="fw-900 text-white mb-0 text-uppercase tiny-text tracking-widest d-flex align-items-center gap-2">
-                                    <span className="text-info">●</span> Live Call Logs Sync
+                                    <span className="text-info">●</span> Recent Service Logs
                                 </h6>
                                 <span className="badge bg-secondary bg-opacity-25 tiny-text px-2 py-1">{filteredLogs.length}</span>
                             </div>
+                            <p className="text-muted small mb-3">Live feed of previously submitted technical outputs.</p>
                             <div className="mb-3">
                                 <input 
                                     type="text" 
                                     className="form-control bg-dark text-white border-secondary border-opacity-25 rounded-3 shadow-none small"
-                                    placeholder="Filter live logs..."
+                                    placeholder="Search active logs..."
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                 />
@@ -250,7 +266,7 @@ const ProductivtyOfTechnical = ({ triggerToast, username }) => {
                                     </div>
                                 )) : (
                                     <div className="text-muted small text-center py-4 bg-black rounded-3 border border-white border-opacity-5">
-                                        No matching logs found.
+                                        No logs matching filter.
                                     </div>
                                 )}
                             </div>
@@ -262,9 +278,12 @@ const ProductivtyOfTechnical = ({ triggerToast, username }) => {
                 <div className="col-12 col-xl-8">
                     <div className="p-4 rounded-4 sidebar-user-box border border-white border-opacity-10 shadow-sm">
                         <div className="d-flex justify-content-between align-items-center mb-4">
-                            <h5 className="fw-900 text-white m-0 text-uppercase tiny-text tracking-widest d-flex align-items-center gap-2">
-                                <span className="jade-accent">●</span> Entered Technical Productivity Ledger
-                            </h5>
+                            <div>
+                                <h5 className="fw-900 text-white m-0 text-uppercase tiny-text tracking-widest d-flex align-items-center gap-2">
+                                    <span className="jade-accent">●</span> Productivity Master Ledger
+                                </h5>
+                                <p className="text-muted small m-0 mt-1">Complete historical record of dispatched technician service hours.</p>
+                            </div>
                             <button 
                                 onClick={fetchInitialData} 
                                 className="btn btn-sm border-white border-opacity-10 text-muted hover-lift rounded-3 shadow-none d-flex align-items-center gap-1.5 px-3 py-1.5"
@@ -278,13 +297,13 @@ const ProductivtyOfTechnical = ({ triggerToast, username }) => {
                             <table className="table table-dark table-hover align-middle mb-0" style={{ backgroundColor: 'transparent' }}>
                                 <thead>
                                     <tr className="text-muted tiny-text text-uppercase border-bottom border-white border-opacity-10">
-                                        <th className="py-3 bg-transparent font-weight-bold">Time In / Out</th>
-                                        <th className="py-3 bg-transparent font-weight-bold">Technician</th>
-                                        <th className="py-3 bg-transparent font-weight-bold">Client</th>
-                                        <th className="py-3 bg-transparent font-weight-bold">Machine / Serial</th>
-                                        <th className="py-3 bg-transparent font-weight-bold">FSR Series</th>
-                                        <th className="py-3 bg-transparent font-weight-bold">Trouble Found</th>
-                                        <th className="py-3 bg-transparent font-weight-bold">Work Done</th>
+                                        <th className="py-3 bg-transparent">Duration / Time</th>
+                                        <th className="py-3 bg-transparent">Technician</th>
+                                        <th className="py-3 bg-transparent">Client</th>
+                                        <th className="py-3 bg-transparent">Machine / Serial</th>
+                                        <th className="py-3 bg-transparent">FSR Series</th>
+                                        <th className="py-3 bg-transparent">Trouble Found</th>
+                                        <th className="py-3 bg-transparent">Work Done</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -321,135 +340,160 @@ const ProductivtyOfTechnical = ({ triggerToast, username }) => {
                 </div>
             </div>
 
-            {/* Entry Form Modal Component */}
+            {/* Entry Form Modal Component (Redesigned for Handy, Clean, Step-by-Step Flow) */}
             {showModal && (
                 <div className="modal show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(4px)' }}>
                     <div className="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
                         <div className="modal-content bg-dark border border-white border-opacity-20 text-white rounded-4 shadow-lg overflow-hidden">
                             <div className="modal-header border-bottom border-white border-opacity-10 px-4 py-3 bg-black bg-opacity-50">
                                 <h5 className="modal-title fw-900 tiny-text tracking-widest text-uppercase d-flex align-items-center gap-2 m-0">
-                                    <span className="jade-accent">●</span> New Technical Productivity Entry
+                                    <span className="jade-accent">●</span> New Technical Service Log
                                 </h5>
                                 <button type="button" className="btn-close btn-close-white shadow-none" onClick={() => setShowModal(false)}></button>
                             </div>
                             <div className="modal-body p-4">
                                 <form onSubmit={handleSubmit} id="productivityForm">
-                                    {/* Client Selector */}
-                                    <div className="mb-3.5">
-                                        <label className="form-label tiny-text text-uppercase fw-bold text-muted mb-1.5">Select Client</label>
-                                        <select 
-                                            className="form-select bg-dark text-white border-secondary border-opacity-25 rounded-3 shadow-none py-2.5"
-                                            value={selectedClient}
-                                            onChange={(e) => setSelectedClient(e.target.value)}
-                                            required
-                                        >
-                                            <option value="">-- Choose Client --</option>
-                                            {clients.map((c, i) => (
-                                                <option key={i} value={c.name || c.client_name}>{c.name || c.client_name}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-
-                                    {/* Machine / Serial Numbers Array Section */}
-                                    <div className="mb-3.5">
-                                        <div className="d-flex justify-content-between align-items-center mb-1.5">
-                                            <label className="form-label tiny-text text-uppercase fw-bold text-muted m-0">Machine / Serial Number</label>
-                                            {selectedMachines.length < 2 && (
-                                                <button type="button" onClick={handleAddMachineField} className="btn btn-sm btn-link jade-accent p-0 tiny-text text-decoration-none fw-bold">
-                                                    + Add 2nd Machine
-                                                </button>
-                                            )}
+                                    
+                                    {/* SECTION 1: CLIENT & MACHINES */}
+                                    <div className="p-3.5 mb-3.5 rounded-3 bg-black bg-opacity-40 border border-white border-opacity-5">
+                                        <div className="tiny-text text-uppercase fw-bold text-muted mb-3 tracking-wider">
+                                            1. Client & Equipment Assignment
                                         </div>
-                                        {selectedMachines.map((m, index) => (
-                                            <div key={index} className="input-group mb-2">
-                                                <input 
-                                                    type="text" 
-                                                    className="form-control bg-dark text-white border-secondary border-opacity-25 rounded-3 shadow-none font-monospace small py-2.5"
-                                                    placeholder={`Machine / Serial #${index + 1}`}
-                                                    value={m}
-                                                    onChange={(e) => handleMachineChange(index, e.target.value)}
-                                                    required={index === 0}
-                                                />
-                                                {selectedMachines.length > 1 && (
-                                                    <button type="button" className="btn btn-outline-danger border-opacity-25 text-danger px-3" onClick={() => handleRemoveMachineField(index)}>
-                                                        <i className="fa-solid fa-trash-can tiny-text"></i>
+
+                                        <div className="mb-3">
+                                            <label className="form-label tiny-text text-uppercase fw-bold text-secondary mb-1">Client Name *</label>
+                                            <select 
+                                                className="form-select bg-dark text-white border-secondary border-opacity-25 rounded-3 shadow-none py-2"
+                                                value={selectedClient}
+                                                onChange={(e) => setSelectedClient(e.target.value)}
+                                                required
+                                            >
+                                                <option value="">-- Choose Customer / Client --</option>
+                                                {clients.map((c, i) => (
+                                                    <option key={i} value={c.name || c.client_name}>{c.name || c.client_name}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+
+                                        <div>
+                                            <div className="d-flex justify-content-between align-items-center mb-1">
+                                                <label className="form-label tiny-text text-uppercase fw-bold text-secondary m-0">Machine / Serial Number *</label>
+                                                {selectedMachines.length < 2 && (
+                                                    <button type="button" onClick={handleAddMachineField} className="btn btn-sm btn-link jade-accent p-0 tiny-text text-decoration-none fw-bold">
+                                                        + Include 2nd Machine
                                                     </button>
                                                 )}
                                             </div>
-                                        ))}
-                                    </div>
-
-                                    {/* Date & Time Range Grid */}
-                                    <div className="row g-3 mb-3.5">
-                                        <div className="col-12 col-md-6">
-                                            <label className="form-label tiny-text text-uppercase fw-bold text-muted mb-1.5">Time In</label>
-                                            <input 
-                                                type="datetime-local" 
-                                                className="form-control bg-dark text-white border-secondary border-opacity-25 rounded-3 shadow-none py-2.5 small"
-                                                value={timeIn}
-                                                onChange={(e) => setTimeIn(e.target.value)}
-                                                required
-                                            />
-                                        </div>
-                                        <div className="col-12 col-md-6">
-                                            <label className="form-label tiny-text text-uppercase fw-bold text-muted mb-1.5">Time Out</label>
-                                            <input 
-                                                type="datetime-local" 
-                                                className="form-control bg-dark text-white border-secondary border-opacity-25 rounded-3 shadow-none py-2.5 small"
-                                                value={timeOut}
-                                                onChange={(e) => setTimeOut(e.target.value)}
-                                                required
-                                            />
+                                            {selectedMachines.map((m, index) => (
+                                                <div key={index} className="input-group mb-2">
+                                                    <span className="input-group-text bg-dark border-secondary border-opacity-25 text-muted tiny-text">#{index + 1}</span>
+                                                    <input 
+                                                        type="text" 
+                                                        className="form-control bg-dark text-white border-secondary border-opacity-25 rounded-end shadow-none font-monospace small py-2"
+                                                        placeholder="Enter machine serial / ID..."
+                                                        value={m}
+                                                        onChange={(e) => handleMachineChange(index, e.target.value)}
+                                                        required={index === 0}
+                                                    />
+                                                    {selectedMachines.length > 1 && (
+                                                        <button type="button" className="btn btn-outline-danger border-opacity-25 text-danger px-3 ms-2 rounded-3" onClick={() => handleRemoveMachineField(index)} title="Remove machine">
+                                                            <i className="fa-solid fa-trash-can tiny-text"></i>
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            ))}
                                         </div>
                                     </div>
 
-                                    {/* FSR Series Code */}
-                                    <div className="mb-3.5">
-                                        <label className="form-label tiny-text text-uppercase fw-bold text-muted mb-1.5">FSR Series Number</label>
-                                        <input 
-                                            type="text" 
-                                            className="form-control bg-dark text-white border-secondary border-opacity-25 rounded-3 shadow-none font-monospace py-2.5 small"
-                                            placeholder="Enter FSR series code..."
-                                            value={fsrSeries}
-                                            onChange={(e) => setFsrSeries(e.target.value)}
-                                            required
-                                        />
+                                    {/* SECTION 2: TIME TRACKING (WITH FAST-FILL HANDY BUTTONS) */}
+                                    <div className="p-3.5 mb-3.5 rounded-3 bg-black bg-opacity-40 border border-white border-opacity-5">
+                                        <div className="tiny-text text-uppercase fw-bold text-muted mb-3 tracking-wider">
+                                            2. Service Duration & Timing
+                                        </div>
+                                        <div className="row g-3">
+                                            <div className="col-12 col-md-6">
+                                                <div className="d-flex justify-content-between align-items-center mb-1">
+                                                    <label className="form-label tiny-text text-uppercase fw-bold text-secondary m-0">Time In *</label>
+                                                    <button type="button" onClick={handleSetNowTimeIn} className="btn btn-sm btn-link text-info p-0 tiny-text text-decoration-none">
+                                                        Set Now
+                                                    </button>
+                                                </div>
+                                                <input 
+                                                    type="datetime-local" 
+                                                    className="form-control bg-dark text-white border-secondary border-opacity-25 rounded-3 shadow-none py-2 small"
+                                                    value={timeIn}
+                                                    onChange={(e) => setTimeIn(e.target.value)}
+                                                    required
+                                                />
+                                            </div>
+                                            <div className="col-12 col-md-6">
+                                                <div className="d-flex justify-content-between align-items-center mb-1">
+                                                    <label className="form-label tiny-text text-uppercase fw-bold text-secondary m-0">Time Out *</label>
+                                                    <button type="button" onClick={handleSetNowTimeOut} className="btn btn-sm btn-link text-info p-0 tiny-text text-decoration-none">
+                                                        Set Now
+                                                    </button>
+                                                </div>
+                                                <input 
+                                                    type="datetime-local" 
+                                                    className="form-control bg-dark text-white border-secondary border-opacity-25 rounded-3 shadow-none py-2 small"
+                                                    value={timeOut}
+                                                    onChange={(e) => setTimeOut(e.target.value)}
+                                                    required
+                                                />
+                                            </div>
+                                        </div>
                                     </div>
 
-                                    {/* Image Attachment File Uploader */}
-                                    <div className="mb-3.5">
-                                        <label className="form-label tiny-text text-uppercase fw-bold text-muted mb-1.5">Upload Picture of FSR</label>
-                                        <input 
-                                            type="file" 
-                                            accept="image/*"
-                                            className="form-control bg-dark text-white border-secondary border-opacity-25 rounded-3 shadow-none py-2.5 small"
-                                            onChange={handleImageUpload}
-                                        />
-                                        {fsrImage && <div className="mt-2 text-success tiny-text d-flex align-items-center gap-1">✓ Image attached successfully</div>}
-                                    </div>
+                                    {/* SECTION 3: FSR & TECHNICAL FINDINGS */}
+                                    <div className="p-3.5 rounded-3 bg-black bg-opacity-40 border border-white border-opacity-5">
+                                        <div className="tiny-text text-uppercase fw-bold text-muted mb-3 tracking-wider">
+                                            3. FSR Document & Service Notes
+                                        </div>
 
-                                    {/* Diagnostic Details */}
-                                    <div className="mb-3.5">
-                                        <label className="form-label tiny-text text-uppercase fw-bold text-muted mb-1.5">Trouble Found</label>
-                                        <textarea 
-                                            className="form-control bg-dark text-white border-secondary border-opacity-25 rounded-3 shadow-none small"
-                                            rows="2"
-                                            placeholder="Describe diagnostic findings..."
-                                            value={troubleFound}
-                                            onChange={(e) => setTroubleFound(e.target.value)}
-                                        ></textarea>
-                                    </div>
+                                        <div className="mb-3">
+                                            <label className="form-label tiny-text text-uppercase fw-bold text-secondary mb-1">FSR Series Number *</label>
+                                            <input 
+                                                type="text" 
+                                                className="form-control bg-dark text-white border-secondary border-opacity-25 rounded-3 shadow-none font-monospace py-2 small"
+                                                placeholder="e.g., FSR-2026-00124"
+                                                value={fsrSeries}
+                                                onChange={(e) => setFsrSeries(e.target.value)}
+                                                required
+                                            />
+                                        </div>
 
-                                    {/* Remediation Work Done */}
-                                    <div className="mb-2">
-                                        <label className="form-label tiny-text text-uppercase fw-bold text-muted mb-1.5">Work Done</label>
-                                        <textarea 
-                                            className="form-control bg-dark text-white border-secondary border-opacity-25 rounded-3 shadow-none small"
-                                            rows="2"
-                                            placeholder="Describe remediation / actions taken..."
-                                            value={workDone}
-                                            onChange={(e) => setWorkDone(e.target.value)}
-                                        ></textarea>
+                                        <div className="mb-3">
+                                            <label className="form-label tiny-text text-uppercase fw-bold text-secondary mb-1">Upload FSR Document Image</label>
+                                            <input 
+                                                type="file" 
+                                                accept="image/*"
+                                                className="form-control bg-dark text-white border-secondary border-opacity-25 rounded-3 shadow-none py-2 small"
+                                                onChange={handleImageUpload}
+                                            />
+                                            {fsrImage && <div className="mt-1.5 text-success tiny-text d-flex align-items-center gap-1">✓ FSR image attached</div>}
+                                        </div>
+
+                                        <div className="mb-3">
+                                            <label className="form-label tiny-text text-uppercase fw-bold text-secondary mb-1">Trouble Found</label>
+                                            <textarea 
+                                                className="form-control bg-dark text-white border-secondary border-opacity-25 rounded-3 shadow-none small"
+                                                rows="2"
+                                                placeholder="What was the diagnosed issue?"
+                                                value={troubleFound}
+                                                onChange={(e) => setTroubleFound(e.target.value)}
+                                            ></textarea>
+                                        </div>
+
+                                        <div className="mb-0">
+                                            <label className="form-label tiny-text text-uppercase fw-bold text-secondary mb-1">Work Done / Action Taken</label>
+                                            <textarea 
+                                                className="form-control bg-dark text-white border-secondary border-opacity-25 rounded-3 shadow-none small"
+                                                rows="2"
+                                                placeholder="What steps were taken to resolve the issue?"
+                                                value={workDone}
+                                                onChange={(e) => setWorkDone(e.target.value)}
+                                            ></textarea>
+                                        </div>
                                     </div>
                                 </form>
                             </div>
@@ -460,17 +504,17 @@ const ProductivtyOfTechnical = ({ triggerToast, username }) => {
                                 <button 
                                     type="submit" 
                                     form="productivityForm" 
-                                    className="btn px-4 py-2 fw-bold tiny-text tracking-widest text-dark rounded-3 d-flex align-items-center gap-2"
+                                    className="btn px-4 py-2.5 fw-bold tiny-text tracking-widest text-dark rounded-3 d-flex align-items-center gap-2"
                                     style={{ backgroundColor: 'var(--jade)' }}
                                     disabled={isSubmitting}
                                 >
                                     {isSubmitting ? (
                                         <>
                                             <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                                            SAVING...
+                                            SYNCING ENTRY...
                                         </>
                                     ) : (
-                                        'SAVE & SYNC TO CALL LOGS (OK)'
+                                        'SAVE & SYNC TO CALL LOGS'
                                     )}
                                 </button>
                             </div>
@@ -482,4 +526,4 @@ const ProductivtyOfTechnical = ({ triggerToast, username }) => {
     );
 };
 
-export default ProductivtyOfTechnical;
+export default ProductivityOfTechnical;
