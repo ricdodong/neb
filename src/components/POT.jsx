@@ -8,6 +8,9 @@ const ProductivtyOfTechnical = ({ triggerToast, username }) => {
     const [machines, setMachines] = useState([]);
     const [serviceLogs, setServiceLogs] = useState([]);
     
+    // Modal State
+    const [showModal, setShowModal] = useState(false);
+
     // Form States
     const [selectedClient, setSelectedClient] = useState('');
     const [selectedMachines, setSelectedMachines] = useState(['']); // array to support multiple machines (usahay duha)
@@ -32,7 +35,7 @@ const ProductivtyOfTechnical = ({ triggerToast, username }) => {
             const [clientRes, machineRes, logsRes] = await Promise.all([
                 axios.get(`${BASE_URL}/api/customers`),
                 axios.get(`${BASE_URL}/api/inventory`), 
-                axios.get(`${BASE_URL}/api/call-logs`)
+                axios.get(`${BASE_URL}/api/productivity-technical`)
             ]);
             setClients(clientRes.data || []);
             setMachines(machineRes.data || []);
@@ -108,10 +111,11 @@ const ProductivtyOfTechnical = ({ triggerToast, username }) => {
                 status: 'OK'
             };
 
+            // Post to call-logs which automatically syncs to productivity-technical table in your Cloudflare worker
             await axios.post(`${BASE_URL}/api/call-logs`, payload);
             triggerToast("Productivity logged & synced to Call Logs successfully!", "success");
             
-            // Reset form
+            // Reset form & close modal
             setSelectedClient('');
             setSelectedMachines(['']);
             setTimeIn('');
@@ -120,6 +124,7 @@ const ProductivtyOfTechnical = ({ triggerToast, username }) => {
             setFsrImage('');
             setTroubleFound('');
             setWorkDone('');
+            setShowModal(false);
             fetchInitialData();
         } catch (err) {
             console.error("Error saving productivity log", err);
@@ -151,132 +156,24 @@ const ProductivtyOfTechnical = ({ triggerToast, username }) => {
 
     return (
         <div className="animate-fade-in text-white">
-            <header className="mb-4">
-                <h3 className="fw-900 tracking-tighter text-white">
-                    PRODUCTIVITY OF <span className="jade-accent">TECHNICAL</span>
-                </h3>
-                <p className="text-muted small">Service logs, FSR tracking, and automated call-log deployment.</p>
+            <header className="mb-4 d-flex justify-content-between align-items-center">
+                <div>
+                    <h3 className="fw-900 tracking-tighter text-white m-0">
+                        PRODUCTIVITY OF <span className="jade-accent">TECHNICAL</span>
+                    </h3>
+                    <p className="text-muted small m-0">Service logs, FSR tracking, and automated call-log deployment.</p>
+                </div>
+                <button 
+                    onClick={() => setShowModal(true)} 
+                    className="btn px-4 py-2 fw-bold tiny-text tracking-widest text-dark d-flex align-items-center gap-2"
+                    style={{ backgroundColor: 'var(--jade)' }}
+                >
+                    <i className="fa-solid fa-plus"></i> + ADD NEW ENTRY
+                </button>
             </header>
 
+            {/* SEARCH & SERIAL RESEARCH PANEL & LEDGER */}
             <div className="row g-4">
-                {/* FORM SECTION */}
-                <div className="col-12 col-xl-7">
-                    <div className="p-4 rounded-4 sidebar-user-box border border-white border-opacity-10">
-                        <form onSubmit={handleSubmit}>
-                            <div className="mb-3">
-                                <label className="form-label tiny-text text-uppercase fw-bold text-muted">Select Client</label>
-                                <select 
-                                    className="form-select bg-dark text-white border-secondary border-opacity-25 rounded-3 shadow-none"
-                                    value={selectedClient}
-                                    onChange={(e) => setSelectedClient(e.target.value)}
-                                    required
-                                >
-                                    <option value="">-- Choose Client --</option>
-                                    {clients.map((c, i) => (
-                                        <option key={i} value={c.name || c.client_name}>{c.name || c.client_name}</option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            <div className="mb-3">
-                                <div className="d-flex justify-content-between align-items-center mb-1">
-                                    <label className="form-label tiny-text text-uppercase fw-bold text-muted">Select Machine / Serial Number</label>
-                                    {selectedMachines.length < 2 && (
-                                        <button type="button" onClick={handleAddMachineField} className="btn btn-sm btn-link jade-accent p-0 tiny-text text-decoration-none">
-                                            + Add 2nd Machine
-                                        </button>
-                                    )}
-                                </div>
-                                {selectedMachines.map((m, index) => (
-                                    <div key={index} className="input-group mb-2">
-                                        <input 
-                                            type="text" 
-                                            className="form-control bg-dark text-white border-secondary border-opacity-25 rounded-3 shadow-none font-monospace"
-                                            placeholder={`Machine / Serial #${index + 1}`}
-                                            value={m}
-                                            onChange={(e) => handleMachineChange(index, e.target.value)}
-                                            required={index === 0}
-                                        />
-                                    </div>
-                                ))}
-                            </div>
-
-                            <div className="row g-3 mb-3">
-                                <div className="col-6">
-                                    <label className="form-label tiny-text text-uppercase fw-bold text-muted">Time In</label>
-                                    <input 
-                                        type="datetime-local" 
-                                        className="form-control bg-dark text-white border-secondary border-opacity-25 rounded-3 shadow-none"
-                                        value={timeIn}
-                                        onChange={(e) => setTimeIn(e.target.value)}
-                                        required
-                                    />
-                                </div>
-                                <div className="col-6">
-                                    <label className="form-label tiny-text text-uppercase fw-bold text-muted">Time Out</label>
-                                    <input 
-                                        type="datetime-local" 
-                                        className="form-control bg-dark text-white border-secondary border-opacity-25 rounded-3 shadow-none"
-                                        value={timeOut}
-                                        onChange={(e) => setTimeOut(e.target.value)}
-                                        required
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="mb-3">
-                                <label className="form-label tiny-text text-uppercase fw-bold text-muted">FSR Series Number</label>
-                                <input 
-                                    type="text" 
-                                    className="form-control bg-dark text-white border-secondary border-opacity-25 rounded-3 shadow-none font-monospace"
-                                    placeholder="Enter FSR series code..."
-                                    value={fsrSeries}
-                                    onChange={(e) => setFsrSeries(e.target.value)}
-                                    required
-                                />
-                            </div>
-
-                            <div className="mb-3">
-                                <label className="form-label tiny-text text-uppercase fw-bold text-muted">Upload Picture of FSR</label>
-                                <input 
-                                    type="file" 
-                                    accept="image/*"
-                                    className="form-control bg-dark text-white border-secondary border-opacity-25 rounded-3 shadow-none"
-                                    onChange={handleImageUpload}
-                                />
-                                {fsrImage && <div className="mt-2 text-success tiny-text">✓ Image attached successfully</div>}
-                            </div>
-
-                            <div className="mb-3">
-                                <label className="form-label tiny-text text-uppercase fw-bold text-muted">Trouble Found</label>
-                                <textarea 
-                                    className="form-control bg-dark text-white border-secondary border-opacity-25 rounded-3 shadow-none"
-                                    rows="2"
-                                    placeholder="Describe diagnostic findings..."
-                                    value={troubleFound}
-                                    onChange={(e) => setTroubleFound(e.target.value)}
-                                ></textarea>
-                            </div>
-
-                            <div className="mb-4">
-                                <label className="form-label tiny-text text-uppercase fw-bold text-muted">Work Done</label>
-                                <textarea 
-                                    className="form-control bg-dark text-white border-secondary border-opacity-25 rounded-3 shadow-none"
-                                    rows="2"
-                                    placeholder="Describe remediation / actions taken..."
-                                    value={workDone}
-                                    onChange={(e) => setWorkDone(e.target.value)}
-                                ></textarea>
-                            </div>
-
-                            <button type="submit" className="btn w-100 py-3 fw-bold tiny-text tracking-widest text-dark" style={{ backgroundColor: 'var(--jade)' }}>
-                                SAVE & SYNC TO CALL LOGS (OK)
-                            </button>
-                        </form>
-                    </div>
-                </div>
-
-                {/* SEARCH & SERIAL RESEARCH PANEL */}
                 <div className="col-12 col-xl-5">
                     {/* SERIAL LOOKUP RESEARCH WIDGET */}
                     <div className="p-4 rounded-4 sidebar-user-box border border-white border-opacity-10 mb-4">
@@ -328,11 +225,9 @@ const ProductivtyOfTechnical = ({ triggerToast, username }) => {
                         </div>
                     </div>
                 </div>
-            </div>
 
-            {/* PRODUCTIVITY LEDGER DATA TABLE SECTION */}
-            <div className="row mt-4">
-                <div className="col-12">
+                {/* PRODUCTIVITY LEDGER DATA TABLE SECTION */}
+                <div className="col-12 col-xl-7">
                     <div className="p-4 rounded-4 sidebar-user-box border border-white border-opacity-10">
                         <div className="d-flex justify-content-between align-items-center mb-4">
                             <h5 className="fw-900 text-white m-0 text-uppercase tiny-text tracking-widest">
@@ -387,6 +282,137 @@ const ProductivtyOfTechnical = ({ triggerToast, username }) => {
                     </div>
                 </div>
             </div>
+
+            {/* NEW PRODUCTIVITY ENTRY MODAL */}
+            {showModal && (
+                <div className="modal show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.8)' }}>
+                    <div className="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+                        <div className="modal-content bg-dark border border-white border-opacity-15 text-white rounded-4 shadow-lg">
+                            <div className="modal-header border-bottom border-white border-opacity-10 px-4 py-3">
+                                <h5 className="modal-title fw-900 tiny-text tracking-widest text-uppercase">
+                                    <span className="jade-accent me-2">●</span> New Technical Productivity Entry
+                                </h5>
+                                <button type="button" className="btn-close btn-close-white shadow-none" onClick={() => setShowModal(false)}></button>
+                            </div>
+                            <div className="modal-body p-4">
+                                <form onSubmit={handleSubmit} id="productivityForm">
+                                    <div className="mb-3">
+                                        <label className="form-label tiny-text text-uppercase fw-bold text-muted">Select Client</label>
+                                        <select 
+                                            className="form-select bg-dark text-white border-secondary border-opacity-25 rounded-3 shadow-none"
+                                            value={selectedClient}
+                                            onChange={(e) => setSelectedClient(e.target.value)}
+                                            required
+                                        >
+                                            <option value="">-- Choose Client --</option>
+                                            {clients.map((c, i) => (
+                                                <option key={i} value={c.name || c.client_name}>{c.name || c.client_name}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    <div className="mb-3">
+                                        <div className="d-flex justify-content-between align-items-center mb-1">
+                                            <label className="form-label tiny-text text-uppercase fw-bold text-muted">Select Machine / Serial Number</label>
+                                            {selectedMachines.length < 2 && (
+                                                <button type="button" onClick={handleAddMachineField} className="btn btn-sm btn-link jade-accent p-0 tiny-text text-decoration-none">
+                                                    + Add 2nd Machine
+                                                </button>
+                                            )}
+                                        </div>
+                                        {selectedMachines.map((m, index) => (
+                                            <div key={index} className="input-group mb-2">
+                                                <input 
+                                                    type="text" 
+                                                    className="form-control bg-dark text-white border-secondary border-opacity-25 rounded-3 shadow-none font-monospace"
+                                                    placeholder={`Machine / Serial #${index + 1}`}
+                                                    value={m}
+                                                    onChange={(e) => handleMachineChange(index, e.target.value)}
+                                                    required={index === 0}
+                                                />
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    <div className="row g-3 mb-3">
+                                        <div className="col-6">
+                                            <label className="form-label tiny-text text-uppercase fw-bold text-muted">Time In</label>
+                                            <input 
+                                                type="datetime-local" 
+                                                className="form-control bg-dark text-white border-secondary border-opacity-25 rounded-3 shadow-none"
+                                                value={timeIn}
+                                                onChange={(e) => setTimeIn(e.target.value)}
+                                                required
+                                            />
+                                        </div>
+                                        <div className="col-6">
+                                            <label className="form-label tiny-text text-uppercase fw-bold text-muted">Time Out</label>
+                                            <input 
+                                                type="datetime-local" 
+                                                className="form-control bg-dark text-white border-secondary border-opacity-25 rounded-3 shadow-none"
+                                                value={timeOut}
+                                                onChange={(e) => setTimeOut(e.target.value)}
+                                                required
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="mb-3">
+                                        <label className="form-label tiny-text text-uppercase fw-bold text-muted">FSR Series Number</label>
+                                        <input 
+                                            type="text" 
+                                            className="form-control bg-dark text-white border-secondary border-opacity-25 rounded-3 shadow-none font-monospace"
+                                            placeholder="Enter FSR series code..."
+                                            value={fsrSeries}
+                                            onChange={(e) => setFsrSeries(e.target.value)}
+                                            required
+                                        />
+                                    </div>
+
+                                    <div className="mb-3">
+                                        <label className="form-label tiny-text text-uppercase fw-bold text-muted">Upload Picture of FSR</label>
+                                        <input 
+                                            type="file" 
+                                            accept="image/*"
+                                            className="form-control bg-dark text-white border-secondary border-opacity-25 rounded-3 shadow-none"
+                                            onChange={handleImageUpload}
+                                        />
+                                        {fsrImage && <div className="mt-2 text-success tiny-text">✓ Image attached successfully</div>}
+                                    </div>
+
+                                    <div className="mb-3">
+                                        <label className="form-label tiny-text text-uppercase fw-bold text-muted">Trouble Found</label>
+                                        <textarea 
+                                            className="form-control bg-dark text-white border-secondary border-opacity-25 rounded-3 shadow-none"
+                                            rows="2"
+                                            placeholder="Describe diagnostic findings..."
+                                            value={troubleFound}
+                                            onChange={(e) => setTroubleFound(e.target.value)}
+                                        ></textarea>
+                                    </div>
+
+                                    <div className="mb-3">
+                                        <label className="form-label tiny-text text-uppercase fw-bold text-muted">Work Done</label>
+                                        <textarea 
+                                            className="form-control bg-dark text-white border-secondary border-opacity-25 rounded-3 shadow-none"
+                                            rows="2"
+                                            placeholder="Describe remediation / actions taken..."
+                                            value={workDone}
+                                            onChange={(e) => setWorkDone(e.target.value)}
+                                        ></textarea>
+                                    </div>
+                                </form>
+                            </div>
+                            <div className="modal-footer border-top border-white border-opacity-10 px-4 py-3">
+                                <button type="button" className="btn btn-secondary px-4 py-2 tiny-text rounded-3" onClick={() => setShowModal(false)}>Cancel</button>
+                                <button type="submit" form="productivityForm" className="btn px-4 py-2 fw-bold tiny-text tracking-widest text-dark rounded-3" style={{ backgroundColor: 'var(--jade)' }}>
+                                    SAVE & SYNC TO CALL LOGS (OK)
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
