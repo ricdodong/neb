@@ -4,38 +4,50 @@ import axios from 'axios';
 const BASE_URL = 'https://dpsapi.ricalgen.eu.org';
 
 const ProductivityOfTechnical = ({ triggerToast, username }) => {
-    const [clients, setClients] = useState([]);
-    const [repairableMachines, setRepairableMachines] = useState([]);
-    const [serviceLogs, setServiceLogs] = useState([]);
-    const [isSubmitting, setIsSubmitting] = useState(false);
+    // ==========================================
+    // 1. DATA & CORE STATES
+    // ==========================================
+    const [clients, setClients] = useState([]);                     // Stores list of customers from API
+    const [repairableMachines, setRepairableMachines] = useState([]); // Stores dynamic machines/units for selected client
+    const [serviceLogs, setServiceLogs] = useState([]);             // Stores all board records/logs
+    const [isSubmitting, setIsSubmitting] = useState(false);        // Tracks API submission loader state
 
-    // Modal & View State
-    const [showModal, setShowModal] = useState(false);
-    const [activeTab, setActiveTab] = useState('table'); // 'table' | 'kanban'
+    // ==========================================
+    // 2. MODAL & VIEW STATES
+    // ==========================================
+    const [showModal, setShowModal] = useState(false);              // Controls modal visibility
+    const [activeTab, setActiveTab] = useState('table');            // View switcher: 'table' | 'kanban'
 
-    // Form States (Monday.com board-style columns)
-    const [selectedClient, setSelectedClient] = useState('');
-    const [selectedClientId, setSelectedClientId] = useState('');
-    const [selectedMachines, setSelectedMachines] = useState(['']);
-    const [timeIn, setTimeIn] = useState('');
-    const [timeOut, setTimeOut] = useState('');
-    const [fsrSeries, setFsrSeries] = useState('');
-    const [fsrImage, setFsrImage] = useState('');
-    const [troubleFound, setTroubleFound] = useState('');
-    const [workDone, setWorkDone] = useState('');
-    const [status, setStatus] = useState('Working on it'); // Monday-style status item
-    const [priority, setPriority] = useState('Medium'); // Monday-style priority item
+    // ==========================================
+    // 3. FORM STATES (Monday.com Board Columns)
+    // ==========================================
+    const [selectedClient, setSelectedClient] = useState('');       // Customer name string
+    const [selectedClientId, setSelectedClientId] = useState('');   // Customer ID for API lookups
+    const [selectedMachines, setSelectedMachines] = useState(['']); // Array supporting up to 2 machines/serials
+    const [timeIn, setTimeIn] = useState('');                       // Service start timestamp
+    const [timeOut, setTimeOut] = useState('');                     // Service end timestamp
+    const [fsrSeries, setFsrSeries] = useState('');                 // FSR Document code/series number
+    const [fsrImage, setFsrImage] = useState('');                   // Base64 string for image attachment preview
+    const [troubleFound, setTroubleFound] = useState('');           // Diagnosed issue / description
+    const [workDone, setWorkDone] = useState('');                   // Actions taken / remediation
+    const [status, setStatus] = useState('Working on it');          // Board item status (Working on it / Done / Stuck)
+    const [priority, setPriority] = useState('Medium');             // Board item priority (High / Medium / Low)
 
-    // Search & Filter State
-    const [searchQuery, setSearchQuery] = useState('');
-    const [serialSearchQuery, setSerialSearchQuery] = useState('');
-    const [serialSearchResult, setSerialSearchResult] = useState(null);
+    // ==========================================
+    // 4. SEARCH & FILTER STATES
+    // ==========================================
+    const [searchQuery, setSearchQuery] = useState('');             // General keyword search state
+    const [serialSearchQuery, setSerialSearchQuery] = useState(''); // Specific serial number filter
+    const [serialSearchResult, setSerialSearchResult] = useState(null); // Filter outcome holder
 
+    // ==========================================
+    // 5. LIFECYCLE HOOKS
+    // ==========================================
     useEffect(() => {
         fetchInitialData();
     }, []);
 
-    // Fetch repairable items whenever selectedClientId changes
+    // Trigger lookup fetch whenever selectedClientId updates
     useEffect(() => {
         if (selectedClientId) {
             fetchRepairableMachines(selectedClientId);
@@ -44,6 +56,9 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
         }
     }, [selectedClientId]);
 
+    // ==========================================
+    // 6. API FETCH HELPERS
+    // ==========================================
     const fetchInitialData = async () => {
         try {
             const [clientRes, logsRes] = await Promise.all([
@@ -68,35 +83,45 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
         }
     };
 
+    // ==========================================
+    // 7. FORM UTILITY & INTERACTION HELPERS
+    // ==========================================
+    
+    // Auto-populates 'Time In' input with the current local timestamp
     const handleSetNowTimeIn = () => {
         const now = new Date();
         now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
         setTimeIn(now.toISOString().slice(0, 16));
     };
 
+    // Auto-populates 'Time Out' input with the current local timestamp
     const handleSetNowTimeOut = () => {
         const now = new Date();
         now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
         setTimeOut(now.toISOString().slice(0, 16));
     };
 
+    // Appends an extra blank machine field slot (max limit set to 2)
     const handleAddMachineField = () => {
         if (selectedMachines.length < 2) {
             setSelectedMachines([...selectedMachines, '']);
         }
     };
 
+    // Safely removes a specific machine slot row by array index
     const handleRemoveMachineField = (index) => {
         const updated = selectedMachines.filter((_, i) => i !== index);
         setSelectedMachines(updated.length > 0 ? updated : ['']);
     };
 
+    // Tracks changes in individual machine option dropdowns
     const handleMachineChange = (index, value) => {
         const updated = [...selectedMachines];
         updated[index] = value;
         setSelectedMachines(updated);
     };
 
+    // Processes uploaded document/image files via FileReader into Base64 format
     const handleImageUpload = (e) => {
         const file = e.target.files[0];
         if (file) {
@@ -108,6 +133,7 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
         }
     };
 
+    // Wipes all input values back to clean default states
     const resetForm = () => {
         setSelectedClient('');
         setSelectedClientId('');
@@ -123,8 +149,13 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
         setPriority('Medium');
     };
 
+    // ==========================================
+    // 8. FORM SUBMISSION HANDLER
+    // ==========================================
     const handleSubmit = async (e) => {
         e.preventDefault();
+        
+        // Form Validation check
         if (!selectedClient || selectedMachines.length === 0 || !fsrSeries) {
             triggerToast("Please fill in required fields (Client, Machine, FSR Series)", "error");
             return;
@@ -146,9 +177,11 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
                 priority: priority
             };
 
+            // Post request to backend API endpoint
             await axios.post(`${BASE_URL}/api/call-logs`, payload);
             triggerToast("Board item created & synced!", "success");
 
+            // Clean up UI state post-success
             resetForm();
             setShowModal(false);
             fetchInitialData();
