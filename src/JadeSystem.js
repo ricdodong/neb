@@ -147,11 +147,12 @@ const DashboardHome = ({ userRole, setActivePage, activities, dashboardStats, us
                     <div className="row g-3">
                         {[
                             { title: 'New Transaction', desc: 'Launch POS Terminal', icon: 'fa-cart-plus', target: 'pos', allowedRoles: ['admin', 'sales'] },
-                            { title: 'Inventory Log', desc: 'Add/Update Hardware', icon: 'fa-boxes-stacked', target: 'stocks', allowedRoles: ['admin', 'technical'] },
+                            { title: 'Inventory Log', desc: 'Add/Update Hardware', icon: 'fa-boxes-stacked', target: 'stocks', allowedRoles: ['admin'] },
                             { title: 'Suppliers File', desc: 'Supplier Directory & Ledger', icon: 'fa-truck', target: 'suppliers', allowedRoles: ['admin', 'accounting'] },
-                            { title: 'Call Logs', desc: 'Broken Unit Service', icon: 'fa-headset', target: 'call logs', allowedRoles: ['admin', 'technical'] },
+                            { title: 'Repair Lab', desc: 'Broken Unit Service', icon: 'fa-wrench', target: 'services', allowedRoles: ['admin', 'technical'] },
+                            { title: 'Call Logs', desc: 'Call Logs', icon: 'fa-headset', target: 'call logs', allowedRoles: ['admin', 'technical'] },
                             { title: 'Customer File', desc: 'CRM & History', icon: 'fa-address-card', target: 'customers', allowedRoles: ['admin', 'sales', 'technical'] },
-                            { title: 'PO Receives', desc: 'Log Inbound Logistics', icon: 'fa-file-import', target: 'po receives', allowedRoles: ['admin', 'accounting', 'technical'] }
+                            { title: 'PO Receives', desc: 'Log Inbound Logistics', icon: 'fa-file-import', target: 'po receives', allowedRoles: ['admin', 'accounting'] }
                         ]
                             .filter(box => {
                                 const role = (userRole || 'admin').toLowerCase();
@@ -301,14 +302,14 @@ const JadeSystem = ({ userRole, onLogout, username }) => {
     };
 
     const menuItems = [
-        { id: 'dashboard', label: 'Mainframe', icon: 'fa-microchip', roles: ['admin', 'sales', 'technical'] },
+        { id: 'dashboard', label: 'Mainframe', icon: 'fa-microchip', roles: ['admin', 'sales', 'accounting', 'technical'] },
         { id: 'pos', label: 'Point of Sale', icon: 'fa-cash-register', roles: ['admin', 'sales'] },
-        { id: 'stocks', label: 'Inventory', icon: 'fa-laptop-code', roles: ['admin', 'technical'] },
+        { id: 'stocks', label: 'Inventory', icon: 'fa-laptop-code', roles: ['admin'] },
         { id: 'suppliers', label: 'Suppliers', icon: 'fa-truck', roles: ['admin', 'accounting'] },
         { id: 'customers', label: 'Clients', icon: 'fa-users-gear', roles: ['admin', 'sales', 'technical'] },
         { id: 'services', label: 'Repair Lab', icon: 'fa-screwdriver-wrench', roles: ['admin', 'technical'] },
         { id: 'call logs', label: 'Call Logs', icon: 'fa-headset', roles: ['admin', 'technical', 'sales'] },
-        { id: 'po receives', label: 'PO Receives', icon: 'fa-file-import', roles: ['admin', 'accounting', 'technical'] },
+        { id: 'po receives', label: 'PO Receives', icon: 'fa-file-import', roles: ['admin', 'accounting'] },
     ];
 
     const handleNavClick = (id) => {
