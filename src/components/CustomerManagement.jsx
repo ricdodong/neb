@@ -269,66 +269,66 @@ const CustomerManagement = () => {
     }, [customers, searchTerm]);
 
     // Group purchase history by Transaction / Batch Reference & Date + Auto-sort
-    const groupedTransactions = useMemo(() => {
-        const groups = {};
-        purchaseHistory.forEach((item, index) => {
-            const batchRef = item.batch_reference || `BR-UNKNOWN-${index}`;
-            const dateStr = item.purchase_date ? new Date(item.purchase_date).toISOString().split('T')[0] : 'no-date';
-            const groupKey = `${batchRef}-${dateStr}`;
+const groupedTransactions = useMemo(() => {
+    const groups = {};
+    purchaseHistory.forEach((item, index) => {
+        const batchRef = item.batch_reference || `BR-UNKNOWN-${index}`;
+        const dateStr = item.purchase_date ? new Date(item.purchase_date).toISOString().split('T')[0] : 'no-date';
+        const groupKey = `${batchRef}-${dateStr}`;
 
-            if (!groups[groupKey]) {
-                groups[groupKey] = {
-                    displayId: `txn-${index}`,
-                    batch_reference: item.batch_reference || 'N/A',
-                    purchase_date: item.purchase_date,
-                    payment_status: 'Unpaid', // Will be determined dynamically below
-                    items: []
-                };
-            }
-            groups[groupKey].items.push({
-                id: item.id || `row-${index}`,
-                item_name: item.item_name || 'Unknown Item',
-                qty: item.qty || 1,
-                purchase_date: item.purchase_date,
-                serial_number: item.serial_number,
-                srp_amount: item.srp_amount,
+        if (!groups[groupKey]) {
+            groups[groupKey] = {
+                displayId: `txn-${index}`,
                 batch_reference: item.batch_reference || 'N/A',
-                payment_status: item.status || item.payment_status || 'Unpaid', // Fixed mapping to look at item.status
-                warranty_period: item.warranty_period
-            });
+                purchase_date: item.purchase_date,
+                payment_status: item.payment_status || 'Unpaid',
+                items: []
+            };
+        }
+        groups[groupKey].items.push({
+            id: item.id || `row-${index}`,
+            item_name: item.item_name || 'Unknown Item',
+            qty: item.qty || 1,
+            purchase_date: item.purchase_date,
+            serial_number: item.serial_number,
+            srp_amount: item.srp_amount,
+            batch_reference: item.batch_reference || 'N/A',
+            payment_status: item.payment_status || item.status || 'Unpaid',
+            warranty_period: item.warranty_period
         });
+    });
 
-        // Post-process groups to accurately evaluate aggregate payment status
-        Object.values(groups).forEach(group => {
-            const statuses = group.items.map(i => (i.payment_status || '').toLowerCase());
-            const hasPaid = statuses.some(s => s === 'Paid');
-            const allPaid = statuses.length > 0 && statuses.every(s => s === 'paid');
+    // Post-process groups to accurately evaluate aggregate payment status case-insensitively
+    Object.values(groups).forEach(group => {
+        const statuses = group.items.map(i => (i.payment_status || '').toLowerCase());
+        const hasPaid = statuses.some(s => s === 'paid' || s === 'balance');
+        const allPaid = statuses.length > 0 && statuses.every(s => s === 'paid');
 
-            if (allPaid) {
-                group.payment_status = 'Paid';
-            } else if (hasPaid) {
-                group.payment_status = 'Balance'; // Partial payment exists
-            } else {
-                group.payment_status = 'Unpaid';
-            }
-        });
+        if (allPaid) {
+            group.payment_status = 'Paid';
+        } else if (hasPaid) {
+            group.payment_status = 'Balance'; // Partial payment exists
+        } else {
+            group.payment_status = 'Unpaid';
+        }
+    });
 
-        // Convert to array and sort (Unpaid/Balance first, then Latest Date)
-        return Object.values(groups).sort((a, b) => {
-            const statusA = (a.payment_status || '').toLowerCase();
-            const statusB = (b.payment_status || '').toLowerCase();
+    // Convert to array and sort (Unpaid/Balance first, then Latest Date)
+    return Object.values(groups).sort((a, b) => {
+        const statusA = (a.payment_status || '').toLowerCase();
+        const statusB = (b.payment_status || '').toLowerCase();
 
-            const isUnpaidA = statusA === 'unpaid' || statusA === 'balance';
-            const isUnpaidB = statusB === 'unpaid' || statusB === 'balance';
+        const isUnpaidA = statusA === 'unpaid' || statusA === 'balance';
+        const isUnpaidB = statusB === 'unpaid' || statusB === 'balance';
 
-            if (isUnpaidA && !isUnpaidB) return -1;
-            if (!isUnpaidA && isUnpaidB) return 1;
+        if (isUnpaidA && !isUnpaidB) return -1;
+        if (!isUnpaidA && isUnpaidB) return 1;
 
-            const dateA = a.purchase_date ? new Date(a.purchase_date).getTime() : 0;
-            const dateB = b.purchase_date ? new Date(b.purchase_date).getTime() : 0;
-            return dateB - dateA;
-        });
-    }, [purchaseHistory]);
+        const dateA = a.purchase_date ? new Date(a.purchase_date).getTime() : 0;
+        const dateB = b.purchase_date ? new Date(b.purchase_date).getTime() : 0;
+        return dateB - dateA;
+    });
+}, [purchaseHistory]);
 
     return (
         <div className="container-fluid py-4 bg-light min-vh-100 rounded">
