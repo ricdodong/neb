@@ -18,34 +18,35 @@ const FsrImageLightbox = ({ imageUrl, onClose }) => {
     return (
         <div 
             className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
-            style={{ background: 'rgba(0, 0, 0, 0.85)', zIndex: 1060, backdropFilter: 'blur(5px)' }}
+            style={{ background: 'rgba(0, 0, 0, 0.92)', zIndex: 1060, backdropFilter: 'blur(8px)' }}
             onClick={onClose}
         >
             <div 
-                className="position-relative p-3 rounded-4 border border-white border-opacity-15 shadow-lg"
-                style={{ background: '#161b26', maxWidth: '90vw', maxHeight: '90vh' }}
+                className="position-relative w-100 h-100 d-flex flex-column align-items-center justify-content-center p-2"
                 onClick={(e) => e.stopPropagation()}
             >
                 <button
                     type="button"
-                    className="btn-close btn-close-white position-absolute top-0 end-0 m-3 z-3 shadow-none bg-black bg-opacity-50 p-2 rounded-circle border border-white border-opacity-25"
+                    className="btn-close btn-close-white position-fixed top-0 end-0 m-4 z-3 shadow-none bg-black bg-opacity-75 p-3 rounded-circle border border-white border-opacity-25"
                     aria-label="Close"
                     onClick={onClose}
                 ></button>
-                <div className="overflow-hidden rounded-3 text-center mb-2">
+                
+                <div className="w-100 h-100 d-flex align-items-center justify-content-center overflow-auto p-3">
                     <img
                         src={resolvedImageUrl}
-                        alt="FSR Lightbox Preview"
-                        className="img-fluid rounded object-fit-contain shadow"
-                        style={{ maxHeight: '75vh', maxWidth: '100%' }}
+                        alt="FSR Lightbox Full View"
+                        className="img-fluid object-fit-contain shadow-lg rounded"
+                        style={{ maxHeight: '92vh', maxWidth: '92vw', cursor: 'zoom-in' }}
                     />
                 </div>
-                <div className="text-center pt-2 border-top border-white border-opacity-10">
+
+                <div className="position-fixed bottom-0 start-50 translate-middle-x mb-3 z-3">
                     <a 
                         href={resolvedImageUrl} 
                         target="_blank" 
                         rel="noopener noreferrer"
-                        className="btn btn-sm btn-outline-light border-opacity-25 tiny-text fw-bold text-uppercase"
+                        className="btn btn-sm btn-dark bg-opacity-75 border border-white border-opacity-25 px-3 py-2 rounded-pill fw-bold text-uppercase shadow"
                     >
                         <i className="fas fa-external-link-alt me-2"></i> Open Original in New Tab
                     </a>
