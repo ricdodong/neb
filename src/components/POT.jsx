@@ -10,6 +10,11 @@ const FILE_URL = 'https://jadefile.ricalgen.eu.org';
 const FsrImageLightbox = ({ imageUrl, onClose }) => {
     if (!imageUrl) return null;
 
+    // Helper to format/prepend FILE_URL if it's a relative path
+    const resolvedImageUrl = imageUrl.startsWith('http') 
+        ? imageUrl 
+        : `${FILE_URL}/${imageUrl.replace(/^\/+/, '')}`;
+
     return (
         <div 
             className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
@@ -29,7 +34,7 @@ const FsrImageLightbox = ({ imageUrl, onClose }) => {
                 ></button>
                 <div className="overflow-hidden rounded-3 text-center mb-2">
                     <img
-                        src={imageUrl}
+                        src={resolvedImageUrl}
                         alt="FSR Lightbox Preview"
                         className="img-fluid rounded object-fit-contain shadow"
                         style={{ maxHeight: '75vh', maxWidth: '100%' }}
@@ -37,7 +42,7 @@ const FsrImageLightbox = ({ imageUrl, onClose }) => {
                 </div>
                 <div className="text-center pt-2 border-top border-white border-opacity-10">
                     <a 
-                        href={imageUrl} 
+                        href={resolvedImageUrl} 
                         target="_blank" 
                         rel="noopener noreferrer"
                         className="btn btn-sm btn-outline-light border-opacity-25 tiny-text fw-bold text-uppercase"
@@ -54,9 +59,9 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
     // ==========================================
     // 1. DATA & CORE STATES
     // ==========================================
-    const [clients, setClients] = useState([]);                      // Stores list of customers from API
+    const [clients, setClients] = useState([]);                   // Stores list of customers from API
     const [repairableMachines, setRepairableMachines] = useState([]); // Stores dynamic machines/units for selected client
-    const [serviceLogs, setServiceLogs] = useState([]);              // Stores all board records/logs
+    const [serviceLogs, setServiceLogs] = useState([]);               // Stores all board records/logs
     const [isSubmitting, setIsSubmitting] = useState(false);        // Tracks API submission loader state
 
     // ==========================================
@@ -293,9 +298,16 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
         return isNaN(date.getTime()) ? dateString : date.toLocaleString();
     };
 
+
     return (
         <div className="animate-fade-in text-white container-fluid px-0">
-            {/* Monday.com Style Board Header Toolbar */}
+
+        <div>
+            {/* Include Lightbox component render hook */}
+            <FsrImageLightbox imageUrl={lightboxImg} onClose={() => setLightboxImg(null)} />
+        </div>
+
+            {/* Board Header Toolbar */}
             <header className="mb-4 pb-3 border-bottom border-white border-opacity-10 d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
                 <div>
                     <div className="d-flex align-items-center gap-2 mb-1">
