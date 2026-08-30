@@ -476,7 +476,7 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
                                 </table>
                             </div>
                         ) : (
-                            /* Monday.com Kanban View Grouped Columns */
+                            /* Kanban View Grouped Columns */
                             <div className="row g-3">
                                 {['Working on it', 'OK', 'Stuck'].map((colStatus, cIdx) => {
                                     const colItems = filteredLogs.filter(l => (l.status || 'Working on it') === colStatus || (colStatus === 'OK' && l.status === 'Done'));
@@ -534,7 +534,7 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
                                                                         style={{ width: '40px', height: '40px' }}
                                                                         onError={(e) => { e.target.style.display = 'none'; }}
                                                                     />
-                                                                    <span className="text-muted italic" style={{ fontSize: '0.7rem' }}>Click image for lightbox preview</span>
+                                                                    <span className="text-muted italic" style={{ fontSize: '0.7rem' }}>Click image to View</span>
                                                                 </div>
                                                             )}
                                                         </div>
