@@ -374,7 +374,7 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
                                                             <div className="d-flex align-items-center gap-2">
                                                                 {item.fsr_image && (
                                                                     <img
-                                                                        src={`${BASE_URL}${item.fsr_image}`}
+                                                                        src={`${FILE_URL}${item.fsr_image}`}
                                                                         alt="FSR"
                                                                         className="rounded border object-fit-cover shadow-sm flex-shrink-0"
                                                                         style={{ width: '28px', height: '28px' }}
