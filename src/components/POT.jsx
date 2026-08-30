@@ -640,7 +640,7 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
                                                             style={{ borderLeft: `4px solid ${statusConfig.border}`, cursor: 'pointer' }}
                                                         >
                                                             <div className="d-flex justify-content-between align-items-start mb-1">
-                                                                <div className="fw-bold text-dark text-truncate pe-2" style={{ maxWidth: '75%' }}>{item.client_name || item.client}</div>
+                                                                <div className="fw-bold text-dark text-truncate pe-2" style={{ maxWidth: '75%' }}>📌 {item.client_name || item.client}</div>
                                                                 <span className="text-muted" style={{ fontSize: '0.7rem' }}>{formatLocalDateTime(item.time_in)}</span>
                                                             </div>
                                                             <div className="small text-primary font-monospace mb-1 fw-medium">Machine: {item.machine || '—'}</div>
