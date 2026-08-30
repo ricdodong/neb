@@ -28,6 +28,7 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
     const [timeOut, setTimeOut] = useState('');                     // Service end timestamp
     const [fsrSeries, setFsrSeries] = useState('');                 // FSR Document code/series number
     const [fsrFile, setFsrFile] = useState(null);                   // Raw File object for R2 upload
+    const [fsrImage, setFsrImage] = useState('');                   // Base64 string for image attachment preview
     const [troubleFound, setTroubleFound] = useState('');           // Diagnosed issue / description
     const [workDone, setWorkDone] = useState('');                   // Actions taken / remediation
     const [status, setStatus] = useState('Working on it');          // Board item status (Working on it / Done / Stuck)
@@ -121,11 +122,16 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
         setSelectedMachines(updated);
     };
 
-    // Captures the raw file object for multipart/form-data Cloudflare R2 upload
+    // Captures raw file for upload and processes Base64 preview string
     const handleImageUpload = (e) => {
         const file = e.target.files[0];
         if (file) {
             setFsrFile(file);
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setFsrImage(reader.result);
+            };
+            reader.readAsDataURL(file);
         }
     };
 
@@ -139,6 +145,7 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
         setTimeOut('');
         setFsrSeries('');
         setFsrFile(null);
+        setFsrImage('');
         setTroubleFound('');
         setWorkDone('');
         setStatus('Working on it');
