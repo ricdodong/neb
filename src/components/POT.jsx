@@ -294,7 +294,7 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
                     <div className="d-flex flex-column gap-3.5">
                         {/* Search Board Filter */}
                         <div className="p-3.5 rounded-4 sidebar-user-box border border-white border-opacity-10 shadow-sm">
-                            <h6 className="fw-900 text-white mb-2 text-uppercase tiny-text tracking-widest d-flex align-items-center gap-2">
+                            <h6 className="fw-900 text-white m-2 text-uppercase tiny-text tracking-widest d-flex align-items-center gap-2">
                                 <span className="jade-accent">🔍</span> Filter Board
                             </h6>
                             <input
@@ -308,7 +308,7 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
 
                         {/* Quick Serial Lookup Widget */}
                         <div className="p-3.5 rounded-4 sidebar-user-box border border-white border-opacity-10 shadow-sm">
-                            <h6 className="fw-900 text-white mb-2 text-uppercase tiny-text tracking-widest d-flex align-items-center gap-2">
+                            <h6 className="fw-900 text-white m-2 text-uppercase tiny-text tracking-widest d-flex align-items-center gap-2">
                                 <span className="text-info">📌</span> Serial Check
                             </h6>
                             <input
