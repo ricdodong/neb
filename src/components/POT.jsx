@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
 const BASE_URL = 'https://dpsapi.ricalgen.eu.org';
-const FILE_URL = 'https://dpsapi.ricalgen.eu.org';
+const FILE_URL = 'https://jadefile.ricalgen.eu.org';
 
 const ProductivityOfTechnical = ({ triggerToast, username }) => {
     // ==========================================
