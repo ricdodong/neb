@@ -329,32 +329,32 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
 
                 {/* Right Area: Monday.com Table or Kanban Board */}
                 <div className="col-12 col-xl-9">
-                    <div className="p-4 rounded-4 shadow-lg border border-white border-opacity-10 backdrop-blur" style={{ backgroundColor: 'rgba(18, 22, 31, 0.85)' }}>
+                    <div className="p-4 rounded-4 bg-dark border border-secondary text-light shadow">
                         <div className="d-flex justify-content-between align-items-center mb-4">
                             <div className="d-flex align-items-center gap-2">
-                                <span className="badge rounded-3 bg-white bg-opacity-10 px-3 py-1.5 tiny-text fw-bold text-light border border-white border-opacity-10">Active Group</span>
-                                <span className="text-light text-opacity-75 tiny-text fw-semibold">({filteredLogs.length} items)</span>
+                                <span className="badge bg-secondary bg-opacity-50 px-3 py-1.5 text-light">Active Group</span>
+                                <span className="text-muted small">({filteredLogs.length} items)</span>
                             </div>
                             <button
                                 onClick={fetchInitialData}
-                                className="btn btn-sm border-white border-opacity-15 text-light hover-lift rounded-3 shadow-none d-flex align-items-center gap-1.5 px-3 py-1.5 bg-white bg-opacity-5"
+                                className="btn btn-sm btn-outline-light d-flex align-items-center gap-2 px-3"
                             >
-                                <i className="fa-solid fa-rotate tiny-text text-info"></i> <span className="tiny-text fw-medium">Sync Board</span>
+                                <i className="fa-solid fa-rotate"></i> Sync Board
                             </button>
                         </div>
 
                         {activeTab === 'table' ? (
                             <div className="table-responsive">
-                                <table className="table table-dark table-hover align-middle mb-0" style={{ backgroundColor: 'transparent' }}>
+                                <table className="table table-dark table-hover align-middle mb-0">
                                     <thead>
-                                        <tr className="text-light text-opacity-75 tiny-text text-uppercase border-bottom border-white border-opacity-15 tracking-wider">
-                                            <th className="py-3 bg-transparent ps-4" style={{ width: '22%' }}>Item / Client</th>
-                                            <th className="py-3 bg-transparent text-center">Status</th>
-                                            <th className="py-3 bg-transparent text-center">Priority</th>
-                                            <th className="py-3 bg-transparent">Technician</th>
-                                            <th className="py-3 bg-transparent font-monospace">Machine / Serial</th>
-                                            <th className="py-3 bg-transparent font-monospace">FSR Series</th>
-                                            <th className="py-3 bg-transparent pe-4">Time Span</th>
+                                        <tr className="text-secondary small text-uppercase border-bottom border-secondary">
+                                            <th className="py-3 ps-3" style={{ width: '22%' }}>Item / Client</th>
+                                            <th className="py-3 text-center">Status</th>
+                                            <th className="py-3 text-center">Priority</th>
+                                            <th className="py-3">Technician</th>
+                                            <th className="py-3 font-monospace">Machine / Serial</th>
+                                            <th className="py-3 font-monospace">FSR Series</th>
+                                            <th className="py-3 pe-3">Time Span</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -366,60 +366,49 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
                                                     <tr
                                                         key={item.id || idx}
                                                         onClick={() => setSelectedCardDetail(item)}
-                                                        className="border-bottom border-white border-opacity-10 transition-all hover-bg-subtle"
-                                                        style={{ cursor: 'pointer', backgroundColor: 'rgba(255, 255, 255, 0.01)' }}
+                                                        className="border-bottom border-secondary cursor-pointer"
+                                                        style={{ cursor: 'pointer' }}
                                                     >
-                                                        <td className="py-3.5 bg-transparent fw-bold text-white small ps-4">
-                                                            <div className="d-flex align-items-center gap-2">
-                                                                {item.fsr_image && (
-                                                                    <img
-                                                                        src={`${BASE_URL}${item.fsr_image}`}
-                                                                        alt="FSR"
-                                                                        className="rounded border border-white border-opacity-20 object-fit-cover shadow-sm flex-shrink-0"
-                                                                        style={{ width: '30px', height: '30px' }}
-                                                                        onError={(e) => { e.target.style.display = 'none'; }}
-                                                                    />
-                                                                )}
-                                                                <div className="text-white text-opacity-100">{item.client_name || item.client}</div>
-                                                            </div>
-                                                            {item.work_done && <div className="tiny-text text-light text-opacity-75 text-truncate fw-normal mt-1" style={{ maxWidth: '240px' }}>{item.work_done}</div>}
+                                                        <td className="py-3 fw-bold text-light ps-3">
+                                                            <div>{item.client_name || item.client}</div>
+                                                            {item.work_done && <div className="small text-muted fw-normal text-truncate mt-1" style={{ maxWidth: '240px' }}>{item.work_done}</div>}
                                                         </td>
-                                                        <td className="py-3.5 bg-transparent text-center">
-                                                            <span className="badge tiny-text px-3 py-1.5 fw-bold rounded-pill text-center shadow-xs border border-white border-opacity-10" style={{ backgroundColor: statColor.bg, color: statColor.text, minWidth: '105px' }}>
+                                                        <td className="py-3 text-center">
+                                                            <span className="badge px-3 py-1.5 fw-bold" style={{ backgroundColor: statColor.bg, color: statColor.text, minWidth: '95px' }}>
                                                                 {item.status || 'OK'}
                                                             </span>
                                                         </td>
-                                                        <td className="py-3.5 bg-transparent text-center">
-                                                            <span className="badge tiny-text px-2.5 py-1.5 fw-bold rounded-pill text-center border border-white border-opacity-10" style={{ backgroundColor: prioColor.bg, color: prioColor.text, minWidth: '75px' }}>
+                                                        <td className="py-3 text-center">
+                                                            <span className="badge px-2.5 py-1.5 fw-bold" style={{ backgroundColor: prioColor.bg, color: prioColor.text, minWidth: '70px' }}>
                                                                 {item.priority || 'Medium'}
                                                             </span>
                                                         </td>
-                                                        <td className="py-3.5 bg-transparent small text-light text-opacity-85">
+                                                        <td className="py-3 text-muted small">
                                                             <div className="d-flex align-items-center gap-2">
-                                                                <span className="rounded-circle bg-dark bg-opacity-75 text-white d-inline-flex align-items-center justify-content-center tiny-text fw-bold border border-white border-opacity-20 shadow-xs" style={{ width: '26px', height: '26px' }}>
+                                                                <span className="rounded-circle bg-secondary text-white d-inline-flex align-items-center justify-content-center fw-bold small" style={{ width: '24px', height: '24px' }}>
                                                                     {(item.technician || username || 'S').charAt(0).toUpperCase()}
                                                                 </span>
-                                                                <span className="text-truncate fw-medium text-light" style={{ maxWidth: '110px' }}>{item.technician || username || 'Staff'}</span>
+                                                                <span className="text-light">{item.technician || username || 'Staff'}</span>
                                                             </div>
                                                         </td>
-                                                        <td className="py-3.5 bg-transparent font-monospace text-info small fw-semibold text-opacity-100">
+                                                        <td className="py-3 font-monospace text-info small fw-semibold">
                                                             {item.machine || '—'}
                                                         </td>
-                                                        <td className="py-3.5 bg-transparent font-monospace small">
-                                                            <span className="tiny-text px-2.5 py-1 rounded-2 bg-white bg-opacity-10 text-light fw-bold border border-white border-opacity-15">
+                                                        <td className="py-3 font-monospace small">
+                                                            <span className="px-2 py-1 rounded bg-secondary bg-opacity-25 text-light fw-bold">
                                                                 {item.fsr_series || 'N/A'}
                                                             </span>
                                                         </td>
-                                                        <td className="py-3.5 bg-transparent tiny-text text-light text-opacity-75 font-monospace pe-4">
-                                                            <div className="d-flex align-items-center gap-1"><span className="text-success fw-bold">In:</span> <span className="text-light">{formatLocalDateTime(item.time_in)}</span></div>
-                                                            <div className="d-flex align-items-center gap-1 mt-1"><span className="text-danger fw-bold">Out:</span> <span className="text-light">{formatLocalDateTime(item.time_out)}</span></div>
+                                                        <td className="py-3 small text-muted font-monospace pe-3">
+                                                            <div><span className="text-success fw-bold">In:</span> {formatLocalDateTime(item.time_in)}</div>
+                                                            <div><span className="text-danger fw-bold">Out:</span> {formatLocalDateTime(item.time_out)}</div>
                                                         </td>
                                                     </tr>
                                                 );
                                             })
                                         ) : (
                                             <tr>
-                                                <td colSpan="7" className="text-center text-light text-opacity-60 py-5 italic small">
+                                                <td colSpan="7" className="text-center text-muted py-5 fst-italic">
                                                     No board entries match your filter criteria.
                                                 </td>
                                             </tr>
@@ -428,63 +417,43 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
                                 </table>
                             </div>
                         ) : (
-                            /* Monday.com Kanban View Grouped Columns */
+                            /* Kanban View */
                             <div className="row g-3">
                                 {['Working on it', 'OK', 'Stuck'].map((colStatus, cIdx) => {
                                     const colItems = filteredLogs.filter(l => (l.status || 'Working on it') === colStatus || (colStatus === 'OK' && l.status === 'Done'));
 
-                                    // High-contrast, polished styling profile adapted for dark dashboard aesthetics
-                                    const statusConfig = {
-                                        'Working on it': { border: '#ffc107', badgeBg: 'rgba(255, 193, 7, 0.15)', badgeText: '#ffc107', cardBg: '#1a1f2c' },
-                                        'OK': { border: '#198754', badgeBg: 'rgba(25, 135, 84, 0.15)', badgeText: '#20c997', cardBg: '#1a1f2c' },
-                                        'Stuck': { border: '#dc3545', badgeBg: 'rgba(220, 53, 69, 0.15)', badgeText: '#ff6b6b', cardBg: '#1a1f2c' }
-                                    }[colStatus] || { border: '#6c757d', badgeBg: 'rgba(108, 117, 125, 0.15)', badgeText: '#adb5bd', cardBg: '#1a1f2c' };
-
                                     return (
                                         <div key={cIdx} className="col-12 col-md-4">
-                                            <div className="p-3 rounded-4 shadow-sm h-100 border border-white border-opacity-10" style={{ backgroundColor: 'rgba(22, 27, 38, 0.95)', borderTop: `4px solid ${statusConfig.border}` }}>
-                                                <div className="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-white border-opacity-10">
-                                                    <span className="badge px-3 py-1.5 fw-bold rounded-pill border border-white border-opacity-10" style={{ backgroundColor: statusConfig.badgeBg, color: statusConfig.badgeText, fontSize: '0.8rem' }}>
+                                            <div className="p-3 rounded bg-black bg-opacity-25 border border-secondary h-100">
+                                                <div className="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-secondary">
+                                                    <span className="badge bg-secondary text-light px-3 py-1.5 fw-bold">
                                                         {colStatus}
                                                     </span>
-                                                    <span className="badge bg-white bg-opacity-10 text-light fw-bold rounded-pill px-2.5 py-1 border border-white border-opacity-10">{colItems.length}</span>
+                                                    <span className="badge bg-secondary text-white rounded-pill">{colItems.length}</span>
                                                 </div>
-                                                <div className="d-flex flex-column gap-3" style={{ minHeight: '300px' }}>
+                                                <div className="d-flex flex-column gap-3">
                                                     {colItems.length > 0 ? colItems.map((item, i) => (
                                                         <div
                                                             key={item.id || i}
                                                             onClick={() => setSelectedCardDetail(item)}
-                                                            className="p-3 rounded-3 border border-white border-opacity-10 shadow-xs hover-shadow transition-all cursor-pointer position-relative text-start"
-                                                            style={{ backgroundColor: statusConfig.cardBg, borderLeft: `4px solid ${statusConfig.border}`, cursor: 'pointer' }}
+                                                            className="p-3 rounded bg-dark border border-secondary shadow-sm cursor-pointer"
+                                                            style={{ cursor: 'pointer' }}
                                                         >
-                                                            <div className="d-flex justify-content-between align-items-start mb-1.5">
-                                                                <div className="fw-bold text-white text-truncate pe-2" style={{ maxWidth: '70%' }}>{item.client_name || item.client}</div>
-                                                                <span className="text-light text-opacity-60 font-monospace" style={{ fontSize: '0.7rem' }}>{formatLocalDateTime(item.time_in)}</span>
+                                                            <div className="d-flex justify-content-between align-items-start mb-2">
+                                                                <div className="fw-bold text-light text-truncate pe-2">{item.client_name || item.client}</div>
+                                                                <span className="text-muted small">{formatLocalDateTime(item.time_in)}</span>
                                                             </div>
-                                                            <div className="small text-info font-monospace mb-1.5 fw-semibold">Machine: {item.machine || '—'}</div>
-                                                            <div className="text-light text-opacity-75 mb-2" style={{ fontSize: '0.75rem' }}>FSR: <span className="fw-semibold text-white">{item.fsr_series || 'N/A'}</span></div>
+                                                            <div className="small text-info font-monospace mb-1">Machine: {item.machine || '—'}</div>
+                                                            <div className="text-muted small mb-2">FSR: <span className="text-light fw-semibold">{item.fsr_series || 'N/A'}</span></div>
 
                                                             {item.work_done && (
-                                                                <div className="text-light text-opacity-85 bg-black bg-opacity-30 p-2 rounded-2 mb-2 text-truncate border border-white border-opacity-5" style={{ fontSize: '0.75rem' }}>
+                                                                <div className="text-muted bg-black p-2 rounded small mb-2 text-truncate">
                                                                     {item.work_done}
-                                                                </div>
-                                                            )}
-
-                                                            {item.fsr_image && (
-                                                                <div className="mt-2 pt-2 border-top border-white border-opacity-10 d-flex align-items-center gap-2">
-                                                                    <img
-                                                                        src={`${BASE_URL}${item.fsr_image}`}
-                                                                        alt="FSR Attachment"
-                                                                        className="rounded border border-white border-opacity-20 object-fit-cover shadow-sm"
-                                                                        style={{ width: '40px', height: '40px' }}
-                                                                        onError={(e) => { e.target.style.display = 'none'; }}
-                                                                    />
-                                                                    <span className="text-light text-opacity-60 italic" style={{ fontSize: '0.7rem' }}>Click card to view details & attachment</span>
                                                                 </div>
                                                             )}
                                                         </div>
                                                     )) : (
-                                                        <div className="text-center text-light text-opacity-50 small py-5 fst-italic border border-dashed border-white border-opacity-10 rounded-3 bg-black bg-opacity-20">
+                                                        <div className="text-center text-muted small py-4 fst-italic border border-secondary border-dashed rounded">
                                                             No items in {colStatus}
                                                         </div>
                                                     )}
@@ -494,7 +463,6 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
                                     );
                                 })}
                             </div>
-
                         )}
                     </div>
                 </div>
