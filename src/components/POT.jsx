@@ -262,13 +262,13 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
                     {/* View Switcher Tabs */}
                     <div className="btn-group bg-dark border border-white border-opacity-10 rounded-3 p-1">
                         <button
-                            className={`btn btn-sm px-3 rounded-2 tiny-text fw-bold transition-all ${activeTab === 'table' ? 'bg-secondary bg-opacity-50 text-white shadow-sm' : 'text-muted border-0'}`}
+                            className={`btn btn-sm px-3 rounded-2 tiny-text fw-bold transition-all ${activeTab === 'table' ? 'bg-secondary bg-opacity-50 text-white shadow-sm' : 'text-white border-0'}`}
                             onClick={() => setActiveTab('table')}
                         >
                             <i className="fa-solid fa-table-cells-row-lock me-1"></i> Main Table
                         </button>
                         <button
-                            className={`btn btn-sm px-3 rounded-2 tiny-text fw-bold transition-all ${activeTab === 'kanban' ? 'bg-secondary bg-opacity-50 text-white shadow-sm' : 'text-muted border-0'}`}
+                            className={`btn btn-sm px-3 rounded-2 tiny-text fw-bold transition-all ${activeTab === 'kanban' ? 'bg-secondary bg-opacity-50 text-white shadow-sm' : 'text-white border-0'}`}
                             onClick={() => setActiveTab('kanban')}
                         >
                             <i className="fa-solid fa-kanban me-1"></i> Kanban Board
@@ -640,7 +640,7 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
                                         </div>
 
                                         <div className="mb-3">
-                                            <label className="form-label tiny-text text-uppercase fw-bold text-secondary mb-1">FSR Document Attachment</label>
+                                            <label className="form-label tiny-text text-uppercase fw-bold text-secondary mb-1">Picture of FSR</label>
                                             <input
                                                 type="file"
                                                 accept="image/*"
@@ -699,10 +699,10 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
                                     {isSubmitting ? (
                                         <>
                                             <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                                            CREATING ITEM...
+                                            SAVING ITEM...
                                         </>
                                     ) : (
-                                        'CREATE BOARD ITEM'
+                                        'Save'
                                     )}
                                 </button>
                             </div>
