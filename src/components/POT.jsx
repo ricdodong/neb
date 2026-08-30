@@ -258,9 +258,9 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
                     </h3>
                 </div>
 
-                <div className="d-flex flex-wrap align-items-center gap-2.5 me-1">
+                <div className="d-flex flex-wrap align-items-center gap-2.5">
                     {/* View Switcher Tabs */}
-                    <div className="btn-group bg-dark border border-white border-opacity-10 rounded-3 p-1">
+                    <div className="btn-group bg-dark border border-white border-opacity-10 rounded-3 p-1 me-1">
                         <button
                             className={`btn btn-sm px-3 rounded-2 tiny-text fw-bold transition-all ${activeTab === 'table' ? 'bg-secondary bg-opacity-50 text-white shadow-sm' : 'text-secondary border-0'}`}
                             onClick={() => setActiveTab('table')}
