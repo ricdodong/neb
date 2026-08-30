@@ -383,7 +383,7 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
                                                                 )}
                                                                 <div className="text-truncate">{item.client_name || item.client}</div>
                                                             </div>
-                                                            {item.work_done && <div className="tiny-text text-muted text-truncate fw-normal mt-1" style={{ maxWidth: '240px' }}>{item.work_done}</div>}
+                                                            {item.work_done && <div className="tiny-text text-secondary text-truncate fw-normal mt-1" style={{ maxWidth: '240px' }}>{item.work_done}</div>}
                                                         </td>
                                                         <td className="py-3 bg-transparent text-center">
                                                             <span className="badge tiny-text px-3 py-1.5 fw-bold rounded-pill text-center shadow-xs" style={{ backgroundColor: statColor.bg, color: statColor.text, minWidth: '105px' }}>
@@ -411,7 +411,7 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
                                                                 {item.fsr_series || 'N/A'}
                                                             </span>
                                                         </td>
-                                                        <td className="py-3 bg-transparent tiny-text text-muted font-monospace pe-4">
+                                                        <td className="py-3 bg-transparent tiny-text text-secondary font-monospace pe-4">
                                                             <div className="d-flex align-items-center gap-1"><span className="text-success fw-bold">In:</span> {formatLocalDateTime(item.time_in)}</div>
                                                             <div className="d-flex align-items-center gap-1 mt-0.5"><span className="text-danger fw-bold">Out:</span> {formatLocalDateTime(item.time_out)}</div>
                                                         </td>
