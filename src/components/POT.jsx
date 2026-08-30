@@ -503,7 +503,7 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
 
                             <button
                                 onClick={fetchInitialData}
-                                className="btn btn-sm border-white border-opacity-10 text-muted hover-lift rounded-3 shadow-none d-flex align-items-center gap-1.5 px-3 py-1"
+                                className="btn btn-sm border-white border-opacity-10 text-secondary hover-lift rounded-3 shadow-none d-flex align-items-center gap-1.5 px-3 py-1"
                             >
                                 <i className="fa-solid fa-rotate tiny-text"></i> <span className="tiny-text">Sync Board</span>
                             </button>
