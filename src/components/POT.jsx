@@ -510,7 +510,7 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
                             {/* Modal Header */}
                             <div className="modal-header border-bottom border-secondary border-opacity-15 px-3 px-md-4 py-3 bg-black bg-opacity-75 sticky-top" style={{ zIndex: 10 }}>
                                 <h5 className="modal-title fw-bold tiny-text tracking-widest text-uppercase d-flex align-items-center gap-2 m-0 text-light">
-                                    <span style={{ color: '#00c875', fontSize: '0.85rem' }}>●</span> Create Monday Board Item
+                                    <span style={{ color: '#00c875', fontSize: '0.85rem' }}>●</span> Service of Productivity
                                 </h5>
                                 <button type="button" className="btn-close btn-close-white shadow-none opacity-75" onClick={() => setShowModal(false)}></button>
                             </div>
