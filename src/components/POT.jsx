@@ -470,7 +470,7 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
 
             <div className="row g-4">
                 {/* Main Table or Kanban Board */}
-                <div className="col-12 col-xl-9">
+                <div className="w-100">
                     <div className="p-4 rounded-4 sidebar-user-box border border-white border-opacity-10 shadow-sm">
                         <div className="d-flex justify-content-between align-items-center mb-3">
                             <div className="d-flex align-items-center gap-2">
