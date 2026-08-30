@@ -4,6 +4,52 @@ import axios from 'axios';
 const BASE_URL = 'https://dpsapi.ricalgen.eu.org';
 const FILE_URL = 'https://jadefile.ricalgen.eu.org';
 
+// ==========================================
+// FSR IMAGE LIGHTBOX COMPONENT
+// ==========================================
+const FsrImageLightbox = ({ imageUrl, onClose }) => {
+    if (!imageUrl) return null;
+
+    return (
+        <div 
+            className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
+            style={{ background: 'rgba(0, 0, 0, 0.85)', zIndex: 1060, backdropFilter: 'blur(5px)' }}
+            onClick={onClose}
+        >
+            <div 
+                className="position-relative p-3 rounded-4 border border-white border-opacity-15 shadow-lg"
+                style={{ background: '#161b26', maxWidth: '90vw', maxHeight: '90vh' }}
+                onClick={(e) => e.stopPropagation()}
+            >
+                <button
+                    type="button"
+                    className="btn-close btn-close-white position-absolute top-0 end-0 m-3 z-3 shadow-none bg-black bg-opacity-50 p-2 rounded-circle border border-white border-opacity-25"
+                    aria-label="Close"
+                    onClick={onClose}
+                ></button>
+                <div className="overflow-hidden rounded-3 text-center mb-2">
+                    <img
+                        src={imageUrl}
+                        alt="FSR Lightbox Preview"
+                        className="img-fluid rounded object-fit-contain shadow"
+                        style={{ maxHeight: '75vh', maxWidth: '100%' }}
+                    />
+                </div>
+                <div className="text-center pt-2 border-top border-white border-opacity-10">
+                    <a 
+                        href={imageUrl} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="btn btn-sm btn-outline-light border-opacity-25 tiny-text fw-bold text-uppercase"
+                    >
+                        <i className="fas fa-external-link-alt me-2"></i> Open Original in New Tab
+                    </a>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 const ProductivityOfTechnical = ({ triggerToast, username }) => {
     // ==========================================
     // 1. DATA & CORE STATES
@@ -19,6 +65,7 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
     const [showModal, setShowModal] = useState(false);              // Controls modal visibility
     const [activeTab, setActiveTab] = useState('table');            // View switcher: 'table' | 'kanban'
     const [selectedCardDetail, setSelectedCardDetail] = useState(null); // Selected card for detail/preview modal
+    const [lightboxImg, setLightboxImg] = useState(null);           // Lightbox Active Image State
 
     // ==========================================
     // 3. FORM STATES (Monday.com Board Columns)
@@ -472,15 +519,22 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
                                                             )}
 
                                                             {item.fsr_image && (
-                                                                <div className="mt-2 pt-2 border-top d-flex align-items-center gap-2">
+                                                                <div
+                                                                    className="mt-2 pt-2 border-top d-flex align-items-center gap-2"
+                                                                    style={{ cursor: 'pointer' }}
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        setLightboxImg(`${FILE_URL}${item.fsr_image}`);
+                                                                    }}
+                                                                >
                                                                     <img
                                                                         src={`${FILE_URL}${item.fsr_image}`}
                                                                         alt="FSR Attachment"
-                                                                        className="rounded border object-fit-cover"
+                                                                        className="rounded border object-fit-cover shadow-sm"
                                                                         style={{ width: '40px', height: '40px' }}
                                                                         onError={(e) => { e.target.style.display = 'none'; }}
                                                                     />
-                                                                    <span className="text-muted italic" style={{ fontSize: '0.7rem' }}>Click card to view details & attachment</span>
+                                                                    <span className="text-muted italic" style={{ fontSize: '0.7rem' }}>Click image for lightbox preview</span>
                                                                 </div>
                                                             )}
                                                         </div>
@@ -765,6 +819,7 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
                     </div>
                 </div>
             )}
+       
         </div>
     );
 };
