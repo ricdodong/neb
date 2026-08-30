@@ -480,11 +480,11 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
 
                             {/* Google Search Bar Style Container */}
                             <div className="position-relative flex-grow-1 mx-4 max-w-md">
-                                <div className="input-group input-group-sm bg-dark rounded-pill border border-white border-opacity-15 shadow-sm overflow-hidden px-3 py-1 align-items-center">
-                                    <span className="text-muted me-2 small"><i className="fa-solid fa-magnifying-glass"></i></span>
+                                <div className="input-group input-group-sm bg-white rounded-pill border border-white border-opacity-15 shadow-sm overflow-hidden px-3 py-1 align-items-center">
+                                    <span className="text-secondary me-2 small"><i className="fa-solid fa-magnifying-glass"></i></span>
                                     <input
                                         type="text"
-                                        className="form-control bg-white text-white border-0 shadow-none p-0 small"
+                                        className="form-control bg-white text-dark border-0 shadow-none p-0 small"
                                         placeholder="Search client, tech, serial..."
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
@@ -492,7 +492,7 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
                                     {searchQuery && (
                                         <button
                                             type="button"
-                                            className="btn btn-link text-muted p-0 text-decoration-none small"
+                                            className="btn btn-link text-secondary p-0 text-decoration-none small"
                                             onClick={() => setSearchQuery('')}
                                         >
                                             <i className="fa-solid fa-xmark"></i>
