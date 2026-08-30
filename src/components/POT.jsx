@@ -470,45 +470,6 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
 
             {/* Main Layout Grid (monday.com filter + board view) */}
             <div className="row g-4">
-                {/* Left Sidebar: Filters & Utilities */}
-                <div className="col-12 col-xl-3">
-                    <div className="d-flex flex-column gap-3.5">
-                        {/* Search Board Filter */}
-                        <div className="p-3.5 rounded-4 sidebar-user-box border border-white border-opacity-10 shadow-sm">
-                            <h6 className="fw-900 text-white m-2 text-uppercase tiny-text tracking-widest d-flex align-items-center gap-2">
-                                <span className="jade-accent">🔍</span> Filter Board
-                            </h6>
-                            <input
-                                type="text"
-                                className="form-control bg-dark text-white border-secondary border-opacity-25 rounded-3 shadow-none small"
-                                placeholder="Search client, tech, serial..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                            />
-                        </div>
-
-                        {/* Quick Serial Lookup Widget */}
-                        <div className="p-3.5 rounded-4 sidebar-user-box border border-white border-opacity-10 shadow-sm">
-                            <h6 className="fw-900 text-white m-2 text-uppercase tiny-text tracking-widest d-flex align-items-center gap-2">
-                                <span className="text-info">📌</span> Serial Check
-                            </h6>
-                            <input
-                                type="text"
-                                className="form-control bg-dark text-white border-secondary border-opacity-25 rounded-3 shadow-none font-monospace small"
-                                placeholder="Scan serial number..."
-                                value={serialSearchQuery}
-                                onChange={(e) => handleSerialResearch(e.target.value)}
-                            />
-                            {serialSearchResult && (
-                                <div className="p-2.5 mt-2.5 rounded-3 bg-black border border-white border-opacity-10 animate-fade-in tiny-text">
-                                    <div className="text-white fw-bold">{serialSearchResult.client}</div>
-                                    <div className="text-info font-monospace mt-0.5">Machine: {serialSearchResult.machine}</div>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
-
                 {/* Right Area: Monday.com Table or Kanban Board */}
                 <div className="col-12 col-xl-9">
                     <div className="p-4 rounded-4 sidebar-user-box border border-white border-opacity-10 shadow-sm">
@@ -516,6 +477,18 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
                             <div className="d-flex align-items-center gap-2">
                                 <span className="badge rounded-3 bg-white bg-opacity-10 px-2.5 py-1 tiny-text fw-bold">Active Group</span>
                                 <span className="text-muted tiny-text">({filteredLogs.length} items)</span>
+                            </div>
+                            <div className="p-3.5 rounded-4 sidebar-user-box border border-white border-opacity-10 shadow-sm">
+                                <h6 className="fw-900 text-white m-2 text-uppercase tiny-text tracking-widest d-flex align-items-center gap-2">
+                                    <span className="jade-accent">🔍</span> Filter Board
+                                </h6>
+                                <input
+                                    type="text"
+                                    className="form-control bg-dark text-white border-secondary border-opacity-25 rounded-3 shadow-none small"
+                                    placeholder="Search client, tech, serial..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                />
                             </div>
                             <button
                                 onClick={fetchInitialData}
