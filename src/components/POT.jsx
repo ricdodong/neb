@@ -329,35 +329,35 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
 
                 {/* Right Area: Monday.com Table or Kanban Board */}
                 <div className="col-12 col-xl-9">
-                    <div className="p-4 rounded-4 bg-dark border border-secondary text-light shadow">
+                    <div className="sidebar-user-box p-4 rounded-4 shadow-lg border border-white border-opacity-10" style={{ background: '#111' }}>
                         <div className="d-flex justify-content-between align-items-center mb-4">
                             <div className="d-flex align-items-center gap-2">
-                                <span className="badge bg-secondary bg-opacity-50 px-3 py-1.5 text-light">Active Group</span>
-                                <span className="text-muted small">({filteredLogs.length} items)</span>
+                                <span className="badge rounded-pill px-3 py-1.5 uppercase tiny-text fw-bold border border-white border-opacity-10 bg-white bg-opacity-10 text-white">Active Group</span>
+                                <span className="text-white-50 tiny-text">({filteredLogs.length} items)</span>
                             </div>
                             <button
                                 onClick={fetchInitialData}
-                                className="btn btn-sm btn-outline-light d-flex align-items-center gap-2 px-3"
+                                className="btn btn-sm btn-outline-light border-opacity-25 d-flex align-items-center gap-2 py-1 px-3"
                             >
-                                <i className="fa-solid fa-rotate"></i> Sync Board
+                                <i className="fas fa-sync-alt tiny-text"></i> <span className="tiny-text fw-bold">SYNC BOARD</span>
                             </button>
                         </div>
 
                         {activeTab === 'table' ? (
                             <div className="table-responsive">
-                                <table className="table table-dark table-hover align-middle mb-0">
+                                <table className="table table-dark table-hover border-0 align-middle mb-0">
                                     <thead>
-                                        <tr className="text-secondary small text-uppercase border-bottom border-secondary">
-                                            <th className="py-3 ps-3" style={{ width: '22%' }}>Item / Client</th>
-                                            <th className="py-3 text-center">Status</th>
-                                            <th className="py-3 text-center">Priority</th>
-                                            <th className="py-3">Technician</th>
-                                            <th className="py-3 font-monospace">Machine / Serial</th>
-                                            <th className="py-3 font-monospace">FSR Series</th>
-                                            <th className="py-3 pe-3">Time Span</th>
+                                        <tr className="tiny-text text-uppercase border-bottom border-white border-opacity-25">
+                                            <th className="border-0 pb-3 text-white-50 ps-3" style={{ width: '22%' }}>Item / Client</th>
+                                            <th className="border-0 pb-3 text-white-50 text-center">Status</th>
+                                            <th className="border-0 pb-3 text-white-50 text-center">Priority</th>
+                                            <th className="border-0 pb-3 text-white-50">Technician</th>
+                                            <th className="border-0 pb-3 text-white-50 font-monospace">Machine / Serial</th>
+                                            <th className="border-0 pb-3 text-white-50 font-monospace">FSR Series</th>
+                                            <th className="border-0 pb-3 text-white-50 pe-3">Time Span</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
+                                    <tbody className="small">
                                         {filteredLogs.length > 0 ? (
                                             filteredLogs.map((item, idx) => {
                                                 const statColor = getStatusBadgeStyle(item.status || 'OK');
@@ -366,49 +366,60 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
                                                     <tr
                                                         key={item.id || idx}
                                                         onClick={() => setSelectedCardDetail(item)}
-                                                        className="border-bottom border-secondary cursor-pointer"
+                                                        className="border-bottom border-white border-opacity-10"
                                                         style={{ cursor: 'pointer' }}
                                                     >
-                                                        <td className="py-3 fw-bold text-light ps-3">
-                                                            <div>{item.client_name || item.client}</div>
-                                                            {item.work_done && <div className="small text-muted fw-normal text-truncate mt-1" style={{ maxWidth: '240px' }}>{item.work_done}</div>}
+                                                        <td className="fw-bold py-3 text-white ps-3">
+                                                            <div className="d-flex align-items-center gap-2">
+                                                                {item.fsr_image && (
+                                                                    <img
+                                                                        src={`${BASE_URL}${item.fsr_image}`}
+                                                                        alt="FSR"
+                                                                        className="rounded border border-white border-opacity-10 object-fit-cover flex-shrink-0"
+                                                                        style={{ width: '28px', height: '28px' }}
+                                                                        onError={(e) => { e.target.style.display = 'none'; }}
+                                                                    />
+                                                                )}
+                                                                <div className="text-truncate">{item.client_name || item.client}</div>
+                                                            </div>
+                                                            {item.work_done && <div className="tiny-text text-white-50 text-truncate fw-normal mt-1" style={{ maxWidth: '240px' }}>{item.work_done}</div>}
                                                         </td>
                                                         <td className="py-3 text-center">
-                                                            <span className="badge px-3 py-1.5 fw-bold" style={{ backgroundColor: statColor.bg, color: statColor.text, minWidth: '95px' }}>
+                                                            <span className="badge rounded-pill px-3 py-1 text-uppercase tiny-text" style={statColor}>
                                                                 {item.status || 'OK'}
                                                             </span>
                                                         </td>
                                                         <td className="py-3 text-center">
-                                                            <span className="badge px-2.5 py-1.5 fw-bold" style={{ backgroundColor: prioColor.bg, color: prioColor.text, minWidth: '70px' }}>
+                                                            <span className="badge rounded-pill px-2.5 py-1 text-uppercase tiny-text" style={prioColor}>
                                                                 {item.priority || 'Medium'}
                                                             </span>
                                                         </td>
-                                                        <td className="py-3 text-muted small">
+                                                        <td className="py-3 text-white-50">
                                                             <div className="d-flex align-items-center gap-2">
-                                                                <span className="rounded-circle bg-secondary text-white d-inline-flex align-items-center justify-content-center fw-bold small" style={{ width: '24px', height: '24px' }}>
+                                                                <span className="rounded-circle bg-white bg-opacity-10 text-white d-inline-flex align-items-center justify-content-center tiny-text fw-bold border border-white border-opacity-10" style={{ width: '26px', height: '26px' }}>
                                                                     {(item.technician || username || 'S').charAt(0).toUpperCase()}
                                                                 </span>
-                                                                <span className="text-light">{item.technician || username || 'Staff'}</span>
+                                                                <span className="text-truncate fw-medium text-white" style={{ maxWidth: '110px' }}>{item.technician || username || 'Staff'}</span>
                                                             </div>
                                                         </td>
-                                                        <td className="py-3 font-monospace text-info small fw-semibold">
+                                                        <td className="py-3 font-monospace text-info small">
                                                             {item.machine || '—'}
                                                         </td>
-                                                        <td className="py-3 font-monospace small">
-                                                            <span className="px-2 py-1 rounded bg-secondary bg-opacity-25 text-light fw-bold">
+                                                        <td className="py-3 font-monospace">
+                                                            <span className="tiny-text px-2 py-1 rounded bg-white bg-opacity-10 text-white fw-bold border border-white border-opacity-10">
                                                                 {item.fsr_series || 'N/A'}
                                                             </span>
                                                         </td>
-                                                        <td className="py-3 small text-muted font-monospace pe-3">
-                                                            <div><span className="text-success fw-bold">In:</span> {formatLocalDateTime(item.time_in)}</div>
-                                                            <div><span className="text-danger fw-bold">Out:</span> {formatLocalDateTime(item.time_out)}</div>
+                                                        <td className="py-3 tiny-text text-white-50 font-monospace pe-3">
+                                                            <div className="d-flex align-items-center gap-1"><span className="text-success fw-bold">In:</span> {formatLocalDateTime(item.time_in)}</div>
+                                                            <div className="d-flex align-items-center gap-1 mt-0.5"><span className="text-danger fw-bold">Out:</span> {formatLocalDateTime(item.time_out)}</div>
                                                         </td>
                                                     </tr>
                                                 );
                                             })
                                         ) : (
                                             <tr>
-                                                <td colSpan="7" className="text-center text-muted py-5 fst-italic">
+                                                <td colSpan="7" className="text-center text-muted py-5 italic small">
                                                     No board entries match your filter criteria.
                                                 </td>
                                             </tr>
@@ -417,43 +428,62 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
                                 </table>
                             </div>
                         ) : (
-                            /* Kanban View */
+                            /* Dark Glass Kanban View */
                             <div className="row g-3">
                                 {['Working on it', 'OK', 'Stuck'].map((colStatus, cIdx) => {
                                     const colItems = filteredLogs.filter(l => (l.status || 'Working on it') === colStatus || (colStatus === 'OK' && l.status === 'Done'));
 
+                                    const statusConfig = {
+                                        'Working on it': { border: '#ffc107', badgeClass: 'bg-warning text-dark' },
+                                        'OK': { border: '#198754', badgeClass: 'bg-success text-white' },
+                                        'Stuck': { border: '#dc3545', badgeClass: 'bg-danger text-white' }
+                                    }[colStatus] || { border: '#6c757d', badgeClass: 'bg-secondary text-white' };
+
                                     return (
                                         <div key={cIdx} className="col-12 col-md-4">
-                                            <div className="p-3 rounded bg-black bg-opacity-25 border border-secondary h-100">
-                                                <div className="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-secondary">
-                                                    <span className="badge bg-secondary text-light px-3 py-1.5 fw-bold">
+                                            <div className="p-3 rounded-4 h-100 border border-white border-opacity-10" style={{ background: '#1a1a1a', borderTop: `4px solid ${statusConfig.border}` }}>
+                                                <div className="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-white border-opacity-10">
+                                                    <span className={`badge px-3 py-1 text-uppercase tiny-text fw-bold rounded-pill ${statusConfig.badgeClass}`}>
                                                         {colStatus}
                                                     </span>
-                                                    <span className="badge bg-secondary text-white rounded-pill">{colItems.length}</span>
+                                                    <span className="badge bg-white bg-opacity-10 text-white rounded-circle px-2 py-1 tiny-text">{colItems.length}</span>
                                                 </div>
-                                                <div className="d-flex flex-column gap-3">
+                                                <div className="d-flex flex-column gap-3" style={{ minHeight: '300px' }}>
                                                     {colItems.length > 0 ? colItems.map((item, i) => (
                                                         <div
-                                                            key={item.id || i}
+                                                            key={i}
                                                             onClick={() => setSelectedCardDetail(item)}
-                                                            className="p-3 rounded bg-dark border border-secondary shadow-sm cursor-pointer"
-                                                            style={{ cursor: 'pointer' }}
+                                                            className="p-3 rounded-3 border border-white border-opacity-10 text-white shadow-sm cursor-pointer"
+                                                            style={{ background: '#111', borderLeft: `4px solid ${statusConfig.border}`, cursor: 'pointer' }}
                                                         >
-                                                            <div className="d-flex justify-content-between align-items-start mb-2">
-                                                                <div className="fw-bold text-light text-truncate pe-2">{item.client_name || item.client}</div>
-                                                                <span className="text-muted small">{formatLocalDateTime(item.time_in)}</span>
+                                                            <div className="d-flex justify-content-between align-items-start mb-1">
+                                                                <div className="fw-bold text-white text-truncate pe-2" style={{ maxWidth: '75%' }}>{item.client_name || item.client}</div>
+                                                                <span className="tiny-text text-white-50">{formatLocalDateTime(item.time_in)}</span>
                                                             </div>
-                                                            <div className="small text-info font-monospace mb-1">Machine: {item.machine || '—'}</div>
-                                                            <div className="text-muted small mb-2">FSR: <span className="text-light fw-semibold">{item.fsr_series || 'N/A'}</span></div>
+                                                            <div className="small text-info font-monospace mb-1 fw-medium">Machine: {item.machine || '—'}</div>
+                                                            <div className="tiny-text text-white-50 mb-2">FSR: <span className="fw-semibold text-white">{item.fsr_series || 'N/A'}</span></div>
 
                                                             {item.work_done && (
-                                                                <div className="text-muted bg-black p-2 rounded small mb-2 text-truncate">
+                                                                <div className="tiny-text text-white-50 bg-black bg-opacity-50 p-2 rounded mb-2 text-truncate border border-white border-opacity-5">
                                                                     {item.work_done}
+                                                                </div>
+                                                            )}
+
+                                                            {item.fsr_image && (
+                                                                <div className="mt-2 pt-2 border-top border-white border-opacity-10 d-flex align-items-center gap-2">
+                                                                    <img
+                                                                        src={`${BASE_URL}${item.fsr_image}`}
+                                                                        alt="FSR Attachment"
+                                                                        className="rounded border border-white border-opacity-10 object-fit-cover"
+                                                                        style={{ width: '36px', height: '36px' }}
+                                                                        onError={(e) => { e.target.style.display = 'none'; }}
+                                                                    />
+                                                                    <span className="tiny-text text-white-50 italic">Click card to view details</span>
                                                                 </div>
                                                             )}
                                                         </div>
                                                     )) : (
-                                                        <div className="text-center text-muted small py-4 fst-italic border border-secondary border-dashed rounded">
+                                                        <div className="text-center text-white-50 tiny-text py-5 italic border border-white border-opacity-10 border-dashed rounded-3">
                                                             No items in {colStatus}
                                                         </div>
                                                     )}
