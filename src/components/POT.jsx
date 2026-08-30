@@ -572,7 +572,7 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
                                                             {item.machine || '—'}
                                                         </td>
                                                         <td className="py-3 bg-transparent font-monospace small">
-                                                            <span className="tiny-text px-2.5 py-1 rounded-2 bg-white bg-opacity-10 text-white fw-bold border border-white border-opacity-10">
+                                                            <span className="tiny-text px-2 py-1 rounded-2 bg-white bg-opacity-10 text-white fw-bold border border-white border-opacity-10">
                                                                 {item.fsr_series || 'N/A'}
                                                             </span>
                                                         </td>
