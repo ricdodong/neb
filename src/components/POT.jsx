@@ -17,6 +17,7 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
     // ==========================================
     const [showModal, setShowModal] = useState(false);              // Controls modal visibility
     const [activeTab, setActiveTab] = useState('table');            // View switcher: 'table' | 'kanban'
+    const [selectedCardDetail, setSelectedCardDetail] = useState(null); // Selected card for detail/preview modal
 
     // ==========================================
     // 3. FORM STATES (Monday.com Board Columns)
