@@ -12,14 +12,14 @@ const FsrImageLightbox = ({ imageUrl, onClose }) => {
     const [position, setPosition] = useState({ x: 0, y: 0 });
     const [isDragging, setIsDragging] = useState(false);
     const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-    
+
     // For mobile pinch-to-zoom tracking
     const [touchStartDist, setTouchStartDist] = useState(null);
 
     if (!imageUrl) return null;
 
-    const resolvedImageUrl = imageUrl.startsWith('http') 
-        ? imageUrl 
+    const resolvedImageUrl = imageUrl.startsWith('http')
+        ? imageUrl
         : `${FILE_URL}/${imageUrl.replace(/^\/+/, '')}`;
 
     // Handle mouse wheel zoom
@@ -27,10 +27,10 @@ const FsrImageLightbox = ({ imageUrl, onClose }) => {
         e.preventDefault();
         const zoomFactor = 1.1;
         let newScale = e.deltaY < 0 ? scale * zoomFactor : scale / zoomFactor;
-        
+
         // Limit zoom constraints (min 1x, max 5x)
         newScale = Math.max(1, Math.min(newScale, 5));
-        
+
         if (newScale === 1) {
             setPosition({ x: 0, y: 0 }); // Reset position when fully zoomed out
         }
@@ -101,12 +101,12 @@ const FsrImageLightbox = ({ imageUrl, onClose }) => {
     };
 
     return (
-        <div 
+        <div
             className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
             style={{ background: 'rgba(0, 0, 0, 0.92)', zIndex: 1060, backdropFilter: 'blur(8px)' }}
             onClick={onClose}
         >
-            <div 
+            <div
                 className="position-relative w-100 h-100 d-flex flex-column align-items-center justify-content-center p-2 overflow-hidden"
                 onClick={(e) => e.stopPropagation()}
             >
@@ -116,7 +116,7 @@ const FsrImageLightbox = ({ imageUrl, onClose }) => {
                     aria-label="Close"
                     onClick={onClose}
                 ></button>
-                
+
                 {/* Reset zoom indicator/button if zoomed in */}
                 {scale > 1 && (
                     <button
@@ -128,7 +128,7 @@ const FsrImageLightbox = ({ imageUrl, onClose }) => {
                     </button>
                 )}
 
-                <div 
+                <div
                     className="w-100 h-100 d-flex align-items-center justify-content-center overflow-hidden"
                     onWheel={handleWheel}
                     onMouseDown={handleMouseDown}
@@ -144,9 +144,9 @@ const FsrImageLightbox = ({ imageUrl, onClose }) => {
                         src={resolvedImageUrl}
                         alt="FSR Lightbox Full View"
                         className="img-fluid object-fit-contain shadow-lg rounded transition-transform"
-                        style={{ 
-                            maxHeight: '92vh', 
-                            maxWidth: '92vw', 
+                        style={{
+                            maxHeight: '92vh',
+                            maxWidth: '92vw',
                             transform: `scale(${scale}) translate(${position.x / scale}px, ${position.y / scale}px)`,
                             transition: isDragging ? 'none' : 'transform 0.1s ease-out'
                         }}
@@ -163,9 +163,9 @@ const FsrImageLightbox = ({ imageUrl, onClose }) => {
                 </div>
 
                 <div className="position-fixed bottom-0 start-50 translate-middle-x mb-3 z-3">
-                    <a 
-                        href={resolvedImageUrl} 
-                        target="_blank" 
+                    <a
+                        href={resolvedImageUrl}
+                        target="_blank"
                         rel="noopener noreferrer"
                         className="btn btn-sm btn-dark bg-opacity-75 border border-white border-opacity-25 px-3 py-2 rounded-pill fw-bold text-uppercase shadow"
                     >
@@ -424,10 +424,10 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
     return (
         <div className="animate-fade-in text-white container-fluid px-0">
 
-        <div>
-            {/* Include Lightbox component render hook */}
-            <FsrImageLightbox imageUrl={lightboxImg} onClose={() => setLightboxImg(null)} />
-        </div>
+            <div>
+                {/* Include Lightbox component render hook */}
+                <FsrImageLightbox imageUrl={lightboxImg} onClose={() => setLightboxImg(null)} />
+            </div>
 
             {/* Board Header Toolbar */}
             <header className="mb-4 pb-3 border-bottom border-white border-opacity-10 d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
@@ -468,9 +468,8 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
                 </div>
             </header>
 
-            {/* Main Layout Grid (monday.com filter + board view) */}
             <div className="row g-4">
-                {/* Right Area: Monday.com Table or Kanban Board */}
+                {/* Main Table or Kanban Board */}
                 <div className="col-12 col-xl-9">
                     <div className="p-4 rounded-4 sidebar-user-box border border-white border-opacity-10 shadow-sm">
                         <div className="d-flex justify-content-between align-items-center mb-3">
@@ -478,18 +477,30 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
                                 <span className="badge rounded-3 bg-white bg-opacity-10 px-2.5 py-1 tiny-text fw-bold">Active Group</span>
                                 <span className="text-muted tiny-text">({filteredLogs.length} items)</span>
                             </div>
-                            <div className="p-3.5 rounded-4 sidebar-user-box border border-white border-opacity-10 shadow-sm">
-                                <h6 className="fw-900 text-white m-2 text-uppercase tiny-text tracking-widest d-flex align-items-center gap-2">
-                                    <span className="jade-accent">🔍</span> Filter Board
-                                </h6>
-                                <input
-                                    type="text"
-                                    className="form-control bg-dark text-white border-secondary border-opacity-25 rounded-3 shadow-none small"
-                                    placeholder="Search client, tech, serial..."
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                />
+
+                            {/* Google Search Bar Style Container */}
+                            <div className="position-relative flex-grow-1 mx-4 max-w-md">
+                                <div className="input-group input-group-sm bg-dark rounded-pill border border-white border-opacity-15 shadow-sm overflow-hidden px-3 py-1 align-items-center">
+                                    <span className="text-muted me-2 small"><i className="fa-solid fa-magnifying-glass"></i></span>
+                                    <input
+                                        type="text"
+                                        className="form-control bg-transparent text-white border-0 shadow-none p-0 small"
+                                        placeholder="Search client, tech, serial..."
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                    />
+                                    {searchQuery && (
+                                        <button
+                                            type="button"
+                                            className="btn btn-link text-muted p-0 text-decoration-none small"
+                                            onClick={() => setSearchQuery('')}
+                                        >
+                                            <i className="fa-solid fa-xmark"></i>
+                                        </button>
+                                    )}
+                                </div>
                             </div>
+
                             <button
                                 onClick={fetchInitialData}
                                 className="btn btn-sm border-white border-opacity-10 text-muted hover-lift rounded-3 shadow-none d-flex align-items-center gap-1.5 px-3 py-1"
@@ -926,7 +937,7 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
                     </div>
                 </div>
             )}
-       
+
         </div>
     );
 };
