@@ -5,15 +5,100 @@ const BASE_URL = 'https://dpsapi.ricalgen.eu.org';
 const FILE_URL = 'https://jadefile.ricalgen.eu.org';
 
 // ==========================================
-// FSR IMAGE LIGHTBOX COMPONENT
+// FSR IMAGE LIGHTBOX COMPONENT (Zoomable & Full Image Base)
 // ==========================================
 const FsrImageLightbox = ({ imageUrl, onClose }) => {
+    const [scale, setScale] = useState(1);
+    const [position, setPosition] = useState({ x: 0, y: 0 });
+    const [isDragging, setIsDragging] = useState(false);
+    const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+    
+    // For mobile pinch-to-zoom tracking
+    const [touchStartDist, setTouchStartDist] = useState(null);
+
     if (!imageUrl) return null;
 
-    // Helper to format/prepend FILE_URL if it's a relative path
     const resolvedImageUrl = imageUrl.startsWith('http') 
         ? imageUrl 
         : `${FILE_URL}/${imageUrl.replace(/^\/+/, '')}`;
+
+    // Handle mouse wheel zoom
+    const handleWheel = (e) => {
+        e.preventDefault();
+        const zoomFactor = 1.1;
+        let newScale = e.deltaY < 0 ? scale * zoomFactor : scale / zoomFactor;
+        
+        // Limit zoom constraints (min 1x, max 5x)
+        newScale = Math.max(1, Math.min(newScale, 5));
+        
+        if (newScale === 1) {
+            setPosition({ x: 0, y: 0 }); // Reset position when fully zoomed out
+        }
+        setScale(newScale);
+    };
+
+    // Pan / Drag handlers for desktop mouse
+    const handleMouseDown = (e) => {
+        if (scale > 1) {
+            setIsDragging(true);
+            setDragStart({ x: e.clientX - position.x, y: e.clientY - position.y });
+        }
+    };
+
+    const handleMouseMove = (e) => {
+        if (isDragging && scale > 1) {
+            setPosition({
+                x: e.clientX - dragStart.x,
+                y: e.clientY - dragStart.y
+            });
+        }
+    };
+
+    const handleMouseUp = () => {
+        setIsDragging(false);
+    };
+
+    // Mobile touch pinch-to-zoom & pan handlers
+    const handleTouchStart = (e) => {
+        if (e.touches.length === 2) {
+            const dist = Math.hypot(
+                e.touches[0].clientX - e.touches[1].clientX,
+                e.touches[0].clientY - e.touches[1].clientY
+            );
+            setTouchStartDist(dist);
+        } else if (e.touches.length === 1 && scale > 1) {
+            setIsDragging(true);
+            setDragStart({ x: e.touches[0].clientX - position.x, y: e.touches[0].clientY - position.y });
+        }
+    };
+
+    const handleTouchMove = (e) => {
+        if (e.touches.length === 2 && touchStartDist !== null) {
+            const dist = Math.hypot(
+                e.touches[0].clientX - e.touches[1].clientX,
+                e.touches[0].clientY - e.touches[1].clientY
+            );
+            const factor = dist / touchStartDist;
+            let newScale = Math.max(1, Math.min(scale * factor, 5));
+            setScale(newScale);
+            setTouchStartDist(dist);
+        } else if (e.touches.length === 1 && isDragging && scale > 1) {
+            setPosition({
+                x: e.touches[0].clientX - dragStart.x,
+                y: e.touches[0].clientY - dragStart.y
+            });
+        }
+    };
+
+    const handleTouchEnd = () => {
+        setIsDragging(false);
+        setTouchStartDist(null);
+    };
+
+    const resetZoom = () => {
+        setScale(1);
+        setPosition({ x: 0, y: 0 });
+    };
 
     return (
         <div 
@@ -22,7 +107,7 @@ const FsrImageLightbox = ({ imageUrl, onClose }) => {
             onClick={onClose}
         >
             <div 
-                className="position-relative w-100 h-100 d-flex flex-column align-items-center justify-content-center p-2"
+                className="position-relative w-100 h-100 d-flex flex-column align-items-center justify-content-center p-2 overflow-hidden"
                 onClick={(e) => e.stopPropagation()}
             >
                 <button
@@ -32,12 +117,48 @@ const FsrImageLightbox = ({ imageUrl, onClose }) => {
                     onClick={onClose}
                 ></button>
                 
-                <div className="w-100 h-100 d-flex align-items-center justify-content-center overflow-auto p-3">
+                {/* Reset zoom indicator/button if zoomed in */}
+                {scale > 1 && (
+                    <button
+                        type="button"
+                        className="position-fixed top-0 start-50 translate-middle-x mt-4 z-3 btn btn-sm btn-outline-light bg-dark bg-opacity-75 rounded-pill px-3 py-1 shadow"
+                        onClick={resetZoom}
+                    >
+                        Reset Zoom ({Math.round(scale * 100)}%)
+                    </button>
+                )}
+
+                <div 
+                    className="w-100 h-100 d-flex align-items-center justify-content-center overflow-hidden"
+                    onWheel={handleWheel}
+                    onMouseDown={handleMouseDown}
+                    onMouseMove={handleMouseMove}
+                    onMouseUp={handleMouseUp}
+                    onMouseLeave={handleMouseUp}
+                    onTouchStart={handleTouchStart}
+                    onTouchMove={handleTouchMove}
+                    onTouchEnd={handleTouchEnd}
+                    style={{ cursor: scale > 1 ? (isDragging ? 'grabbing' : 'grab') : 'zoom-in' }}
+                >
                     <img
                         src={resolvedImageUrl}
                         alt="FSR Lightbox Full View"
-                        className="img-fluid object-fit-contain shadow-lg rounded"
-                        style={{ maxHeight: '92vh', maxWidth: '92vw', cursor: 'zoom-in' }}
+                        className="img-fluid object-fit-contain shadow-lg rounded transition-transform"
+                        style={{ 
+                            maxHeight: '92vh', 
+                            maxWidth: '92vw', 
+                            transform: `scale(${scale}) translate(${position.x / scale}px, ${position.y / scale}px)`,
+                            transition: isDragging ? 'none' : 'transform 0.1s ease-out'
+                        }}
+                        draggable={false}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            if (scale === 1) {
+                                setScale(2); // Quick tap/click zoom-in to 2x
+                            } else {
+                                resetZoom();
+                            }
+                        }}
                     />
                 </div>
 
