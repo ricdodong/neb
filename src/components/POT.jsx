@@ -413,27 +413,60 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
                             <div className="row g-3">
                                 {['Working on it', 'OK', 'Stuck'].map((colStatus, cIdx) => {
                                     const colItems = filteredLogs.filter(l => (l.status || 'Working on it') === colStatus || (colStatus === 'OK' && l.status === 'Done'));
-                                    const colColor = getStatusBadgeStyle(colStatus);
+
+                                    // Professional status color styling profile
+                                    const statusConfig = {
+                                        'Working on it': { border: '#ffc107', badgeBg: '#fff3cd', badgeText: '#856404', headerBg: '#fef9e7' },
+                                        'OK': { border: '#198754', badgeBg: '#d1e7dd', badgeText: '#0f5132', headerBg: '#f1f8f5' },
+                                        'Stuck': { border: '#dc3545', badgeBg: '#f8d7da', badgeText: '#842029', headerBg: '#fdf2f2' }
+                                    }[colStatus] || { border: '#6c757d', badgeBg: '#e2e3e5', badgeText: '#383d41', headerBg: '#f8f9fa' };
+
                                     return (
                                         <div key={cIdx} className="col-12 col-md-4">
-                                            <div className="p-3 rounded-3 bg-black bg-opacity-40 border border-white border-opacity-5 h-100">
-                                                <div className="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-white border-opacity-10">
-                                                    <span className="badge tiny-text px-2.5 py-1 fw-bold rounded-2" style={{ backgroundColor: colColor.bg, color: colColor.text }}>
+                                            <div className="p-3 rounded-4 shadow-sm h-100 bg-white border border-light-subtle" style={{ borderTop: `4px solid ${statusConfig.border}` }}>
+                                                <div className="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+                                                    <span className="badge px-3 py-1.5 fw-semibold rounded-pill" style={{ backgroundColor: statusConfig.badgeBg, color: statusConfig.badgeText, fontSize: '0.8rem' }}>
                                                         {colStatus}
                                                     </span>
-                                                    <span className="text-muted tiny-text fw-bold">{colItems.length}</span>
+                                                    <span className="badge bg-light text-dark fw-bold rounded-circle px-2 py-1">{colItems.length}</span>
                                                 </div>
-                                                <div className="d-flex flex-column gap-2.5" style={{ minHeight: '300px' }}>
+                                                <div className="d-flex flex-column gap-3" style={{ minHeight: '300px' }}>
                                                     {colItems.length > 0 ? colItems.map((item, i) => (
-                                                        <div key={i} className="p-3 rounded-3 bg-dark border border-white border-opacity-10 shadow-sm hover-border transition-all">
-                                                            <div className="fw-bold text-white small mb-1">{item.client_name || item.client}</div>
-                                                            <div className="tiny-text text-info font-monospace mb-1">Machine: {item.machine || '—'}</div>
-                                                            <div className="tiny-text text-muted">FSR: {item.fsr_series || 'N/A'}</div>
-                                                            {item.work_done && <div className="tiny-text text-secondary mt-2 pt-2 border-top border-white border-opacity-5 text-truncate">{item.work_done}</div>}
+                                                        <div
+                                                            key={i}
+                                                            onClick={() => setSelectedCardDetail(item)}
+                                                            className="p-3 rounded-3 bg-white border shadow-xs hover-shadow transition-all cursor-pointer position-relative"
+                                                            style={{ borderLeft: `4px solid ${statusConfig.border}`, cursor: 'pointer' }}
+                                                        >
+                                                            <div className="d-flex justify-content-between align-items-start mb-1">
+                                                                <div className="fw-bold text-dark text-truncate pe-2" style={{ maxWidth: '75%' }}>{item.client_name || item.client}</div>
+                                                                <span className="text-muted" style={{ fontSize: '0.7rem' }}>{formatLocalDateTime(item.time_in)}</span>
+                                                            </div>
+                                                            <div className="small text-primary font-monospace mb-1 fw-medium">Machine: {item.machine || '—'}</div>
+                                                            <div className="text-muted mb-2" style={{ fontSize: '0.75rem' }}>FSR: <span className="fw-semibold text-dark">{item.fsr_series || 'N/A'}</span></div>
+
+                                                            {item.work_done && (
+                                                                <div className="text-secondary bg-light p-2 rounded-2 mb-2 text-truncate" style={{ fontSize: '0.75rem' }}>
+                                                                    {item.work_done}
+                                                                </div>
+                                                            )}
+
+                                                            {item.fsr_image && (
+                                                                <div className="mt-2 pt-2 border-top d-flex align-items-center gap-2">
+                                                                    <img
+                                                                        src={`${BASE_URL}${item.fsr_image}`}
+                                                                        alt="FSR Attachment"
+                                                                        className="rounded border object-fit-cover"
+                                                                        style={{ width: '40px', height: '40px' }}
+                                                                        onError={(e) => { e.target.style.display = 'none'; }}
+                                                                    />
+                                                                    <span className="text-muted italic" style={{ fontSize: '0.7rem' }}>Click card to view details & attachment</span>
+                                                                </div>
+                                                            )}
                                                         </div>
                                                     )) : (
-                                                        <div className="text-center text-muted tiny-text py-5 italic border border-white border-opacity-5 rounded-3 border-dashed">
-                                                            No items
+                                                        <div className="text-center text-muted small py-5 fst-italic border rounded-3 bg-light bg-opacity-50 border-dashed">
+                                                            No items in {colStatus}
                                                         </div>
                                                     )}
                                                 </div>
@@ -442,6 +475,7 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
                                     );
                                 })}
                             </div>
+
                         )}
                     </div>
                 </div>
