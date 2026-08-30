@@ -258,7 +258,7 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
                     </h3>
                 </div>
 
-                <div className="d-flex flex-wrap align-items-center gap-2.5">
+                <div className="d-flex flex-wrap align-items-center gap-2.5 me-1">
                     {/* View Switcher Tabs */}
                     <div className="btn-group bg-dark border border-white border-opacity-10 rounded-3 p-1">
                         <button
