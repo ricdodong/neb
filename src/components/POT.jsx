@@ -348,13 +348,13 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
                                 <table className="table table-dark table-hover align-middle mb-0" style={{ backgroundColor: 'transparent' }}>
                                     <thead>
                                         <tr className="text-muted tiny-text text-uppercase border-bottom border-white border-opacity-10">
-                                            <th className="py-3 bg-transparent" style={{ width: '22%' }}>Item / Client</th>
-                                            <th className="py-3 bg-transparent">Status</th>
-                                            <th className="py-3 bg-transparent">Priority</th>
+                                            <th className="py-3 bg-transparent ps-4" style={{ width: '22%' }}>Item / Client</th>
+                                            <th className="py-3 bg-transparent text-center">Status</th>
+                                            <th className="py-3 bg-transparent text-center">Priority</th>
                                             <th className="py-3 bg-transparent">Technician</th>
                                             <th className="py-3 bg-transparent font-monospace">Machine / Serial</th>
                                             <th className="py-3 bg-transparent font-monospace">FSR Series</th>
-                                            <th className="py-3 bg-transparent">Time Span</th>
+                                            <th className="py-3 bg-transparent pe-4">Time Span</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -363,38 +363,56 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
                                                 const statColor = getStatusBadgeStyle(item.status || 'OK');
                                                 const prioColor = getPriorityBadgeStyle(item.priority || 'Medium');
                                                 return (
-                                                    <tr key={item.id || idx} className="border-bottom border-white border-opacity-5">
-                                                        <td className="py-3 bg-transparent fw-bold text-white small">
-                                                            <div>{item.client_name || item.client}</div>
-                                                            {item.work_done && <div className="tiny-text text-muted text-truncate fw-normal mt-0.5" style={{ maxWidth: '200px' }}>{item.work_done}</div>}
+                                                    <tr
+                                                        key={item.id || idx}
+                                                        onClick={() => setSelectedCardDetail(item)}
+                                                        className="border-bottom border-white border-opacity-5 transition-all"
+                                                        style={{ cursor: 'pointer' }}
+                                                    >
+                                                        <td className="py-3 bg-transparent fw-bold text-white small ps-4">
+                                                            <div className="d-flex align-items-center gap-2">
+                                                                {item.fsr_image && (
+                                                                    <img
+                                                                        src={`${BASE_URL}${item.fsr_image}`}
+                                                                        alt="FSR"
+                                                                        className="rounded border object-fit-cover shadow-sm flex-shrink-0"
+                                                                        style={{ width: '28px', height: '28px' }}
+                                                                        onError={(e) => { e.target.style.display = 'none'; }}
+                                                                    />
+                                                                )}
+                                                                <div className="text-truncate">{item.client_name || item.client}</div>
+                                                            </div>
+                                                            {item.work_done && <div className="tiny-text text-muted text-truncate fw-normal mt-1" style={{ maxWidth: '240px' }}>{item.work_done}</div>}
                                                         </td>
-                                                        <td className="py-3 bg-transparent">
-                                                            <span className="badge tiny-text px-2.5 py-1.5 fw-bold rounded-2 text-center" style={{ backgroundColor: statColor.bg, color: statColor.text, minWidth: '95px' }}>
+                                                        <td className="py-3 bg-transparent text-center">
+                                                            <span className="badge tiny-text px-3 py-1.5 fw-bold rounded-pill text-center shadow-xs" style={{ backgroundColor: statColor.bg, color: statColor.text, minWidth: '105px' }}>
                                                                 {item.status || 'OK'}
                                                             </span>
                                                         </td>
-                                                        <td className="py-3 bg-transparent">
-                                                            <span className="badge tiny-text px-2.5 py-1.5 fw-bold rounded-2 text-center" style={{ backgroundColor: prioColor.bg, color: prioColor.text, minWidth: '70px' }}>
+                                                        <td className="py-3 bg-transparent text-center">
+                                                            <span className="badge tiny-text px-2.5 py-1.5 fw-bold rounded-pill text-center" style={{ backgroundColor: prioColor.bg, color: prioColor.text, minWidth: '75px' }}>
                                                                 {item.priority || 'Medium'}
                                                             </span>
                                                         </td>
                                                         <td className="py-3 bg-transparent small text-white-50">
-                                                            <div className="d-flex align-items-center gap-1.5">
-                                                                <span className="rounded-circle bg-secondary bg-opacity-50 text-white d-inline-flex align-items-center justify-content-center tiny-text fw-bold" style={{ width: '22px', height: '22px' }}>
+                                                            <div className="d-flex align-items-center gap-2">
+                                                                <span className="rounded-circle bg-secondary bg-opacity-25 text-white d-inline-flex align-items-center justify-content-center tiny-text fw-bold border border-white border-opacity-10 shadow-xs" style={{ width: '26px', height: '26px' }}>
                                                                     {(item.technician || username || 'S').charAt(0).toUpperCase()}
                                                                 </span>
-                                                                <span className="text-truncate" style={{ maxWidth: '100px' }}>{item.technician || username || 'Staff'}</span>
+                                                                <span className="text-truncate fw-medium text-light" style={{ maxWidth: '110px' }}>{item.technician || username || 'Staff'}</span>
                                                             </div>
                                                         </td>
-                                                        <td className="py-3 bg-transparent font-monospace text-info small">{item.machine || '—'}</td>
+                                                        <td className="py-3 bg-transparent font-monospace text-info small fw-semibold">
+                                                            {item.machine || '—'}
+                                                        </td>
                                                         <td className="py-3 bg-transparent font-monospace small">
-                                                            <span className="tiny-text px-2 py-1 rounded-2 bg-white bg-opacity-10 jade-accent fw-bold">
+                                                            <span className="tiny-text px-2.5 py-1 rounded-2 bg-white bg-opacity-10 text-white fw-bold border border-white border-opacity-10">
                                                                 {item.fsr_series || 'N/A'}
                                                             </span>
                                                         </td>
-                                                        <td className="py-3 bg-transparent tiny-text text-muted font-monospace">
-                                                            <div>In: {formatLocalDateTime(item.time_in)}</div>
-                                                            <div>Out: {formatLocalDateTime(item.time_out)}</div>
+                                                        <td className="py-3 bg-transparent tiny-text text-muted font-monospace pe-4">
+                                                            <div className="d-flex align-items-center gap-1"><span className="text-success fw-bold">In:</span> {formatLocalDateTime(item.time_in)}</div>
+                                                            <div className="d-flex align-items-center gap-1 mt-0.5"><span className="text-danger fw-bold">Out:</span> {formatLocalDateTime(item.time_out)}</div>
                                                         </td>
                                                     </tr>
                                                 );
