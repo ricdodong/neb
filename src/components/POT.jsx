@@ -484,7 +484,7 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
                                     <span className="text-muted me-2 small"><i className="fa-solid fa-magnifying-glass"></i></span>
                                     <input
                                         type="text"
-                                        className="form-control bg-transparent text-white border-0 shadow-none p-0 small"
+                                        className="form-control bg-white text-white border-0 shadow-none p-0 small"
                                         placeholder="Search client, tech, serial..."
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
@@ -503,7 +503,7 @@ const ProductivityOfTechnical = ({ triggerToast, username }) => {
 
                             <button
                                 onClick={fetchInitialData}
-                                className="btn btn-sm border-white text-secondary hover-lift rounded-3 shadow-none d-flex align-items-center gap-1.5 px-3 py-1"
+                                className="btn btn-sm border-secondary text-secondary hover-lift rounded-3 shadow-none d-flex align-items-center gap-1.5 px-3 py-1"
                             >
                                 <i className="fa-solid fa-rotate tiny-text"></i> <span className="tiny-text">Sync Board</span>
                             </button>
